@@ -235,29 +235,14 @@ def q115_to_float(q):
 
 # ISA
 
-![ISA](/docs/images/isa.png)
-
 Atreides implements a 12-instruction ISA optimized for neural network kernels:
 
-| Opcode | Mnemonic | Format | Description |
-|--------|----------|--------|-------------|
-| 0000 | NOP | - | No operation |
-| 0001 | BRnzp | nzp, imm | Branch on condition |
-| 0010 | CMP | Rd, Rs | Compare (sets NZP flags) |
-| 0011 | ADD | Rd, Rs, Rt | Integer add (indexing) |
-| 0100 | SUB | Rd, Rs, Rt | Integer subtract (indexing) |
-| 0101 | MUL | Rd, Rs, Rt | Integer multiply (indexing) |
-| 0110 | DIV | Rd, Rs, Rt | Integer divide (indexing) |
-| 0111 | LDR | Rd, Rs | Load 16-bit from memory |
-| 1000 | STR | Rd, Rs | Store 16-bit to memory |
-| 1001 | CONST | Rd, imm | Load 8-bit immediate (sign-extended) |
-| **1010** | **FMA** | **Rd, Rs, Rt** | **Q1.15 fused multiply-add: Rd = (Rs × Rt) + Rd** |
-| 1111 | RET | - | End thread execution |
+![ISA](/docs/images/isa.png)
 
 ### Key Design Decision
 
 - **Integer operations** (ADD, SUB, MUL, DIV): Used for indexing, addressing, loop counters
-- **FMA operation**: Used exclusively for Q1.15 matrix computations
+- **FMA operation** (FMA, ACT): Used exclusively for Q1.15 matrix computations
 
 This separation ensures optimal hardware for each use case.
 
@@ -870,7 +855,7 @@ magic -T ~/.ciel/sky130A/libs.tech/magic/sky130A.tech \
   ~/OpenLane/designs/atreides/runs/<run_id>/results/final/gds/gpu.gds
 ```
 
-# Module Summary
+# Modules
 
 | Module | File | Description |
 |--------|------|-------------|
