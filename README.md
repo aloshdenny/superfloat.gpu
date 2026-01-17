@@ -901,8 +901,4 @@ magic -T ~/.ciel/sky130A/libs.tech/magic/sky130A.tech \
 
 <div align="center">
 
-**Atreides** - *Fear is the mind-killer.*
-
-Built for learning. Built for inference. Built for the future.
-
 </div>
