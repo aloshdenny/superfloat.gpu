@@ -1,0 +1,24 @@
+*/**/__pycache__
+__pycache__/
+*.pyc
+
+# Build artifacts
+build/
+*.vvp
+*.vcd
+
+# Test logs (keep .gitkeep)
+test/logs/*
+!test/logs/.gitkeep
+
+# Python virtual environment
+venv/
+
+# GDS intermediates
+gds/**/*.gltf
+
+# System files
+.DS_Store
+
+# Test results
+results.xml
