@@ -7,10 +7,6 @@ build/
 *.vvp
 *.vcd
 
-# Test logs (keep .gitkeep)
-test/logs/*
-!test/logs/.gitkeep
-
 # Python virtual environment
 venv/
 
@@ -22,3 +18,6 @@ gds/**/*.gltf
 
 # Test results
 results.xml
+results/
+logs/
+*.gtkw
