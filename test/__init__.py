@@ -1,2 +1,2 @@
-# Atreides GPU Test Suite
+# Test package for Atreides GPU
 
