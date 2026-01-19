@@ -65,6 +65,24 @@ module tb_systolic_array #(
         .ready(ready)
     );
 
+    // Explicit result wires for GTKWave (avoids escaped name issues)
+    wire [DATA_BITS-1:0] res_0_0 = results_flat[0*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_0_1 = results_flat[1*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_0_2 = results_flat[2*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_0_3 = results_flat[3*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_1_0 = results_flat[4*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_1_1 = results_flat[5*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_1_2 = results_flat[6*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_1_3 = results_flat[7*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_2_0 = results_flat[8*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_2_1 = results_flat[9*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_2_2 = results_flat[10*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_2_3 = results_flat[11*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_3_0 = results_flat[12*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_3_1 = results_flat[13*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_3_2 = results_flat[14*DATA_BITS +: DATA_BITS];
+    wire [DATA_BITS-1:0] res_3_3 = results_flat[15*DATA_BITS +: DATA_BITS];
+
     // VCD dump for waveform viewing
     initial begin
         $dumpfile("build/waves/systolic_array.vcd");

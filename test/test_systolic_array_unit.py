@@ -357,7 +357,7 @@ async def test_array_zeros(dut):
     assert passed, "Array zeros test failed"
 
 
-@cocotb.test(skip=True)  # Architecture needs vertical accumulation for proper matmul
+@cocotb.test()
 async def test_array_4x4_full(dut):
     """Test full 4x4 matrix multiplication."""
     logger = await setup_array_test(dut, "array_4x4_full")
