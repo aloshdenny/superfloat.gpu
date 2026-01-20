@@ -813,6 +813,13 @@ make mount
 ./flow.tcl -design atreides
 ```
 
+### View Physical Schematic
+
+```bash
+# After running OpenLane flow
+klayout ~/OpenLane/designs/atreides/runs/<run_id>/results/final/gds/gpu.gds
+```
+
 ### Output Files
 
 After successful completion, find outputs at:

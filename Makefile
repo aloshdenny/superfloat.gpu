@@ -132,6 +132,55 @@ test_all_units: test_fma_unit test_alu_unit test_activation_unit test_systolic_p
 	@echo "All unit tests completed"
 
 # =============================================================================
+# Physical Layout Generation (KLayout)
+# =============================================================================
+
+# KLayout executable path (macOS)
+KLAYOUT := /Applications/KLayout/klayout.app/Contents/MacOS/klayout
+KLAYOUT_LYP := scripts/sky130.lyp
+
+layout:
+	@echo "Generating physical layout images from GDS..."
+	$(KLAYOUT) -b -r scripts/generate_layout.py
+
+view_layout:
+	@echo "Opening GDS in KLayout with Sky130 layer colors..."
+	$(KLAYOUT) -l $(KLAYOUT_LYP) gds/atreides.gds &
+
+# Generate zoom sequence for video
+zoom_sequence:
+	@echo "Generating zoom sequence frames (this may take a few minutes)..."
+	$(KLAYOUT) -b -r scripts/generate_zoom_sequence.py
+
+# Create zoom-out video from frames (requires ffmpeg)
+zoom_video: zoom_sequence
+	@echo "Creating zoom-out video..."
+	@mkdir -p build
+	ffmpeg -y -framerate 30 -i build/zoom_sequence/frame_%04d.png \
+		-c:v libx264 -pix_fmt yuv420p -crf 18 -preset slow \
+		build/gpu_zoomout.mp4
+	@echo "Video created: build/gpu_zoomout.mp4"
+
+# Create smooth 60fps video with motion interpolation
+zoom_video_smooth: zoom_sequence
+	@echo "Creating smooth 60fps zoom-out video..."
+	@mkdir -p build
+	ffmpeg -y -framerate 30 -i build/zoom_sequence/frame_%04d.png \
+		-filter:v "minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:vsbmc=1" \
+		-c:v libx264 -pix_fmt yuv420p -crf 18 -preset slow \
+		build/gpu_zoomout_smooth.mp4
+	@echo "Video created: build/gpu_zoomout_smooth.mp4"
+
+# Create high-quality 4K video
+zoom_video_4k: zoom_sequence
+	@echo "Creating 4K zoom-out video..."
+	@mkdir -p build
+	ffmpeg -y -framerate 24 -i build/zoom_sequence/frame_%04d.png \
+		-c:v libx264 -pix_fmt yuv420p -crf 15 -preset veryslow \
+		-tune film build/gpu_zoomout_4k.mp4
+	@echo "Video created: build/gpu_zoomout_4k.mp4"
+
+# =============================================================================
 # Cleanup
 # =============================================================================
 
@@ -215,6 +264,14 @@ help:
 	@echo ""
 	@echo "Reports:"
 	@echo "  make report                 - Generate test summary reports"
+	@echo ""
+	@echo "Physical Layout:"
+	@echo "  make layout                 - Generate physical layout images (KLayout)"
+	@echo "  make view_layout            - Open GDS in KLayout GUI"
+	@echo "  make zoom_sequence          - Generate zoom sequence frames for video"
+	@echo "  make zoom_video             - Create zoom-out video (requires ffmpeg)"
+	@echo "  make zoom_video_smooth      - Create smooth 60fps video"
+	@echo "  make zoom_video_4k          - Create high-quality 4K video"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean                  - Remove generated files"
