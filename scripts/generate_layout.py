@@ -64,54 +64,137 @@ print(f"{'─'*50}")
 
 # Create layout view
 lv = lay.LayoutView()
-lv.set_config("background-color", "#0f0f23")  # Deep navy background
+lv.set_config("background-color", "#000000")  # Pure black background (matches reference)
 lv.set_config("grid-visible", "false")
-lv.set_config("text-visible", "true")
+lv.set_config("text-visible", "false")  # Hide text for cleaner look
 
 cell_view_index = lv.load_layout(GDS_FILE, True)
 cv = lv.cellview(cell_view_index)
 cv.cell = top_cell
 lv.max_hier_levels = 100
 
-# Vibrant color palette for semiconductor layers
-LAYER_COLORS = [
-    0x00D4FF,  # Cyan - Local Interconnect
-    0xFF6B6B,  # Coral - Metal layers
-    0x2ED573,  # Emerald - Poly
-    0xFFD93D,  # Gold - Active
-    0xA55EEA,  # Purple - Via
-    0x1DD1A1,  # Mint - N-well
-    0xFF9F43,  # Orange - P-well
-    0x54A0FF,  # Blue - Metal1
-    0xFFC048,  # Amber - Metal2
-    0xFF6B81,  # Pink - Metal3
-    0x5F27CD,  # Indigo - Via2
-    0x20BF6B,  # Lime - Diffusion
-    0xEB3B5A,  # Red - Contact
-    0x8854D0,  # Violet - Via3
-    0xFA8231,  # Dark Orange - Metal4
-    0x3867D6,  # Navy - Metal5
-    0xF7B731,  # Amber - Highlight
-    0x26DE81,  # Mint Green
-    0xFC5C65,  # Salmon
-    0x45AAF2,  # Sky Blue
-]
+# Sky130 layer colors matching reference image (Yellow, Pink, Cyan on black)
+# Based on actual GDS layer analysis:
+#   68/20 (li.drawing): 1.2M shapes - Local Interconnect - CYAN (power grid)
+#   69/20 (met1.drawing): 587K shapes - Metal 1 - YELLOW/GOLD
+#   70/20 (met2.drawing): 81K shapes - Metal 2 - PINK
+#   67/20 (poly.drawing): 269K shapes - Polysilicon - PINK
+#   65/20 (diff.drawing): Active - YELLOW
+#   71/20 (met3.drawing): Metal 3 - YELLOW
+#   72/20 (met4.drawing): Metal 4 - PINK
 
-# Apply colors
+SKY130_COLORS = {
+    # Layer/Datatype : (color, visible, is_fill_layer)
+    # Local Interconnect - Cyan (power rails)
+    (68, 20): (0x00D4FF, True, True),    # li.drawing - Cyan
+    (68, 44): (0x00D4FF, False, False),  # li.label - hidden
+    (68, 5):  (0x00BFFF, False, False),  # li.res - hidden
+    (68, 16): (0x00CED1, False, False),  # li.cut - hidden
+    
+    # Metal 1 - Yellow/Gold
+    (69, 20): (0xFFD93D, True, True),    # met1.drawing - Yellow Gold
+    (69, 44): (0xFFD700, False, False),  # met1.label - hidden
+    (69, 5):  (0xFFCC00, False, False),  # met1.res - hidden
+    (69, 16): (0xFFAA00, False, False),  # met1.cut - hidden
+    
+    # Metal 2 - Pink
+    (70, 20): (0xFF69B4, True, True),    # met2.drawing - Hot Pink
+    (70, 44): (0xFF6B81, False, False),  # met2.label - hidden
+    (70, 5):  (0xFF1493, False, False),  # met2.res - hidden
+    (70, 16): (0xDB7093, False, False),  # met2.cut - hidden
+    
+    # Metal 3 - Yellow
+    (71, 20): (0xFFE066, True, True),    # met3.drawing - Light Gold
+    (71, 44): (0xFFD700, False, False),  # met3.label - hidden
+    (71, 5):  (0xFFCC00, False, False),  # met3.res - hidden
+    (71, 16): (0xFFAA00, False, False),  # met3.cut - hidden
+    
+    # Metal 4 - Pink
+    (72, 20): (0xFF69B4, True, True),    # met4.drawing - Hot Pink
+    (72, 5):  (0xFF1493, False, False),  # met4.res - hidden
+    (72, 16): (0xDB7093, False, False),  # met4.cut - hidden
+    
+    # Polysilicon - Pink/Magenta
+    (67, 20): (0xFF6B81, True, True),    # poly.drawing - Pink
+    (67, 44): (0xFF69B4, False, False),  # poly.label/mcon - hidden
+    (67, 5):  (0xFF1493, False, False),  # poly.res - hidden
+    (67, 16): (0xDB7093, False, False),  # poly.cut - hidden
+    
+    # Active/Diffusion - Yellow
+    (65, 20): (0xFFD93D, True, True),    # diff.drawing - Yellow Gold
+    (65, 44): (0xFFCC00, False, False),  # diff.label - hidden
+    
+    # Tap - Yellow
+    (66, 20): (0xFFCC00, True, True),    # tap.drawing - Amber
+    (66, 44): (0x00D4FF, False, False),  # tap.label/licon - hidden
+    
+    # Wells - Hide for cleaner look
+    (64, 20): (0x444444, False, False),  # nwell.drawing - hidden
+    (64, 16): (0x444444, False, False),  # nwell.pin - hidden
+    (64, 5):  (0x444444, False, False),  # nwell.label - hidden
+    (64, 59): (0x444444, False, False),  # pwell.pin - hidden
+    (122, 16): (0x333333, False, False), # pwell.drawing - hidden
+    
+    # Implants - Hide
+    (93, 44): (0x00CED1, False, False),  # nsdm - hidden
+    (94, 20): (0xFF69B4, False, False),  # psdm - hidden
+    
+    # Vias - Small cyan dots
+    (78, 44): (0x00D4FF, False, False),  # via - hidden
+    
+    # Capacitor
+    (95, 20): (0xFF6600, True, True),    # capacitor - Orange
+    
+    # Area IDs and boundaries - Hide
+    (81, 4):  (0x222222, False, False),  # areaid.sc - hidden
+    (81, 14): (0x333333, False, False),  # areaid.frame - hidden
+    (81, 23): (0x222222, False, False),  # areaid.seal - hidden
+    (83, 44): (0x444444, False, False),  # boundary - hidden
+    (235, 4): (0x333333, False, False),  # prBoundary - hidden
+    (236, 0): (0x555555, False, False),  # padframe - hidden
+}
+
+# Apply Sky130-specific colors
 layer_iter = lv.begin_layers()
 idx = 0
 while not layer_iter.at_end():
     lp = layer_iter.current()
-    color = LAYER_COLORS[idx % len(LAYER_COLORS)]
     
-    lp.fill_color = color
-    lp.frame_color = color
-    lp.fill_brightness = 10
-    lp.frame_brightness = 20
-    lp.visible = True
-    lp.transparent = False
-    lp.width = 1
-    lp.dither_pattern = 0
+    # Parse layer info from source
+    source = str(lp.source)
+    layer_key = None
+    try:
+        if '/' in source and '@' in source:
+            parts = source.split('@')[0].split('/')
+            layer_num = int(parts[0])
+            datatype = int(parts[1])
+            layer_key = (layer_num, datatype)
+    except:
+        pass
+    
+    # Apply color based on layer mapping
+    if layer_key and layer_key in SKY130_COLORS:
+        color, visible, is_fill = SKY130_COLORS[layer_key]
+        lp.fill_color = color
+        lp.frame_color = color
+        lp.visible = visible
+        lp.fill_brightness = 0 if is_fill else -20
+        lp.frame_brightness = 10
+        lp.transparent = False
+        lp.width = 1
+        lp.dither_pattern = 0
+    else:
+        # Default: cycle through yellow, pink, cyan
+        cycle_colors = [0xFFD93D, 0xFF69B4, 0x00D4FF]
+        color = cycle_colors[idx % 3]
+        lp.fill_color = color
+        lp.frame_color = color
+        lp.visible = True
+        lp.fill_brightness = 0
+        lp.frame_brightness = 10
+        lp.transparent = False
+        lp.width = 1
+        lp.dither_pattern = 0
     
     lv.set_layer_properties(layer_iter, lp)
     idx += 1

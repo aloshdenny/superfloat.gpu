@@ -815,6 +815,8 @@ make mount
 
 ### View Physical Schematic
 
+![GDS Render](/docs/images/gds_rendered.png)
+
 ```bash
 # After running OpenLane flow
 klayout ~/OpenLane/designs/atreides/runs/<run_id>/results/final/gds/gpu.gds
