@@ -3,7 +3,7 @@ Systolic Array Unit Tests for Atreides GPU
 
 Tests the NxN systolic array with:
 - Weight-stationary matrix multiplication
-- Various matrix sizes (tested with 4x4 default)
+- Various matrix sizes (tested with 8x8 default)
 - Q1.15 arithmetic verification
 - Identity matrix tests
 - Random matrix tests
@@ -23,8 +23,8 @@ from helpers.q115 import float_to_q115, q115_to_float, q115_mul, q115_add
 from helpers.logger import GPULogger
 
 
-# Default array size (must match compiled testbench)
-ARRAY_SIZE = 4
+# Default array size (must match compiled testbench) - Updated for 8x8
+ARRAY_SIZE = 8
 DATA_BITS = 16
 
 
