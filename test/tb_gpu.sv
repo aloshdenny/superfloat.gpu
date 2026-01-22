@@ -3,15 +3,18 @@
 
 // Testbench wrapper for Atreides GPU
 // Includes program and data memory models for cocotb testing
+// Updated for enhanced architecture: 4 cores, 4 threads/block, 8x8 systolic arrays
 module tb_gpu #(
-    parameter DATA_MEM_ADDR_BITS = 8,
+    parameter DATA_MEM_ADDR_BITS = 12,         // Increased: 4096 rows
     parameter DATA_MEM_DATA_BITS = 16,
-    parameter DATA_MEM_NUM_CHANNELS = 4,
-    parameter PROGRAM_MEM_ADDR_BITS = 8,
+    parameter DATA_MEM_NUM_CHANNELS = 16,      // Increased: 4 cores × 4 threads
+    parameter PROGRAM_MEM_ADDR_BITS = 12,      // Increased: 4096 instructions
     parameter PROGRAM_MEM_DATA_BITS = 16,
-    parameter PROGRAM_MEM_NUM_CHANNELS = 1,
-    parameter NUM_CORES = 1,
-    parameter THREADS_PER_BLOCK = 4
+    parameter PROGRAM_MEM_NUM_CHANNELS = 4,    // Increased: 1 per core
+    parameter NUM_CORES = 4,                   // Increased: 4 cores
+    parameter THREADS_PER_BLOCK = 4,
+    parameter SYSTOLIC_SIZE = 8,               // 8x8 systolic arrays
+    parameter NUM_SYSTOLIC_ARRAYS = 8          // 8 arrays per core
 ) (
     input wire clk,
     input wire reset,
@@ -44,7 +47,7 @@ module tb_gpu #(
     wire device_control_write_enable = (thread_count != 8'd0);
     wire [7:0] device_control_data = thread_count;
 
-    // GPU Instance
+    // GPU Instance (enhanced architecture)
     gpu #(
         .DATA_MEM_ADDR_BITS(DATA_MEM_ADDR_BITS),
         .DATA_MEM_DATA_BITS(DATA_MEM_DATA_BITS),
@@ -53,7 +56,9 @@ module tb_gpu #(
         .PROGRAM_MEM_DATA_BITS(PROGRAM_MEM_DATA_BITS),
         .PROGRAM_MEM_NUM_CHANNELS(PROGRAM_MEM_NUM_CHANNELS),
         .NUM_CORES(NUM_CORES),
-        .THREADS_PER_BLOCK(THREADS_PER_BLOCK)
+        .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
+        .SYSTOLIC_SIZE(SYSTOLIC_SIZE),
+        .NUM_SYSTOLIC_ARRAYS(NUM_SYSTOLIC_ARRAYS)
     ) gpu_inst (
         .clk(clk),
         .reset(reset),

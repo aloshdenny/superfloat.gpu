@@ -4,9 +4,10 @@
 // Testbench wrapper for Systolic Array
 // Provides direct access to array signals for cocotb testing
 // Parameterized to support various array sizes (2, 4, 8, etc.)
+// Updated for 8x8 default array size
 module tb_systolic_array #(
     parameter DATA_BITS = 16,        // Q1.15 fixed-point width
-    parameter ARRAY_SIZE = 4         // Default 4x4 array
+    parameter ARRAY_SIZE = 8         // Default 8x8 array (updated from 4x4)
 ) (
     input wire clk,
     input wire reset,
