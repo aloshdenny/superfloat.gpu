@@ -1,0 +1,26 @@
+{
+    "DESIGN_NAME": "systolic_pe",
+    "VERILOG_FILES": [
+        "dir::src/systolic_pe.v"
+    ],
+    "CLOCK_PORT": "clk",
+    "CLOCK_PERIOD": 10.0,
+    
+    "FP_SIZING": "relative",
+    "FP_CORE_UTIL": 50,
+    "FP_ASPECT_RATIO": 1.0,
+    
+    "PL_TARGET_DENSITY": 0.55,
+    
+    "GRT_ADJUSTMENT": 0.1,
+    
+    "RUN_CVC": false,
+    
+    "pdk::sky130*": {
+        "FP_CORE_UTIL": 45,
+        "PL_TARGET_DENSITY": 0.5,
+        "scl::sky130_fd_sc_hd": {
+            "CLOCK_PERIOD": 12.0
+        }
+    }
+}
