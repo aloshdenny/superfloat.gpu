@@ -14,7 +14,8 @@
 // > Technically, different instructions can branch to different PCs, requiring "branch divergence." In
 //   this minimal implementation, we assume no branch divergence (naive approach for simplicity)
 module scheduler #(
-    parameter THREADS_PER_BLOCK = 4
+    parameter THREADS_PER_BLOCK = 4,
+    parameter PROGRAM_MEM_ADDR_BITS = 8
 ) (
     input wire clk,
     input wire reset,
@@ -30,8 +31,8 @@ module scheduler #(
     input wire [1:0] lsu_state [THREADS_PER_BLOCK-1:0],
 
     // Current & Next PC
-    output reg [7:0] current_pc,
-    input wire [7:0] next_pc [THREADS_PER_BLOCK-1:0],
+    output reg [PROGRAM_MEM_ADDR_BITS-1:0] current_pc,
+    input wire [PROGRAM_MEM_ADDR_BITS-1:0] next_pc [THREADS_PER_BLOCK-1:0],
 
     // Execution State
     output reg [2:0] core_state,

@@ -1,21 +1,25 @@
 `default_nettype none
 `timescale 1ns/1ns
 
-// GPU
+// GPU - ATREIDES NEURAL NETWORK ACCELERATOR
 // > Built to use an external async memory with multi-channel read/write
 // > Assumes that the program is loaded into program memory, data into data memory, and threads into
 //   the device control register before the start signal is triggered
 // > Has memory controllers to interface between external memory and its multiple cores
 // > Configurable number of cores and thread capacity per core
+// > Enhanced with 4 cores, 4 threads/block, 8x8 systolic arrays (8 per core)
+// > Hierarchical design for improved physical synthesis
 module gpu #(
-    parameter DATA_MEM_ADDR_BITS = 8,        // Number of bits in data memory address (256 rows)
-    parameter DATA_MEM_DATA_BITS = 16,       // Number of bits in data memory value (16-bit Q1.15 fixed-point)
-    parameter DATA_MEM_NUM_CHANNELS = 4,     // Number of concurrent channels for sending requests to data memory
-    parameter PROGRAM_MEM_ADDR_BITS = 8,     // Number of bits in program memory address (256 rows)
-    parameter PROGRAM_MEM_DATA_BITS = 16,    // Number of bits in program memory value (16 bit instruction)
-    parameter PROGRAM_MEM_NUM_CHANNELS = 1,  // Number of concurrent channels for sending requests to program memory
-    parameter NUM_CORES = 2,                 // Number of cores to include in this GPU
-    parameter THREADS_PER_BLOCK = 4          // Number of threads to handle per block (determines the compute resources of each core)
+    parameter DATA_MEM_ADDR_BITS = 12,       // Increased: 4096 rows for larger data
+    parameter DATA_MEM_DATA_BITS = 16,       // 16-bit Q1.15 fixed-point
+    parameter DATA_MEM_NUM_CHANNELS = 16,    // Increased: 16 channels for 4 cores × 4 threads
+    parameter PROGRAM_MEM_ADDR_BITS = 12,    // Increased: 4096 instructions
+    parameter PROGRAM_MEM_DATA_BITS = 16,    // 16 bit instruction
+    parameter PROGRAM_MEM_NUM_CHANNELS = 4,  // Increased: 4 channels for 4 cores
+    parameter NUM_CORES = 4,                 // Increased: 4 compute cores
+    parameter THREADS_PER_BLOCK = 4,         // 4 threads per block
+    parameter SYSTOLIC_SIZE = 8,             // 8x8 systolic arrays
+    parameter NUM_SYSTOLIC_ARRAYS = 8        // 8 systolic arrays per core
 ) (
     input wire clk,
     input wire reset,
@@ -197,13 +201,16 @@ module gpu #(
                 end
             end
 
-            // Compute Core
+            // Compute Core (with enhanced systolic array cluster)
             core #(
                 .DATA_MEM_ADDR_BITS(DATA_MEM_ADDR_BITS),
                 .DATA_MEM_DATA_BITS(DATA_MEM_DATA_BITS),
                 .PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS),
                 .PROGRAM_MEM_DATA_BITS(PROGRAM_MEM_DATA_BITS),
-                .THREADS_PER_BLOCK(THREADS_PER_BLOCK)
+                .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
+                .SYSTOLIC_SIZE(SYSTOLIC_SIZE),
+                .NUM_SYSTOLIC_ARRAYS(NUM_SYSTOLIC_ARRAYS),
+                .CACHE_SIZE(64)
             ) core_instance (
                 .clk(clk),
                 .reset(core_reset[i]),

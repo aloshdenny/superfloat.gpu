@@ -44,8 +44,8 @@ module pc #(
                 if (decoded_pc_mux == 1) begin 
                     if (((nzp & decoded_nzp) != 3'b0)) begin 
                         // On BRnzp instruction, branch to immediate if NZP case matches previous CMP
-                        // Use 8-bit immediate directly as program address
-                        next_pc <= decoded_immediate[PROGRAM_MEM_ADDR_BITS-1:0];
+                        // Zero-extend the 8-bit immediate to program address width
+                        next_pc <= {{(PROGRAM_MEM_ADDR_BITS-8){1'b0}}, decoded_immediate};
                     end else begin 
                         // Otherwise, just update to PC + 1 (next line)
                         next_pc <= current_pc + 1;

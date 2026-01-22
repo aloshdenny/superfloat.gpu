@@ -13,7 +13,7 @@ module fetcher #(
     
     // Execution State
     input wire [2:0] core_state,
-    input wire [7:0] current_pc,
+    input wire [PROGRAM_MEM_ADDR_BITS-1:0] current_pc,
 
     // Program Memory
     output reg mem_read_valid,

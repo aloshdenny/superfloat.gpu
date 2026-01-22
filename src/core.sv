@@ -4,16 +4,18 @@
 // COMPUTE CORE (Q1.15 Fixed-Point with Neural Network Support)
 // > Handles processing 1 block at a time
 // > Each core contains 1 fetcher & decoder, and per-thread: registers, ALU, FMA, Activation, LSU, PC
-// > Includes optional systolic array for accelerated matrix operations
+// > Includes systolic array cluster (8 arrays of 8x8) for accelerated matrix operations
 // > Supports neural network operations: FMA for matmul, ACT for activation functions
+// > Hierarchical design for improved physical synthesis
 module core #(
-    parameter DATA_MEM_ADDR_BITS = 8,
-    parameter DATA_MEM_DATA_BITS = 16,  // Q1.15 fixed-point (16-bit)
-    parameter PROGRAM_MEM_ADDR_BITS = 8,
+    parameter DATA_MEM_ADDR_BITS = 12,       // Increased: 4096 rows for larger data
+    parameter DATA_MEM_DATA_BITS = 16,       // Q1.15 fixed-point (16-bit)
+    parameter PROGRAM_MEM_ADDR_BITS = 12,    // Increased: 4096 instructions
     parameter PROGRAM_MEM_DATA_BITS = 16,
-    parameter THREADS_PER_BLOCK = 4,
-    parameter SYSTOLIC_SIZE = 4,        // Configurable systolic array size
-    parameter CACHE_SIZE = 16           // Instruction cache size
+    parameter THREADS_PER_BLOCK = 4,         // 4 threads per block
+    parameter SYSTOLIC_SIZE = 8,             // 8x8 systolic array size
+    parameter NUM_SYSTOLIC_ARRAYS = 8,       // 8 systolic arrays per core
+    parameter CACHE_SIZE = 64                // Increased instruction cache size
 ) (
     input wire clk,
     input wire reset,
@@ -48,8 +50,9 @@ module core #(
     reg [15:0] instruction;
 
     // Intermediate Signals (16-bit Q1.15)
-    reg [7:0] current_pc;
-    wire [7:0] next_pc[THREADS_PER_BLOCK-1:0];
+    // Program counter uses full program memory address width
+    reg [PROGRAM_MEM_ADDR_BITS-1:0] current_pc;
+    wire [PROGRAM_MEM_ADDR_BITS-1:0] next_pc[THREADS_PER_BLOCK-1:0];
     reg [DATA_MEM_DATA_BITS-1:0] rs[THREADS_PER_BLOCK-1:0];
     reg [DATA_MEM_DATA_BITS-1:0] rt[THREADS_PER_BLOCK-1:0];
     reg [1:0] lsu_state[THREADS_PER_BLOCK-1:0];
@@ -126,7 +129,8 @@ module core #(
 
     // Scheduler
     scheduler #(
-        .THREADS_PER_BLOCK(THREADS_PER_BLOCK)
+        .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
+        .PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS)
     ) scheduler_instance (
         .clk(clk),
         .reset(reset),
@@ -271,10 +275,19 @@ module core #(
     endgenerate
 
     // ============================================
-    // Systolic Array (shared accelerator)
+    // Systolic Array Cluster (8 arrays of 8x8 PEs)
+    // Hierarchical accelerator for matrix operations
     // ============================================
     wire [DATA_MEM_DATA_BITS-1:0] systolic_results [SYSTOLIC_SIZE-1:0][SYSTOLIC_SIZE-1:0];
     wire systolic_ready;
+    wire [NUM_SYSTOLIC_ARRAYS-1:0] all_systolic_ready;
+
+    // Systolic array control signals (directly from control unit - to be extended)
+    reg [$clog2(NUM_SYSTOLIC_ARRAYS)-1:0] systolic_array_select;
+    reg systolic_clear_acc;
+    reg systolic_load_weights;
+    reg systolic_compute_enable;
+    reg systolic_broadcast_mode;
 
     wire signed [DATA_MEM_DATA_BITS-1:0] systolic_a_inputs [SYSTOLIC_SIZE-1:0];
     wire signed [DATA_MEM_DATA_BITS-1:0] systolic_b_inputs [SYSTOLIC_SIZE-1:0];
@@ -287,20 +300,35 @@ module core #(
         end
     endgenerate
 
-    systolic_array #(
+    // Initialize systolic control signals
+    always @(posedge clk) begin
+        if (reset) begin
+            systolic_array_select <= 0;
+            systolic_clear_acc <= 1'b0;
+            systolic_load_weights <= 1'b0;
+            systolic_compute_enable <= 1'b0;
+            systolic_broadcast_mode <= 1'b0;
+        end
+    end
+
+    systolic_array_cluster #(
         .DATA_BITS(DATA_MEM_DATA_BITS),
-        .ARRAY_SIZE(SYSTOLIC_SIZE)
-    ) systolic_instance (
+        .ARRAY_SIZE(SYSTOLIC_SIZE),
+        .NUM_ARRAYS(NUM_SYSTOLIC_ARRAYS)
+    ) systolic_cluster_instance (
         .clk(clk),
         .reset(reset),
         .enable(1'b1),
-        .clear_acc(reset),
-        .load_weights(1'b0),
-        .compute_enable(1'b0),
+        .array_select(systolic_array_select),
+        .clear_acc(systolic_clear_acc),
+        .load_weights(systolic_load_weights),
+        .compute_enable(systolic_compute_enable),
+        .broadcast_mode(systolic_broadcast_mode),
         .a_inputs(systolic_a_inputs),
         .b_inputs(systolic_b_inputs),
         .results(systolic_results),
-        .ready(systolic_ready)
+        .ready(systolic_ready),
+        .all_ready(all_systolic_ready)
     );
 
 endmodule
