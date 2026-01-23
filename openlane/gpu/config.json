@@ -1,0 +1,58 @@
+{
+    "DESIGN_NAME": "gpu",
+    "VERILOG_FILES": [
+        "dir::src/gpu.v"
+    ],
+    "CLOCK_PORT": "clk",
+    "CLOCK_PERIOD": 10.0,
+    
+    "MACROS": {
+        "core": {
+            "gds": ["dir::../core/runs/latest/results/final/gds/core.gds"],
+            "lef": ["dir::../core/runs/latest/results/final/lef/core.lef"],
+            "instances": {
+                "cores[0].core_instance": {
+                    "location": [200, 200],
+                    "orientation": "N"
+                },
+                "cores[1].core_instance": {
+                    "location": [200, 2200],
+                    "orientation": "N"
+                },
+                "cores[2].core_instance": {
+                    "location": [2200, 200],
+                    "orientation": "N"
+                },
+                "cores[3].core_instance": {
+                    "location": [2200, 2200],
+                    "orientation": "N"
+                }
+            }
+        }
+    },
+    
+    "FP_SIZING": "absolute",
+    "DIE_AREA": "0 0 5000 5000",
+    "FP_CORE_UTIL": 30,
+    
+    "PL_TARGET_DENSITY": 0.35,
+    "PL_MACRO_HALO": "50 50",
+    "PL_MACRO_CHANNEL": "50 50",
+    
+    "GRT_ADJUSTMENT": 0.25,
+    "GLB_RT_OVERFLOW_ITERS": 100,
+    
+    "RUN_CVC": false,
+    
+    "FP_PDN_MULTILAYER": true,
+    "FP_PDN_ENABLE_RAILS": true,
+    
+    "pdk::sky130*": {
+        "DIE_AREA": "0 0 6000 6000",
+        "FP_CORE_UTIL": 25,
+        "PL_TARGET_DENSITY": 0.30,
+        "scl::sky130_fd_sc_hd": {
+            "CLOCK_PERIOD": 12.0
+        }
+    }
+}
