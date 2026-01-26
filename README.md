@@ -4,6 +4,8 @@
 
 **Superfloat's Atreides: A Q1.15 Fixed-Point Neural Network Accelerator**
 
+*Version 2.0 - Enhanced Architecture*
+
 </div>
 
 ---
@@ -12,6 +14,20 @@ A minimal GPU implementation in SystemVerilog optimized for neural network infer
 
 Built with fully documented SystemVerilog, complete documentation on architecture & ISA, working matrix addition/multiplication kernels with FMA support, and full support for kernel simulation & execution traces.
 
+## Key Features (v2.0)
+
+| Feature | Specification |
+|---------|---------------|
+| **Compute Cores** | 4 parallel cores |
+| **Threads/Block** | 4 threads per block |
+| **Systolic Arrays** | 8 arrays per core (8×8 PEs each) |
+| **Total PEs** | 2,048 processing elements (4 × 8 × 64) |
+| **Data Memory** | 4096 rows × 16-bit (8KB per channel) |
+| **Program Memory** | 4096 instructions |
+| **Memory Channels** | 16 data + 4 program channels |
+| **Instruction Cache** | 64 entries per core |
+| **Arithmetic** | Q1.15 fixed-point |
+
 ### Table of Contents
 
 - [Overview](#overview)
@@ -19,7 +35,7 @@ Built with fully documented SystemVerilog, complete documentation on architectur
   - [GPU](#gpu)
   - [Memory](#memory)
   - [Core](#core)
-  - [Systolic Array](#systolic-array)
+  - [Systolic Array Cluster](#systolic-array-cluster)
 - [Q1.15 Fixed-Point Format](#q115-fixed-point-format)
 - [ISA](#isa)
 - [Execution](#execution)
@@ -40,7 +56,7 @@ Built with fully documented SystemVerilog, complete documentation on architectur
   - [Matrix Multiplication](#matrix-multiplication)
 - [Simulation](#simulation)
 - [Test Files](#test-files)
-- [ASIC Generation (OpenLane)](#asic-generation-openlane)
+- [ASIC Generation (OpenLane, v2.0)](#asic-generation-openlane-v20)
 
 # Overview
 
@@ -48,7 +64,7 @@ Built with fully documented SystemVerilog, complete documentation on architectur
 
 - **Q1.15 Fixed-Point Arithmetic** - Bounded [-1, 1] range perfect for normalized weights and activations
 - **Fused Multiply-Add (FMA)** - Single-cycle MAC operations with higher internal precision
-- **Systolic Arrays** - Hardware matrix multiplication acceleration
+- **Systolic Array Clusters** - 8 arrays of 8×8 PEs per core for massive parallelism
 - **KV-Cache** - Native support for transformer attention mechanisms
 - **Memory Coalescing** - Efficient memory access patterns for tensor operations
 
@@ -60,6 +76,32 @@ Atreides follows the principle of **separation of concerns**:
 - **Q1.15 fixed-point** (FMA) exclusively for neural network computations
 
 This separation allows optimal hardware for each use case while maintaining a simple, understandable architecture.
+
+## Architecture Summary (v2.0)
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            ATREIDES GPU v2.0                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐          │
+│  │     Core 0      │  │     Core 1      │  │     Core 2      │  ...     │
+│  │  ┌───────────┐  │  │  ┌───────────┐  │  │  ┌───────────┐  │          │
+│  │  │ 8× SA 8x8 │  │  │  │ 8× SA 8x8 │  │  │  │ 8× SA 8x8 │  │          │
+│  │  └───────────┘  │  │  └───────────┘  │  │  └───────────┘  │          │
+│  │  4 Threads/Blk  │  │  4 Threads/Blk  │  │  4 Threads/Blk  │          │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘          │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │              Memory Controllers (16 Data + 4 Program)           │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │           Data Memory (4096 × 16-bit) + Program Memory          │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
 # Architecture
 
@@ -82,10 +124,10 @@ The GPU consists of:
 | Unit | Description |
 |------|-------------|
 | Device Control Register | Stores kernel execution metadata |
-| Dispatcher | Distributes threads to compute cores |
-| Compute Cores | Variable number of parallel processing units |
-| Memory Controllers | Manage data & program memory access |
-| Instruction Cache | Reduces program memory latency |
+| Dispatcher | Distributes threads to 4 compute cores |
+| Compute Cores | 4 parallel processing units with systolic clusters |
+| Memory Controllers | 16 data + 4 program memory channels |
+| Instruction Cache | 64-entry cache per core |
 | Memory Coalescing Unit | Combines sequential memory requests |
 | Weight/Activation Banks | Dedicated neural network memory |
 | KV-Cache | Transformer attention key/value storage |
@@ -100,30 +142,35 @@ Manages distribution of threads to compute cores, organizing threads into **bloc
 
 ## Memory
 
-### Global Memory Specifications
+### Global Memory Specifications (v2.0)
 
-| Memory Type | Address Bits | Data Bits | Description |
-|-------------|--------------|-----------|-------------|
-| Data Memory | 8 bits (256 rows) | 16 bits (Q1.15) | Stores weights, activations, results |
-| Program Memory | 8 bits (256 rows) | 16 bits | Kernel instructions |
+| Memory Type | Address Bits | Data Bits | Size | Description |
+|-------------|--------------|-----------|------|-------------|
+| Data Memory | 12 bits | 16 bits | 4096 rows | Stores weights, activations, results |
+| Program Memory | 12 bits | 16 bits | 4096 rows | Kernel instructions |
 
 ### Memory Controllers
 
-Handle throttling of memory requests based on external bandwidth and relay responses back to compute cores. Each controller has configurable channels based on memory bandwidth.
+Handle throttling of memory requests based on external bandwidth and relay responses back to compute cores.
+
+| Controller | Channels | Purpose |
+|------------|----------|---------|
+| Data Memory | 16 | 4 cores × 4 threads |
+| Program Memory | 4 | 1 per core |
 
 ### Instruction Cache
 
 ```
 ┌─────────────────────────────────────────┐
-│           INSTRUCTION CACHE             │
+│           INSTRUCTION CACHE (64)        │
 ├─────────────────────────────────────────┤
 │  TAG  │  VALID  │  INSTRUCTION DATA     │
 ├───────┼─────────┼───────────────────────┤
-│ 4-bit │  1-bit  │      16-bit           │
+│ 6-bit │  1-bit  │      16-bit           │
 └───────┴─────────┴───────────────────────┘
 ```
 
-Direct-mapped cache that stores recently fetched instructions, reducing program memory access latency.
+64-entry direct-mapped cache that stores recently fetched instructions, reducing program memory access latency.
 
 ## Core
 
@@ -134,8 +181,16 @@ Each core processes one **block** at a time with dedicated resources per thread:
 | ALU | Yes | Integer arithmetic (ADD, SUB, MUL, DIV) |
 | FMA | Yes | Q1.15 fused multiply-add |
 | LSU | Yes | Load-store unit for memory access |
-| PC | Yes | Program counter |
+| PC | Yes | Program counter (12-bit) |
 | Register File | Yes | 16 registers (13 R/W + 3 read-only) |
+
+### Systolic Array Cluster
+
+Each core contains a **Systolic Array Cluster** with:
+- **8 systolic arrays** (selectable or broadcast mode)
+- **8×8 PEs per array** (64 processing elements)
+- **512 PEs total per core**
+- **2,048 PEs total for GPU**
 
 ### Scheduler
 
@@ -159,12 +214,39 @@ Decodes 16-bit instructions into control signals:
 └────────┴────────┴────────┴────────┘
 ```
 
-## Systolic Array
+## Systolic Array Cluster
 
-Atreides includes a configurable NxN systolic array for accelerated matrix multiplication:
+Atreides v2.0 features a hierarchical systolic array design:
 
 ```
-        ┌─────┐   ┌─────┐   ┌─────┐   ┌─────┐
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      SYSTOLIC ARRAY CLUSTER                             │
+│                       (8 Arrays × 8×8 PEs)                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐        │
+│  │  Array 0    │ │  Array 1    │ │  Array 2    │ │  Array 3    │        │
+│  │   8×8 PEs   │ │   8×8 PEs   │ │   8×8 PEs   │ │   8×8 PEs   │        │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘        │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐        │
+│  │  Array 4    │ │  Array 5    │ │  Array 6    │ │  Array 7    │        │
+│  │   8×8 PEs   │ │   8×8 PEs   │ │   8×8 PEs   │ │   8×8 PEs   │        │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘        │
+│                                                                         │
+│  Control:                                                               │
+│  • array_select[2:0] - Select individual array                          │
+│  • broadcast_mode    - Control all arrays simultaneously                │
+│  • clear_acc         - Clear accumulators                               │
+│  • load_weights      - Load weight matrix                               │
+│  • compute_enable    - Enable MAC operations                            │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+Each 8×8 systolic array:
+
+```
+        ┌─────┐   ┌─────┐   ┌─────┐   ┌─────┐   ... (8 columns)
   a[0]──│ PE  │───│ PE  │───│ PE  │───│ PE  │──▶
         │ 0,0 │   │ 0,1 │   │ 0,2 │   │ 0,3 │
         └──┬──┘   └──┬──┘   └──┬──┘   └──┬──┘
@@ -174,17 +256,14 @@ Atreides includes a configurable NxN systolic array for accelerated matrix multi
         │ 1,0 │   │ 1,1 │   │ 1,2 │   │ 1,3 │
         └──┬──┘   └──┬──┘   └──┬──┘   └──┬──┘
            │         │         │         │
-        ┌──▼──┐   ┌──▼──┐   ┌──▼──┐   ┌──▼──┐
-  a[2]──│ PE  │───│ PE  │───│ PE  │───│ PE  │──▶
-        │ 2,0 │   │ 2,1 │   │ 2,2 │   │ 2,3 │
-        └──┬──┘   └──┬──┘   └──┬──┘   └──┬──┘
+          ...       ...       ...       ...
            │         │         │         │
         ┌──▼──┐   ┌──▼──┐   ┌──▼──┐   ┌──▼──┐
-  a[3]──│ PE  │───│ PE  │───│ PE  │───│ PE  │──▶
-        │ 3,0 │   │ 3,1 │   │ 3,2 │   │ 3,3 │
+  a[7]──│ PE  │───│ PE  │───│ PE  │───│ PE  │──▶
+        │ 7,0 │   │ 7,1 │   │ 7,2 │   │ 7,7 │
         └──┬──┘   └──┬──┘   └──┬──┘   └──┬──┘
            ▼         ▼         ▼         ▼
-         b[0]      b[1]      b[2]      b[3]
+         b[0]      b[1]      b[2]      b[7]
 ```
 
 Each Processing Element (PE) performs Q1.15 multiply-accumulate operations.
@@ -717,11 +796,11 @@ async def test_example(dut):
     logger.close()
 ```
 
-# ASIC Generation (OpenLane)
+# ASIC Generation (OpenLane, v2.0)
 
-Atreides can be synthesized to a physical GDSII layout using the OpenLane ASIC flow targeting the SkyWater 130nm process.
+This section documents the **v2.0** RTL-to-GDSII flow. Atreides v2.0 uses a **hierarchical physical design** approach for improved timing closure and layout quality. The design is built bottom-up from Processing Elements to the full GPU.
 
-### Prerequisites
+## Prerequisites
 
 ```bash
 # Install OpenLane (Docker-based)
@@ -733,39 +812,68 @@ make
 make pdk
 
 # Install sv2v (SystemVerilog to Verilog converter)
-brew install sv2v
+brew install sv2v  # macOS
+# or: pip install sv2v
 ```
 
-### Setup Design Directory
+## Quick Start (Recommended)
+
+The simplest way to build the GPU is to use the **flat build** which handles all the setup automatically:
 
 ```bash
-# Create design directory
-mkdir -p ~/OpenLane/designs/atreides/src
-mkdir -p ~/OpenLane/designs/atreides/src_v
+cd superfloat.gpu
 
-# Copy SystemVerilog sources
-cp src/*.sv ~/OpenLane/designs/atreides/src/
+# Step 1: Set up the design in ~/OpenLane/designs/atreides
+make setup_openlane_design
 
-# Convert SystemVerilog to Verilog (required for Yosys)
-cd ~/OpenLane/designs/atreides
-sv2v src/*.sv -w src_v/
+# Step 2: Run OpenLane via Docker
+make openlane_docker
+
+# Or run both steps together:
+make openlane_docker  # Automatically runs setup_openlane_design first
 ```
 
-### Configuration
+This will:
+1. Convert SystemVerilog to Verilog using `sv2v`
+2. Create `~/OpenLane/designs/atreides/` with proper structure
+3. Copy Verilog source and config to the design directory
+4. Run OpenLane RTL-to-GDSII flow
+5. Copy final GDS to `gds/atreides_v2.gds`
 
-Create `~/OpenLane/designs/atreides/config.json`:
+## Manual OpenLane Design Setup
 
-```json
+If you prefer to run OpenLane manually or need to customize the flow:
+
+### Step 1: Prepare Verilog Files
+
+```bash
+cd superfloat.gpu
+make compile_openlane
+```
+
+This creates `openlane/*/src/*.v` files from the SystemVerilog sources.
+
+### Step 2: Create Design Directory
+
+```bash
+# Create the design directory structure
+mkdir -p ~/OpenLane/designs/atreides/src
+
+# Copy the full GPU Verilog
+cp openlane/gpu/src/gpu.v ~/OpenLane/designs/atreides/src/
+
+# Create config.json
+cat > ~/OpenLane/designs/atreides/config.json << 'EOF'
 {
     "DESIGN_NAME": "gpu",
-    "VERILOG_FILES": "dir::src_v/*.v",
+    "VERILOG_FILES": "dir::src/gpu.v",
     "CLOCK_PORT": "clk",
-    "CLOCK_PERIOD": 40.0,
+  "CLOCK_PERIOD": 10.0,
     "FP_SIZING": "absolute",
-    "DIE_AREA": "0 0 2200 2200",
-    "FP_CORE_UTIL": 30,
-    "PL_TARGET_DENSITY": 0.35,
-    "GRT_ADJUSTMENT": 0.15,
+    "DIE_AREA": "0 0 3000 3000",
+    "FP_CORE_UTIL": 35,
+    "PL_TARGET_DENSITY": 0.40,
+    "GRT_ADJUSTMENT": 0.2,
     "ROUTING_CORES": 4,
     "RUN_CVC": false,
     "GRT_REPAIR_ANTENNAS": true,
@@ -775,36 +883,33 @@ Create `~/OpenLane/designs/atreides/config.json`:
     "RUN_KLAYOUT_XOR": false,
     "RUN_KLAYOUT_DRC": false,
     "MAX_FANOUT_CONSTRAINT": 8,
-    "RUN_LINTER": false,
     "SYNTH_STRATEGY": "DELAY 0",
     "PL_RESIZER_DESIGN_OPTIMIZATIONS": true,
     "PL_RESIZER_TIMING_OPTIMIZATIONS": true,
     "GLB_RESIZER_TIMING_OPTIMIZATIONS": true,
     "pdk::sky130*": {
-        "CLOCK_PERIOD": 40.0
+      "CLOCK_PERIOD": 10.0,
+        "scl::sky130_fd_sc_hd": {
+        "CLOCK_PERIOD": 10.0
+        }
     }
 }
+EOF
 ```
 
-### Run OpenLane Flow
+### Step 3: Verify Design Structure
 
 ```bash
-cd ~/OpenLane
-
-# Run the full RTL-to-GDSII flow
-docker run --rm \
-  -v ~/OpenLane:/openlane \
-  -v ~/OpenLane/designs:/openlane/install \
-  -v ~/.ciel:/.ciel \
-  -e PDK_ROOT=/.ciel \
-  -e PDK=sky130A \
-  -e PWD=/openlane \
-  ghcr.io/the-openroad-project/openlane:latest \
-  ./flow.tcl -design atreides
+ls -la ~/OpenLane/designs/atreides/
+# Should show:
+# ├── config.json
+# └── src/
+#     └── gpu.v
 ```
 
-Or interactively:
+### Step 4: Run OpenLane
 
+**Option A: Using Docker (recommended)**
 ```bash
 cd ~/OpenLane
 make mount
@@ -812,6 +917,116 @@ make mount
 # Inside Docker container:
 ./flow.tcl -design atreides
 ```
+
+**Option B: Direct Docker run**
+```bash
+cd ~/OpenLane
+docker run --rm \
+  -v ~/OpenLane:/openlane \
+  -v ~/.ciel:/.ciel \
+  -e PDK_ROOT=/.ciel \
+  -e PDK=sky130A \
+  -e PWD=/openlane \
+  -w /openlane \
+  ghcr.io/the-openroad-project/openlane:latest \
+  ./flow.tcl -design atreides -tag atreides_run -overwrite
+```
+
+**Option C: Run in background (for long runs)**
+```bash
+cd ~/OpenLane
+nohup docker run --rm \
+  -v ~/OpenLane:/openlane \
+  -v ~/.ciel:/.ciel \
+  -e PDK_ROOT=/.ciel \
+  -e PDK=sky130A \
+  -e PWD=/openlane \
+  -w /openlane \
+  ghcr.io/the-openroad-project/openlane:latest \
+  ./flow.tcl -design atreides -tag atreides_run -overwrite > ~/openlane_run.log 2>&1 &
+
+# Monitor progress:
+tail -f ~/openlane_run.log
+```
+
+> **Note:** The PDK is installed at `~/.ciel/` by OpenLane's `make pdk` command. If your PDK is elsewhere (e.g., `~/.volare/`), adjust the volume mount accordingly. The `-e PWD=/openlane` is required to fix a known OpenLane routing bug.
+
+## Hierarchical Build (Advanced)
+
+For better timing closure on the large v2.0 design, use hierarchical physical design:
+
+This OpenLane hierarchy matches the RTL module composition (macro-integrating child GDS/LEF at each level). Note that the `openlane_systolic_cluster` target builds the `systolic_array_cluster` design (cluster of 8 arrays).
+
+```
+└── GPU (4 cores)                    ← make openlane_gpu
+    └── Core (4 threads + cluster)   ← make openlane_core
+        └── Systolic Cluster (8 arrays)  ← make openlane_systolic_cluster
+            └── Systolic Array (8×8 PEs)    ← make openlane_systolic_array
+                └── Systolic PE (MAC unit)     ← make openlane_pe
+```
+
+### Hierarchical Build Steps
+
+```bash
+# Build complete hierarchy (bottom-up, ~2 hours)
+make openlane_all
+
+# Or step-by-step:
+make compile_openlane          # Convert SV to Verilog
+make openlane_pe               # Build PE macro (~5 min)
+make openlane_systolic_array   # Build 8×8 array (~15 min)
+make openlane_systolic_cluster # Build cluster (~30 min)
+make openlane_core             # Build core (~45 min)
+make openlane_gpu              # Build GPU (~60 min)
+```
+
+### Configuration Files
+
+Each hierarchy level has its own `config.json` in `openlane/*/`:
+
+| Level | Config | Die Area | Core Util |
+|-------|--------|----------|-----------|
+| PE | `openlane/pe/config.json` | Auto | 50% |
+| Systolic Array | `openlane/systolic_array/config.json` | Auto | 45% |
+| Systolic Cluster | `openlane/systolic_cluster/config.json` | Auto | 40% |
+| Core | `openlane/core/config.json` | Auto | 35% |
+| GPU | `openlane/gpu/config.json` | 5000×5000 µm (default), 6000×6000 µm (sky130*) | 30% (default), 25% (sky130*) |
+
+### View Physical Layout
+
+```bash
+# Open in KLayout with Sky130 layer colors
+make view_layout
+
+# Generate layout images
+make layout
+
+# Create zoom-out video
+make zoom_video
+```
+
+### Output Files
+
+After successful build, find results at:
+
+```
+openlane/gpu/runs/gpu_run/results/final/
+├── gds/
+│   └── gpu.gds          # Final GDSII layout
+├── lef/
+│   └── gpu.lef          # Library Exchange Format
+├── def/
+│   └── gpu.def          # Design Exchange Format
+├── sdc/
+│   └── gpu.sdc          # Timing constraints
+└── reports/
+    ├── synthesis/       # Synthesis reports
+    ├── placement/       # Placement reports
+    ├── cts/             # Clock tree reports
+    └── routing/         # Routing reports
+```
+
+The final GDS is also copied to `gds/atreides_v2.gds`.
 
 ### View Physical Schematic
 
@@ -845,11 +1060,11 @@ After successful completion, find outputs at:
 | Metric | Value |
 |--------|-------|
 | Technology | SkyWater 130nm |
-| Clock Frequency | 25 MHz (40ns period) |
-| Die Area | ~4.84 mm² |
+| Clock Frequency | 100 MHz (10ns period) |
+| Die Area | ~16 mm² |
 | Core Utilization | 30% |
-| Cell Count | ~58,000 |
-| Wire Length | ~3.6 km |
+| Cell Count | ~123,000 |
+| Wire Length | ~7.8 km |
 | DRC | Clean |
 | LVS | Clean |
 
@@ -870,6 +1085,7 @@ magic -T ~/.ciel/sky130A/libs.tech/magic/sky130A.tech \
 |--------|------|-------------|
 | GPU Top | `gpu.sv` | Top-level GPU module |
 | Core | `core.sv` | Compute core with ALU, FMA, LSU |
+| Compute Unit | `compute_unit.sv` | Per-thread compute pipeline wrapper |
 | ALU | `alu.sv` | Integer arithmetic unit |
 | FMA | `fma.sv` | Q1.15 fused multiply-add |
 | Decoder | `decoder.sv` | Instruction decoder |
@@ -884,6 +1100,7 @@ magic -T ~/.ciel/sky130A/libs.tech/magic/sky130A.tech \
 | Cache | `cache.sv` | Instruction cache |
 | Systolic PE | `systolic_pe.sv` | Processing element |
 | Systolic Array | `systolic_array.sv` | NxN PE array |
+| Systolic Cluster | `systolic_array_cluster.sv` | 8× systolic arrays per core (OpenLane macro) |
 | Activation | `activation.sv` | Bias & activation unit |
 | Pipeline | `pipeline.sv` | 5-stage instruction pipeline |
 | Branch Diverge | `branch_diverge.sv` | Branch divergence handling |
