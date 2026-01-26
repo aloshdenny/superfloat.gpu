@@ -15,7 +15,7 @@ import klayout.lay as lay
 import os
 
 # Configuration
-GDS_FILE = "gds/atreides.gds"
+GDS_FILE = "gds/atreides_v2.gds"
 OUTPUT_DIR = "build"
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
