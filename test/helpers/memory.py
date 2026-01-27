@@ -151,6 +151,18 @@ def asm_fma(rd: int, rs: int, rt: int) -> int:
     return (0xA << 12) | (rd << 8) | (rs << 4) | rt
 
 
+def asm_act(rd: int, rs: int, rt: int) -> int:
+    """
+    ACT Rd, Rs, Rt - Q1.15 bias-add + activation.
+
+    Note: The activation function is currently encoded in instruction[9:8],
+    which overlaps with the Rd field (instruction[11:8]). In practice, choose
+    `rd` such that its low 2 bits select the desired activation:
+      00=none, 01=ReLU, 10=LeakyReLU, 11=ClippedReLU
+    """
+    return (0xB << 12) | (rd << 8) | (rs << 4) | rt
+
+
 def asm_cmp(rd: int, rs: int) -> int:
     """CMP Rd, Rs - Compare and set NZP flags."""
     return (0x2 << 12) | (rd << 8) | (rs << 4)
@@ -207,4 +219,3 @@ R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12 = range(13)
 BLOCK_IDX = 13  # %blockIdx
 BLOCK_DIM = 14  # %blockDim
 THREAD_IDX = 15  # %threadIdx
-
