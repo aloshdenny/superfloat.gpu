@@ -43,9 +43,6 @@ module activation #(
     localparam [1:0] ACT_LEAKY_RELU = 2'b10;
     localparam [1:0] ACT_CLIPPED_RELU = 2'b11;
 
-    // R5: Bias register
-    reg [DATA_BITS-1:0] r5_bias;
-
     // Output register
     reg [DATA_BITS-1:0] activation_out_reg;
     assign activation_out = activation_out_reg;
@@ -53,14 +50,17 @@ module activation #(
     // ============================================
     // Stage 1: Bias Addition with Saturation
     // ============================================
+    // Use the current bias input directly (the core FSM already holds operands stable
+    // across the multi-cycle instruction execution). This avoids stale-bias issues
+    // if REQUEST/EXECUTE phasing shifts by a cycle.
     wire signed [16:0] biased_sum = $signed({unbiased_activation[15], unbiased_activation}) + 
-                                    $signed({r5_bias[15], r5_bias});
+                                    $signed({bias[15], bias});
 
     // Saturation for bias addition
     wire overflow_pos = ~biased_sum[16] & biased_sum[15] & 
-                        ~unbiased_activation[15] & ~r5_bias[15];
+                        ~unbiased_activation[15] & ~bias[15];
     wire overflow_neg = biased_sum[16] & ~biased_sum[15] & 
-                        unbiased_activation[15] & r5_bias[15];
+                        unbiased_activation[15] & bias[15];
     
     wire [DATA_BITS-1:0] biased_activation = overflow_pos ? Q115_MAX :
                                               overflow_neg ? Q115_MIN :
@@ -108,14 +108,8 @@ module activation #(
     // ============================================
     always @(posedge clk) begin
         if (reset) begin
-            r5_bias <= {DATA_BITS{1'b0}};
             activation_out_reg <= {DATA_BITS{1'b0}};
         end else if (enable) begin
-            // Load bias when in REQUEST state
-            if (core_state == 3'b011) begin
-                r5_bias <= bias;
-            end
-            
             // Compute activation when in EXECUTE state
             if (core_state == 3'b101 && activation_enable) begin
                 activation_out_reg <= activated_value;
@@ -123,4 +117,3 @@ module activation #(
         end
     end
 endmodule
-
