@@ -29,20 +29,20 @@ module core #(
     input wire [$clog2(THREADS_PER_BLOCK):0] thread_count,
 
     // Program Memory
-    output reg program_mem_read_valid,
-    output reg [PROGRAM_MEM_ADDR_BITS-1:0] program_mem_read_address,
-    input reg program_mem_read_ready,
-    input reg [PROGRAM_MEM_DATA_BITS-1:0] program_mem_read_data,
+    output wire program_mem_read_valid,
+    output wire [PROGRAM_MEM_ADDR_BITS-1:0] program_mem_read_address,
+    input wire program_mem_read_ready,
+    input wire [PROGRAM_MEM_DATA_BITS-1:0] program_mem_read_data,
 
     // Data Memory (16-bit Q1.15)
-    output reg [THREADS_PER_BLOCK-1:0] data_mem_read_valid,
-    output reg [DATA_MEM_ADDR_BITS-1:0] data_mem_read_address [THREADS_PER_BLOCK-1:0],
-    input reg [THREADS_PER_BLOCK-1:0] data_mem_read_ready,
-    input reg [DATA_MEM_DATA_BITS-1:0] data_mem_read_data [THREADS_PER_BLOCK-1:0],
-    output reg [THREADS_PER_BLOCK-1:0] data_mem_write_valid,
-    output reg [DATA_MEM_ADDR_BITS-1:0] data_mem_write_address [THREADS_PER_BLOCK-1:0],
-    output reg [DATA_MEM_DATA_BITS-1:0] data_mem_write_data [THREADS_PER_BLOCK-1:0],
-    input reg [THREADS_PER_BLOCK-1:0] data_mem_write_ready
+    output wire [THREADS_PER_BLOCK-1:0] data_mem_read_valid,
+    output wire [DATA_MEM_ADDR_BITS-1:0] data_mem_read_address [THREADS_PER_BLOCK-1:0],
+    input wire [THREADS_PER_BLOCK-1:0] data_mem_read_ready,
+    input wire [DATA_MEM_DATA_BITS-1:0] data_mem_read_data [THREADS_PER_BLOCK-1:0],
+    output wire [THREADS_PER_BLOCK-1:0] data_mem_write_valid,
+    output wire [DATA_MEM_ADDR_BITS-1:0] data_mem_write_address [THREADS_PER_BLOCK-1:0],
+    output wire [DATA_MEM_DATA_BITS-1:0] data_mem_write_data [THREADS_PER_BLOCK-1:0],
+    input wire [THREADS_PER_BLOCK-1:0] data_mem_write_ready
 );
     // State
     reg [2:0] core_state;
@@ -53,10 +53,10 @@ module core #(
     // Program counter uses full program memory address width
     reg [PROGRAM_MEM_ADDR_BITS-1:0] current_pc;
     wire [PROGRAM_MEM_ADDR_BITS-1:0] next_pc[THREADS_PER_BLOCK-1:0];
-    reg [DATA_MEM_DATA_BITS-1:0] rs[THREADS_PER_BLOCK-1:0];
-    reg [DATA_MEM_DATA_BITS-1:0] rt[THREADS_PER_BLOCK-1:0];
-    reg [1:0] lsu_state[THREADS_PER_BLOCK-1:0];
-    reg [DATA_MEM_DATA_BITS-1:0] lsu_out[THREADS_PER_BLOCK-1:0];
+    wire [DATA_MEM_DATA_BITS-1:0] rs[THREADS_PER_BLOCK-1:0];
+    wire [DATA_MEM_DATA_BITS-1:0] rt[THREADS_PER_BLOCK-1:0];
+    wire [1:0] lsu_state[THREADS_PER_BLOCK-1:0];
+    wire [DATA_MEM_DATA_BITS-1:0] lsu_out[THREADS_PER_BLOCK-1:0];
     wire [DATA_MEM_DATA_BITS-1:0] alu_out[THREADS_PER_BLOCK-1:0];
     wire [DATA_MEM_DATA_BITS-1:0] fma_out[THREADS_PER_BLOCK-1:0];
     wire [DATA_MEM_DATA_BITS-1:0] act_out[THREADS_PER_BLOCK-1:0];
@@ -82,8 +82,8 @@ module core #(
     reg [1:0] decoded_act_func;
     reg decoded_ret;
 
-    // For FMA: accumulator input from destination register
-    reg [DATA_MEM_DATA_BITS-1:0] rd_value[THREADS_PER_BLOCK-1:0];
+    // For FMA: accumulator input from destination register (direct combinational read)
+    wire [DATA_MEM_DATA_BITS-1:0] rd_data[THREADS_PER_BLOCK-1:0];
 
     // Fetcher
     fetcher #(
@@ -139,6 +139,7 @@ module core #(
         .core_state(core_state),
         .decoded_mem_read_enable(decoded_mem_read_enable),
         .decoded_mem_write_enable(decoded_mem_write_enable),
+        .decoded_fma_enable(decoded_fma_enable),
         .decoded_ret(decoded_ret),
         .lsu_state(lsu_state),
         .current_pc(current_pc),
@@ -176,7 +177,7 @@ module core #(
                 .decoded_fma_enable(decoded_fma_enable),
                 .rs(rs[i]),
                 .rt(rt[i]),
-                .rq(rd_value[i]),
+                .rq(rd_data[i]),
                 .fma_out(fma_out[i])
             );
 
@@ -242,7 +243,8 @@ module core #(
                 .fma_out(fma_out[i]),
                 .act_out(act_out[i]),
                 .rs(rs[i]),
-                .rt(rt[i])
+                .rt(rt[i]),
+                .rd_data(rd_data[i])
             );
 
             // Program Counter
@@ -260,17 +262,9 @@ module core #(
                 .decoded_pc_mux(decoded_pc_mux),
                 .alu_out(alu_out[i]),
                 .current_pc(current_pc),
-                .next_pc(next_pc[i])
+                .next_pc(next_pc[i]),
+                .instruction(instruction)
             );
-
-            // Capture Rd value for FMA accumulator
-            always @(posedge clk) begin
-                if (reset) begin
-                    rd_value[i] <= {DATA_MEM_DATA_BITS{1'b0}};
-                end else if (core_state == 3'b011) begin  // REQUEST state
-                    rd_value[i] <= rs[i];
-                end
-            end
         end
     endgenerate
 
