@@ -37,8 +37,9 @@ module registers #(
     input reg [DATA_BITS-1:0] act_out,      // Activation unit output
 
     // Register Outputs (Q1.15)
-    output reg [DATA_BITS-1:0] rs,
-    output reg [DATA_BITS-1:0] rt
+    output wire [DATA_BITS-1:0] rs,
+    output wire [DATA_BITS-1:0] rt,
+    output wire [DATA_BITS-1:0] rd_data
 );
     // Register input source selection (3-bit)
     localparam [2:0] MUX_ALU = 3'b000,      // ALU output (ADD, SUB, MUL, DIV)
@@ -51,15 +52,18 @@ module registers #(
     // All registers are 16-bit for Q1.15 fixed-point
     reg [DATA_BITS-1:0] registers[15:0];
 
+    // Combinational register reads (used by LSU/ALU/FMA/ACT).
+    // Gate with `enable` so inactive threads don't toggle the downstream datapath.
+    assign rs = enable ? registers[decoded_rs_address] : {DATA_BITS{1'b0}};
+    assign rt = enable ? registers[decoded_rt_address] : {DATA_BITS{1'b0}};
+    assign rd_data = enable ? registers[decoded_rd_address] : {DATA_BITS{1'b0}};
+
     // Sign-extend 8-bit immediate to 16-bit
     wire [DATA_BITS-1:0] immediate_extended;
     assign immediate_extended = {{8{decoded_immediate[7]}}, decoded_immediate};
 
     always @(posedge clk) begin
         if (reset) begin
-            // Empty rs, rt
-            rs <= {DATA_BITS{1'b0}};
-            rt <= {DATA_BITS{1'b0}};
             // Initialize all free registers to zero
             registers[0] <= {DATA_BITS{1'b0}};
             registers[1] <= {DATA_BITS{1'b0}};
@@ -81,12 +85,6 @@ module registers #(
         end else if (enable) begin 
             // Update block_id when a new block is issued from dispatcher
             registers[13] <= {{(DATA_BITS-8){1'b0}}, block_id};
-            
-            // Fill rs/rt when core_state = REQUEST
-            if (core_state == 3'b011) begin 
-                rs <= registers[decoded_rs_address];
-                rt <= registers[decoded_rt_address];
-            end
 
             // Store rd when core_state = UPDATE
             if (core_state == 3'b110) begin 
