@@ -36,6 +36,12 @@ module systolic_pe #(
     localparam [DATA_BITS-1:0] Q115_MAX = 16'h7FFF;
     localparam [DATA_BITS-1:0] Q115_MIN = 16'h8000;
 
+    // Pipeline notes
+    // - Stage 0: register |a|, |w|, and product sign (accepts 1/cycle)
+    // - Stage 1: 15x15 multiply, register the Q1.15-aligned mantissa
+    // - Stage 2: sign/extend + accumulate (only a narrow adder is on the feedback path)
+    localparam int unsigned MAC_PIPE_LATENCY = 2;  // cycles from compute_enable to accumulator update
+
     // Registers (optimized)
     reg [DATA_BITS-1:0] weight_reg;        // Stationary weight (R2 equivalent)
     reg signed [ACC_BITS-1:0] accumulator; // Reduced-width accumulator
@@ -43,33 +49,42 @@ module systolic_pe #(
     // ============================================
     // Optimized MAC using sign-magnitude approach
     // ============================================
-    
-    // Sign bits
-    wire sign_a = a_in[15];
-    wire sign_w = weight_reg[15];
-    wire sign_product = sign_a ^ sign_w;  // XOR for product sign
 
-    // 15-bit mantissa extraction (absolute values)
-    wire [14:0] mantissa_a = sign_a ? (~a_in[14:0] + 1'b1) : a_in[14:0];
-    wire [14:0] mantissa_w = sign_w ? (~weight_reg[14:0] + 1'b1) : weight_reg[14:0];
+    // --------
+    // Stage 0
+    // --------
+    wire sign_a_s0 = a_in[15];
+    wire sign_w_s0 = weight_reg[15];
+    wire sign_product_s0 = sign_a_s0 ^ sign_w_s0;  // XOR for product sign
 
-    // 15x15 unsigned multiplication = 30-bit result
-    wire [29:0] product_unsigned = mantissa_a * mantissa_w;
+    wire [14:0] mantissa_a_s0 = sign_a_s0 ? (~a_in[14:0] + 1'b1) : a_in[14:0];
+    wire [14:0] mantissa_w_s0 = sign_w_s0 ? (~weight_reg[14:0] + 1'b1) : weight_reg[14:0];
 
-    // Extract Q1.15 portion (shift right 15)
-    wire [14:0] product_mantissa = product_unsigned[29:15];
+    reg valid_s0;
+    reg sign_product_s0_r;
+    reg [14:0] mantissa_a_s0_r;
+    reg [14:0] mantissa_w_s0_r;
 
-    // Reconstruct signed product
-    wire [DATA_BITS-1:0] product_unsigned_16 = {1'b0, product_mantissa};
-    wire signed [DATA_BITS-1:0] product_signed = sign_product ? 
-                                                  -$signed(product_unsigned_16) : 
-                                                  $signed(product_unsigned_16);
+    // --------
+    // Stage 1
+    // --------
+    wire [29:0] product_unsigned_s1 = mantissa_a_s0_r * mantissa_w_s0_r;  // 15x15 unsigned multiply
+    wire [14:0] product_mantissa_s1 = product_unsigned_s1[29:15];        // Q1.15-aligned mantissa
 
-    // ============================================
-    // Accumulation with reduced bit width
-    // ============================================
-    wire signed [ACC_BITS-1:0] product_extended = {{(ACC_BITS-DATA_BITS){product_signed[DATA_BITS-1]}}, product_signed};
-    wire signed [ACC_BITS-1:0] acc_sum = accumulator + product_extended;
+    reg valid_s1;
+    reg sign_product_s1_r;
+    reg [14:0] product_mantissa_s1_r;
+
+    // --------
+    // Stage 2 (accumulate)
+    // --------
+    wire [DATA_BITS-1:0] product_unsigned_16_s2 = {1'b0, product_mantissa_s1_r};
+    wire signed [DATA_BITS-1:0] product_signed_s2 =
+        sign_product_s1_r ? -$signed(product_unsigned_16_s2) : $signed(product_unsigned_16_s2);
+
+    wire signed [ACC_BITS-1:0] product_extended_s2 =
+        {{(ACC_BITS-DATA_BITS){product_signed_s2[DATA_BITS-1]}}, product_signed_s2};
+    wire signed [ACC_BITS-1:0] acc_sum_s2 = accumulator + product_extended_s2;
 
     // ============================================
     // Output saturation (convert back to Q1.15)
@@ -93,6 +108,13 @@ module systolic_pe #(
             b_out <= {DATA_BITS{1'b0}};
             weight_reg <= {DATA_BITS{1'b0}};
             accumulator <= {ACC_BITS{1'b0}};
+            valid_s0 <= 1'b0;
+            valid_s1 <= 1'b0;
+            sign_product_s0_r <= 1'b0;
+            mantissa_a_s0_r <= 15'b0;
+            mantissa_w_s0_r <= 15'b0;
+            sign_product_s1_r <= 1'b0;
+            product_mantissa_s1_r <= 15'b0;
         end else if (enable) begin
             // Systolic data flow: pass inputs with 1 cycle delay
             a_out <= a_in;
@@ -103,12 +125,27 @@ module systolic_pe #(
                 weight_reg <= b_in;
             end
 
-            // Accumulator control
+            // Pipeline + accumulator control
             if (clear_acc) begin
                 accumulator <= {ACC_BITS{1'b0}};
-            end else if (compute_enable) begin
-                // MAC: acc = acc + (a_in * weight)
-                accumulator <= acc_sum;
+                valid_s0 <= 1'b0;
+                valid_s1 <= 1'b0;
+            end else begin
+                // Stage 0 registers (accept 1/cycle)
+                valid_s0 <= compute_enable;
+                sign_product_s0_r <= sign_product_s0;
+                mantissa_a_s0_r <= mantissa_a_s0;
+                mantissa_w_s0_r <= mantissa_w_s0;
+
+                // Stage 1 registers
+                valid_s1 <= valid_s0;
+                sign_product_s1_r <= sign_product_s0_r;
+                product_mantissa_s1_r <= product_mantissa_s1;
+
+                // Stage 2: accumulate (narrow feedback adder only)
+                if (valid_s1) begin
+                    accumulator <= acc_sum_s2;
+                end
             end
         end
     end
