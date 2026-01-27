@@ -26,6 +26,7 @@ from helpers.logger import GPULogger
 # Default array size (must match compiled testbench) - Updated for 8x8
 ARRAY_SIZE = 8
 DATA_BITS = 16
+PE_MAC_PIPE_LATENCY = 2  # must match systolic_pe MAC_PIPE_LATENCY
 
 
 def q115_matmul(A: list, B: list, N: int) -> list:
@@ -165,7 +166,7 @@ async def stream_activations(dut, A: list, N: int, num_cycles: int):
         await RisingEdge(dut.clk)
     
     # Extra cycles for data to propagate through
-    for _ in range(N):
+    for _ in range(N + PE_MAC_PIPE_LATENCY):
         dut.a_inputs_flat.value = 0
         await RisingEdge(dut.clk)
     
@@ -198,7 +199,7 @@ async def run_matmul(dut, A: list, B: list, N: int) -> list:
     await stream_activations(dut, A, N, 2 * N - 1)
     
     # Wait for computation to settle
-    await ClockCycles(dut.clk, N + 2)
+    await ClockCycles(dut.clk, N + 2 + PE_MAC_PIPE_LATENCY)
     
     # Read results
     results_flat = int(dut.results_flat.value)
@@ -538,4 +539,3 @@ async def test_array_accumulation_clear(dut):
     logger.close()
     
     assert passed, "Array accumulation clear test failed"
-

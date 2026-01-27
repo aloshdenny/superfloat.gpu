@@ -21,6 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from helpers.q115 import float_to_q115, q115_to_float, q115_mul, q115_add
 from helpers.logger import GPULogger
 
+PE_MAC_PIPE_LATENCY = 2  # must match systolic_pe MAC_PIPE_LATENCY
+
 
 async def setup_pe_test(dut, test_name: str, clock_period_ns: int = 10) -> GPULogger:
     """Set up PE test environment."""
@@ -81,7 +83,7 @@ async def compute_mac(dut, activation: int) -> int:
     dut.compute_enable.value = 1
     await RisingEdge(dut.clk)
     dut.compute_enable.value = 0
-    await RisingEdge(dut.clk)  # Wait for result
+    await ClockCycles(dut.clk, PE_MAC_PIPE_LATENCY)  # Wait for pipelined result
     
     return int(dut.acc_out.value)
 
@@ -420,4 +422,3 @@ async def test_pe_random(dut):
     logger.close()
     
     assert passed, "PE random test failed"
-
