@@ -24,6 +24,7 @@ module scheduler #(
     // Control Signals
     input wire decoded_mem_read_enable,
     input wire decoded_mem_write_enable,
+    input wire decoded_fma_enable,
     input wire decoded_ret,
 
     // Memory Access State
@@ -50,6 +51,10 @@ module scheduler #(
     // Check if any LSU is waiting
     reg any_lsu_waiting;
     integer i;
+
+    // Some execution units are internally pipelined and require >1 EXECUTE cycle
+    // for the result to become valid for WRITEBACK.
+    reg fma_execute_second_cycle;
     
     always @(*) begin
         any_lsu_waiting = 1'b0;
@@ -66,6 +71,7 @@ module scheduler #(
             current_pc <= 0;
             core_state <= IDLE;
             done <= 0;
+            fma_execute_second_cycle <= 1'b0;
         end else begin 
             case (core_state)
                 IDLE: begin
@@ -73,6 +79,7 @@ module scheduler #(
                     if (start) begin 
                         // Start by fetching the next instruction for this block based on PC
                         core_state <= FETCH;
+                        fma_execute_second_cycle <= 1'b0;
                     end
                 end
                 FETCH: begin 
@@ -93,11 +100,18 @@ module scheduler #(
                     // If no LSU is waiting for a response, move onto the next stage
                     if (!any_lsu_waiting) begin
                         core_state <= EXECUTE;
+                        fma_execute_second_cycle <= 1'b0;
                     end
                 end
                 EXECUTE: begin
-                    // Execute is synchronous so we move on after one cycle
-                    core_state <= UPDATE;
+                    // FMA is internally pipelined and needs two EXECUTE cycles.
+                    if (decoded_fma_enable && !fma_execute_second_cycle) begin
+                        fma_execute_second_cycle <= 1'b1;
+                        core_state <= EXECUTE;
+                    end else begin
+                        fma_execute_second_cycle <= 1'b0;
+                        core_state <= UPDATE;
+                    end
                 end
                 UPDATE: begin 
                     if (decoded_ret) begin 
