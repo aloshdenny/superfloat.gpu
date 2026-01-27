@@ -23,7 +23,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from helpers.q115 import float_to_q115, q115_to_float, q115_fma
+from helpers.q115 import float_to_q115, q115_to_float, q115_matmul
 from helpers.memory import (
     init_data_memory, init_program_memory, read_memory_range, dump_memory,
     asm_mul, asm_add, asm_sub, asm_div, asm_const, asm_ldr, asm_str, asm_fma,
@@ -45,24 +45,18 @@ TEST_B = [
     [0.25, 0.5]
 ]
 
-def compute_expected():
-    """Compute expected result using Q1.15 arithmetic."""
-    N = 2
-    C = [[0.0] * N for _ in range(N)]
-    
-    for i in range(N):
-        for j in range(N):
-            acc = 0  # Q1.15 accumulator
-            for k in range(N):
-                a_q = float_to_q115(TEST_A[i][k])
-                b_q = float_to_q115(TEST_B[k][j])
-                acc = q115_fma(acc, a_q, b_q)
-            C[i][j] = q115_to_float(acc)
-    
-    return [C[i][j] for i in range(N) for j in range(N)]
+def mat_to_flat_q115(mat_f_2x2: list) -> list:
+    return [float_to_q115(mat_f_2x2[r][c]) for r in range(2) for c in range(2)]
 
 
-EXPECTED_C = compute_expected()
+EXPECTED_Q = q115_matmul(mat_to_flat_q115(TEST_A), mat_to_flat_q115(TEST_B), 2, 2, 2)
+EXPECTED_C = [q115_to_float(x) for x in EXPECTED_Q]
+
+
+def expected_matmul_q115(A_f: list, B_f: list) -> list:
+    """Compute expected 2x2 matmul using the Python Q1.15 reference implementation."""
+    return q115_matmul(mat_to_flat_q115(A_f), mat_to_flat_q115(B_f), 2, 2, 2)
+
 
 
 def build_matmul_program():
@@ -259,14 +253,12 @@ async def test_matmul(dut):
     logger.log_memory(final_memory, 0, 16, "Data Memory")
     
     # Verify results
-    passed = True
-    tolerance = 0.01  # Q1.15 precision tolerance
-    
-    for i, (actual, expected) in enumerate(zip(results, EXPECTED_C)):
-        if abs(actual - expected) > tolerance:
-            row, col = i // 2, i % 2
-            logger.log_message(f"MISMATCH at C[{row}][{col}]: got {actual:.6f}, expected {expected:.6f}")
-            passed = False
+    passed = results_raw == EXPECTED_Q
+    if not passed:
+        for i, (actual, expected) in enumerate(zip(results_raw, EXPECTED_Q)):
+            if actual != expected:
+                row, col = i // 2, i % 2
+                logger.log_message(f"MISMATCH at C[{row}][{col}]: got 0x{actual:04X}, expected 0x{expected:04X}")
     
     logger.log_result(passed, EXPECTED_C, results)
     logger.close()
@@ -288,9 +280,8 @@ async def test_matmul_identity(dut):
     # For identity, we use values close to 1 and 0
     test_i = [[0.999, 0.0], [0.0, 0.999]]
     
-    # Expected: A × I ≈ A (with some Q1.15 precision loss)
-    expected = [test_a[0][0] * 0.999, test_a[0][1] * 0.999,
-                test_a[1][0] * 0.999, test_a[1][1] * 0.999]
+    expected_q = expected_matmul_q115(test_a, test_i)
+    expected = [q115_to_float(x) for x in expected_q]
     
     # Build data
     data = []
@@ -325,15 +316,115 @@ async def test_matmul_identity(dut):
     logger.log_message(f"Expected (A × I ≈ A): {expected}")
     logger.log_message(f"Actual:               {results}")
     
-    passed = True
-    tolerance = 0.02  # Allow for Q1.15 precision and near-1.0 multiplication
-    for i, (actual, exp) in enumerate(zip(results, expected)):
-        if abs(actual - exp) > tolerance:
-            logger.log_message(f"MISMATCH at index {i}: got {actual}, expected {exp}")
-            passed = False
+    passed = results_raw == expected_q
+    if not passed:
+        for i, (actual, expected_word) in enumerate(zip(results_raw, expected_q)):
+            if actual != expected_word:
+                logger.log_message(f"MISMATCH at index {i}: got 0x{actual:04X}, expected 0x{expected_word:04X}")
     
     logger.log_result(passed, expected, results)
     logger.close()
     
     assert passed, f"Matrix multiplication (identity) failed"
 
+
+@cocotb.test()
+async def test_matmul_saturation(dut):
+    """Force overflow/underflow in Q1.15 matmul and check saturation."""
+    cases = [
+        ("matmul_sat_pos", [[0.999, 0.999], [0.999, 0.999]], [[0.999, 0.999], [0.999, 0.999]]),
+        ("matmul_sat_neg", [[-1.0, -1.0], [-1.0, -1.0]], [[0.999, 0.999], [0.999, 0.999]]),
+    ]
+
+    program = build_matmul_program()
+
+    for name, a_f, b_f in cases:
+        data = []
+        for row in a_f:
+            for v in row:
+                data.append(float_to_q115(v))
+        for row in b_f:
+            for v in row:
+                data.append(float_to_q115(v))
+        data.extend([0] * 4)
+
+        expected_q = expected_matmul_q115(a_f, b_f)
+
+        logger = await setup_test(
+            dut,
+            test_name=name,
+            program=program,
+            data=data,
+            thread_count=4,
+            verbose=True
+        )
+
+        await run_kernel(dut, logger, max_cycles=1200, trace_interval=0)
+
+        results_raw = read_memory_range(dut, 8, 4)
+        passed = results_raw == expected_q
+
+        logger.log_section("Results")
+        logger.log_message(f"Expected: {' '.join(f'{x:04X}' for x in expected_q)}")
+        logger.log_message(f"Actual:   {' '.join(f'{x:04X}' for x in results_raw)}")
+        logger.log_result(passed, [q115_to_float(x) for x in expected_q], [q115_to_float(x) for x in results_raw])
+        logger.close()
+
+        assert passed, f"{name} failed"
+
+
+@cocotb.test()
+async def test_matmul_random_q115(dut):
+    """Randomized Q1.15 matmul vs Python reference (with saturation)."""
+    import random
+
+    random.seed(5678)
+    program = build_matmul_program()
+
+    interesting = [
+        0x0000,  # 0
+        0x0001,  # +LSB
+        0xFFFF,  # -LSB
+        0x4000,  # +0.5
+        0xC000,  # -0.5
+        0x7FFF,  # +max
+        0x7FDF,  # ~0.999
+        0x8000,  # -1.0
+        0x8001,  # -1.0 + LSB
+    ]
+
+    def rand_q115() -> int:
+        if random.random() < 0.35:
+            return random.choice(interesting)
+        signed = random.randint(-32768, 32767)
+        return signed & 0xFFFF
+
+    num_cases = 25
+    for case_idx in range(num_cases):
+        a_q = [rand_q115() for _ in range(4)]
+        b_q = [rand_q115() for _ in range(4)]
+        expected_q = q115_matmul(a_q, b_q, 2, 2, 2)
+
+        data = a_q + b_q + ([0] * 4)
+
+        logger = await setup_test(
+            dut,
+            test_name=f"matmul_rand_{case_idx}",
+            program=program,
+            data=data,
+            thread_count=4,
+            verbose=False
+        )
+
+        await run_kernel(dut, logger, max_cycles=1200, trace_interval=0)
+
+        results_raw = read_memory_range(dut, 8, 4)
+        passed = results_raw == expected_q
+        if not passed:
+            logger.set_verbose(True)
+            logger.log_section("Mismatch")
+            logger.log_message(f"Expected: {' '.join(f'{x:04X}' for x in expected_q)}")
+            logger.log_message(f"Actual:   {' '.join(f'{x:04X}' for x in results_raw)}")
+        logger.close()
+
+        assert passed, f"Random matmul case {case_idx} failed"
