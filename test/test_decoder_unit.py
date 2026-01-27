@@ -235,7 +235,9 @@ async def test_decoder_cmp(dut):
     
     expected = {
         'rd': 5,
-        'rs': 3,
+        # CMP compares (Rd vs Rs). Decoder remaps sources so ALU sees rs=Rd, rt=Rs.
+        'rs': 5,
+        'rt': 3,
         'alu_output_mux': 1,  # Compare mode
         'nzp_write_enable': 1,
         'reg_write_enable': 0,
@@ -326,7 +328,9 @@ async def test_decoder_str(dut):
     
     expected = {
         'rd': 5,
-        'rs': 3,
+        # STR stores Rs to memory[Rd]. Decoder remaps sources so LSU sees rs=Rd, rt=Rs.
+        'rs': 5,
+        'rt': 3,
         'reg_write_enable': 0,
         'mem_read_enable': 0,
         'mem_write_enable': 1,
@@ -538,4 +542,3 @@ async def test_decoder_all_opcodes(dut):
     logger.close()
     
     assert passed, "Decoder all opcodes test failed"
-
