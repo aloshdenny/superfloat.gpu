@@ -57,13 +57,13 @@ module compute_unit #(
 );
 
     // Internal signals
-    reg [DATA_MEM_DATA_BITS-1:0] rs;
-    reg [DATA_MEM_DATA_BITS-1:0] rt;
-    reg [DATA_MEM_DATA_BITS-1:0] lsu_out;
+    wire [DATA_MEM_DATA_BITS-1:0] rs;
+    wire [DATA_MEM_DATA_BITS-1:0] rt;
+    wire [DATA_MEM_DATA_BITS-1:0] lsu_out;
     wire [DATA_MEM_DATA_BITS-1:0] alu_out;
     wire [DATA_MEM_DATA_BITS-1:0] fma_out;
     wire [DATA_MEM_DATA_BITS-1:0] act_out;
-    reg [DATA_MEM_DATA_BITS-1:0] rd_value;
+    wire [DATA_MEM_DATA_BITS-1:0] rd_data;
 
     // ALU (Integer arithmetic for indexing)
     alu #(
@@ -91,7 +91,7 @@ module compute_unit #(
         .decoded_fma_enable(decoded_fma_enable),
         .rs(rs),
         .rt(rt),
-        .rq(rd_value),
+        .rq(rd_data),
         .fma_out(fma_out)
     );
 
@@ -157,7 +157,8 @@ module compute_unit #(
         .fma_out(fma_out),
         .act_out(act_out),
         .rs(rs),
-        .rt(rt)
+        .rt(rt),
+        .rd_data(rd_data)
     );
 
     // Program Counter
@@ -175,16 +176,8 @@ module compute_unit #(
         .decoded_pc_mux(decoded_pc_mux),
         .alu_out(alu_out),
         .current_pc(current_pc),
-        .next_pc(next_pc)
+        .next_pc(next_pc),
+        .instruction(16'b0)
     );
-
-    // Capture Rd value for FMA accumulator
-    always @(posedge clk) begin
-        if (reset) begin
-            rd_value <= {DATA_MEM_DATA_BITS{1'b0}};
-        end else if (core_state == 3'b011) begin  // REQUEST state
-            rd_value <= rs;
-        end
-    end
 
 endmodule
