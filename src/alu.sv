@@ -40,10 +40,12 @@ module alu #(
                 if (decoded_alu_output_mux == 1) begin 
                     // CMP instruction: Set NZP flags based on comparison
                     // Compare as signed integers for proper handling
-                    alu_out_reg <= {{(DATA_BITS-3){1'b0}}, 
-                                   ($signed(rs) > $signed(rt)),   // positive
-                                   (rs == rt),                     // zero
-                                   ($signed(rs) < $signed(rt))};  // negative
+                    // Output ordering matches LC-3 style BR masks and the PC unit:
+                    // bit[2]=N (rs < rt), bit[1]=Z (rs == rt), bit[0]=P (rs > rt)
+                    alu_out_reg <= {{(DATA_BITS-3){1'b0}},
+                                   ($signed(rs) < $signed(rt)),  // negative
+                                   (rs == rt),                    // zero
+                                   ($signed(rs) > $signed(rt))}; // positive
                 end else begin 
                     // Execute the specified integer arithmetic instruction
                     case (decoded_alu_arithmetic_mux)
