@@ -17,20 +17,23 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from helpers.q115 import float_to_q115, q115_to_float, q115_add
+from helpers.q115 import float_to_q115, q115_to_float, q115_add, q115_vector_add
 from helpers.memory import (
     init_data_memory, init_program_memory, read_memory_range, dump_memory,
-    asm_mul, asm_add, asm_const, asm_ldr, asm_str, asm_ret,
+    asm_mul, asm_add, asm_const, asm_ldr, asm_str, asm_act, asm_ret,
     R0, R1, R2, R3, R4, R5, R6, R7, BLOCK_IDX, BLOCK_DIM, THREAD_IDX
 )
 from helpers.setup import setup_test, run_kernel
 
 
-# Test data: A = [0.25] * 8, B = [0.5] * 8
-# Expected: C = [0.75] * 8
+Q115_MAX = 0x7FFF
+Q115_MIN = 0x8000
+
+# Test data: A = [0.25] * 8, B = [0.5] * 8 => C = [0.75] * 8
 TEST_A = [0.25] * 8
 TEST_B = [0.5] * 8
-EXPECTED_C = [a + b for a, b in zip(TEST_A, TEST_B)]
+EXPECTED_Q = q115_vector_add([float_to_q115(a) for a in TEST_A], [float_to_q115(b) for b in TEST_B])
+EXPECTED_C = [q115_to_float(x) for x in EXPECTED_Q]
 
 
 def build_matadd_program():
@@ -51,10 +54,10 @@ def build_matadd_program():
         ADD R5, R2, R0                  ; addr_B = baseB + i
         LDR R5, R5                      ; R5 = B[i]
         
-        ADD R6, R4, R5                  ; R6 = A[i] + B[i]
+        ACT R4, R4, R5                  ; R4 = sat_q115(A[i] + B[i])  (ACT_NONE via Rd=R4)
         
         ADD R7, R3, R0                  ; addr_C = baseC + i
-        STR R7, R6                      ; C[i] = R6
+        STR R7, R4                      ; C[i] = R4
         
         RET
     """
@@ -72,10 +75,10 @@ def build_matadd_program():
         asm_add(R5, R2, R0),                  # 7: addr_B = baseB + i
         asm_ldr(R5, R5),                      # 8: R5 = B[i]
         
-        asm_add(R6, R4, R5),                  # 9: R6 = A[i] + B[i] (integer add)
+        asm_act(R4, R4, R5),                  # 9: R4 = sat_q115(A[i] + B[i])
         
         asm_add(R7, R3, R0),                  # 10: addr_C = baseC + i
-        asm_str(R7, R6),                      # 11: C[i] = R6
+        asm_str(R7, R4),                      # 11: C[i] = R4
         
         asm_ret(),                            # 12: return
     ]
@@ -166,7 +169,10 @@ async def test_matadd_negative(dut):
     # Test with negative values
     test_a = [-0.5, 0.25, -0.125, 0.75, -0.375, 0.0, -1.0, 0.5]
     test_b = [0.25, -0.25, 0.125, -0.25, 0.125, 0.5, 0.5, -0.5]
-    expected = [a + b for a, b in zip(test_a, test_b)]
+    expected_q = [
+        q115_add(float_to_q115(a), float_to_q115(b)) for a, b in zip(test_a, test_b)
+    ]
+    expected = [q115_to_float(x) for x in expected_q]
     
     # Build data
     data = []
@@ -211,3 +217,98 @@ async def test_matadd_negative(dut):
     
     assert passed, f"Matrix addition (negative) failed"
 
+
+@cocotb.test()
+async def test_matadd_saturation(dut):
+    """Test matadd saturates on overflow/underflow."""
+    # Two cases: positive overflow and negative underflow
+    cases = [
+        ("matadd_sat_pos", [0.999] * 8, [0.999] * 8, Q115_MAX),
+        ("matadd_sat_neg", [-1.0] * 8, [-0.75] * 8, Q115_MIN),
+    ]
+
+    program = build_matadd_program()
+
+    for name, vec_a, vec_b, expected_sat in cases:
+        data = [float_to_q115(v) for v in vec_a] + [float_to_q115(v) for v in vec_b] + ([0] * 8)
+
+        logger = await setup_test(
+            dut,
+            test_name=name,
+            program=program,
+            data=data,
+            thread_count=8,
+            verbose=True
+        )
+
+        await run_kernel(dut, logger, max_cycles=800, trace_interval=0)
+
+        results_raw = read_memory_range(dut, 16, 8)
+        passed = all(r == expected_sat for r in results_raw)
+
+        logger.log_section("Results")
+        logger.log_message(f"Expected saturated: 0x{expected_sat:04X}")
+        logger.log_message(f"Actual:            {' '.join(f'{r:04X}' for r in results_raw)}")
+        logger.log_result(passed, [expected_sat] * 8, results_raw)
+        logger.close()
+
+        assert passed, f"{name} failed"
+
+
+@cocotb.test()
+async def test_matadd_random_q115(dut):
+    """Randomized Q1.15 matadd vs Python reference (with saturation)."""
+    import random
+
+    random.seed(1234)
+    program = build_matadd_program()
+
+    interesting = [
+        0x0000,  # 0
+        0x0001,  # +LSB
+        0xFFFF,  # -LSB
+        0x4000,  # +0.5
+        0xC000,  # -0.5
+        0x7FFF,  # +max
+        0x7FDF,  # ~0.999
+        0x8000,  # -1.0
+        0x8001,  # -1.0 + LSB
+    ]
+
+    def rand_q115() -> int:
+        if random.random() < 0.35:
+            return random.choice(interesting)
+        signed = random.randint(-32768, 32767)
+        return signed & 0xFFFF
+
+    num_cases = 25
+    for case_idx in range(num_cases):
+        vec_a_q = [rand_q115() for _ in range(8)]
+        vec_b_q = [rand_q115() for _ in range(8)]
+        expected_q = q115_vector_add(vec_a_q, vec_b_q)
+
+        data = vec_a_q + vec_b_q + ([0] * 8)
+
+        logger = await setup_test(
+            dut,
+            test_name=f"matadd_rand_{case_idx}",
+            program=program,
+            data=data,
+            thread_count=8,
+            verbose=False
+        )
+
+        await run_kernel(dut, logger, max_cycles=800, trace_interval=0)
+
+        results_raw = read_memory_range(dut, 16, 8)
+        passed = results_raw == expected_q
+        if not passed:
+            logger.set_verbose(True)
+            logger.log_section("Mismatch")
+            logger.log_message(f"A: {' '.join(f'{x:04X}' for x in vec_a_q)}")
+            logger.log_message(f"B: {' '.join(f'{x:04X}' for x in vec_b_q)}")
+            logger.log_message(f"Expected: {' '.join(f'{x:04X}' for x in expected_q)}")
+            logger.log_message(f"Actual:   {' '.join(f'{x:04X}' for x in results_raw)}")
+        logger.close()
+
+        assert passed, f"Random matadd case {case_idx} failed"
