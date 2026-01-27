@@ -20,7 +20,7 @@ module pc #(
 
     // Control Signals
     input reg [2:0] decoded_nzp,
-    input reg [7:0] decoded_immediate,      // 8-bit immediate for branch targets (from instruction)
+    input reg [7:0] decoded_immediate,      // 8-bit immediate (CONST uses this); BR uses instruction[8:0]
     input reg decoded_nzp_write_enable,
     input reg decoded_pc_mux, 
 
@@ -30,9 +30,22 @@ module pc #(
 
     // Current & Next PCs
     input reg [PROGRAM_MEM_ADDR_BITS-1:0] current_pc,
-    output reg [PROGRAM_MEM_ADDR_BITS-1:0] next_pc
+    output reg [PROGRAM_MEM_ADDR_BITS-1:0] next_pc,
+
+    // Full instruction for BR offset decoding (PC-relative imm9)
+    input reg [15:0] instruction
 );
     reg [2:0] nzp;
+
+    // PC-relative branch target computation (imm9) with explicit sign-extension.
+    // This avoids signedness pitfalls from part-selects after sv2v/iverilog lowering.
+    // IMPORTANT: avoid 1'sd1 (1-bit signed literal == -1). Use an explicitly-sized +1.
+    wire signed [PROGRAM_MEM_ADDR_BITS:0] pc_plus_one_s =
+        $signed({1'b0, current_pc}) + $signed({{PROGRAM_MEM_ADDR_BITS{1'b0}}, 1'b1});
+    localparam integer BR_OFF_W = PROGRAM_MEM_ADDR_BITS + 1;
+    wire signed [BR_OFF_W-1:0] br_off9_s = $signed({{(BR_OFF_W-9){instruction[8]}}, instruction[8:0]});
+    wire signed [PROGRAM_MEM_ADDR_BITS:0] br_target_s = pc_plus_one_s + br_off9_s;
+    wire [PROGRAM_MEM_ADDR_BITS-1:0] br_target = br_target_s[PROGRAM_MEM_ADDR_BITS-1:0];
 
     always @(posedge clk) begin
         if (reset) begin
@@ -43,9 +56,10 @@ module pc #(
             if (core_state == 3'b101) begin 
                 if (decoded_pc_mux == 1) begin 
                     if (((nzp & decoded_nzp) != 3'b0)) begin 
-                        // On BRnzp instruction, branch to immediate if NZP case matches previous CMP
-                        // Zero-extend the 8-bit immediate to program address width
-                        next_pc <= {{(PROGRAM_MEM_ADDR_BITS-8){1'b0}}, decoded_immediate};
+                        // BRnzp uses PC-relative signed imm9 (LC-3 style): target = PC + 1 + sext(imm9)
+                        // This matches the assembler helpers used by the cocotb integration tests.
+                        // instruction[8:0] is the imm9 field.
+                        next_pc <= br_target;
                     end else begin 
                         // Otherwise, just update to PC + 1 (next line)
                         next_pc <= current_pc + 1;
