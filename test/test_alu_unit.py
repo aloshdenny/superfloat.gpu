@@ -267,36 +267,36 @@ async def test_alu_cmp(dut):
     """Test ALU compare operation (sets NZP flags)."""
     logger = await setup_alu_test(dut, "alu_cmp")
     
-    # ALU outputs: bit 2 = (rs > rt), bit 1 = (rs == rt), bit 0 = (rs < rt)
-    # This is P, Z, N order (opposite of traditional NZP)
+    # ALU outputs: bit 2 = (rs < rt), bit 1 = (rs == rt), bit 0 = (rs > rt)
+    # This matches LC-3 style BR masks (N,Z,P).
     test_cases = [
-        # (rs, rt, expected_pzn, description)
-        (10, 5, 0b100, "10 > 5 -> positive (bit 2)"),
-        (5, 10, 0b001, "5 < 10 -> negative (bit 0)"),
+        # (rs, rt, expected_nzp, description)
+        (10, 5, 0b001, "10 > 5 -> positive (bit 0)"),
+        (5, 10, 0b100, "5 < 10 -> negative (bit 2)"),
         (5, 5, 0b010, "5 == 5 -> zero (bit 1)"),
         (0, 0, 0b010, "0 == 0 -> zero"),
-        (0xFFFF, 0, 0b001, "-1 < 0 -> negative (signed)"),
-        (0, 0xFFFF, 0b100, "0 > -1 -> positive (signed)"),
-        (0x7FFF, 0x8000, 0b100, "32767 > -32768 -> positive (signed)"),
+        (0xFFFF, 0, 0b100, "-1 < 0 -> negative (signed)"),
+        (0, 0xFFFF, 0b001, "0 > -1 -> positive (signed)"),
+        (0x7FFF, 0x8000, 0b001, "32767 > -32768 -> positive (signed)"),
     ]
     
     passed = True
     
-    for rs, rt, expected_pzn, desc in test_cases:
+    for rs, rt, expected_nzp, desc in test_cases:
         hw_result = await execute_alu_op(dut, rs, rt, ALU_ADD, is_compare=True)
         
-        # Extract PZN bits from result (bit2=P, bit1=Z, bit0=N)
-        hw_pzn = hw_result & 0b111
+        # Extract NZP bits from result (bit2=N, bit1=Z, bit0=P)
+        hw_nzp = hw_result & 0b111
         
-        match = hw_pzn == expected_pzn
+        match = hw_nzp == expected_nzp
         if not match:
             passed = False
         
         status = "PASS" if match else "FAIL"
-        pzn_str = lambda x: f"P={x>>2&1} Z={x>>1&1} N={x&1}"
+        nzp_str = lambda x: f"N={x>>2&1} Z={x>>1&1} P={x&1}"
         logger.log_message(f"  {desc}")
         logger.log_message(f"    RS=0x{rs:04X} ({to_signed(rs)}), RT=0x{rt:04X} ({to_signed(rt)})")
-        logger.log_message(f"    HW PZN={pzn_str(hw_pzn)}, Expected PZN={pzn_str(expected_pzn)} [{status}]")
+        logger.log_message(f"    HW NZP={nzp_str(hw_nzp)}, Expected NZP={nzp_str(expected_nzp)} [{status}]")
     
     logger.log_message(f"\nOverall: {'PASS' if passed else 'FAIL'}")
     logger.close()
@@ -388,4 +388,3 @@ async def test_alu_random(dut):
     logger.close()
     
     assert passed, "ALU random test failed"
-
