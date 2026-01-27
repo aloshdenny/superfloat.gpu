@@ -54,7 +54,7 @@ module gpu #(
     // Compute Core State
     reg [NUM_CORES-1:0] core_start;
     reg [NUM_CORES-1:0] core_reset;
-    reg [NUM_CORES-1:0] core_done;
+    wire [NUM_CORES-1:0] core_done;
     reg [7:0] core_block_id [NUM_CORES-1:0];
     reg [$clog2(THREADS_PER_BLOCK):0] core_thread_count [NUM_CORES-1:0];
 
@@ -62,25 +62,35 @@ module gpu #(
     localparam NUM_LSUS = NUM_CORES * THREADS_PER_BLOCK;
     reg [NUM_LSUS-1:0] lsu_read_valid;
     reg [DATA_MEM_ADDR_BITS-1:0] lsu_read_address [NUM_LSUS-1:0];
-    reg [NUM_LSUS-1:0] lsu_read_ready;
-    reg [DATA_MEM_DATA_BITS-1:0] lsu_read_data [NUM_LSUS-1:0];
+    wire [NUM_LSUS-1:0] lsu_read_ready;
+    wire [DATA_MEM_DATA_BITS-1:0] lsu_read_data [NUM_LSUS-1:0];
     reg [NUM_LSUS-1:0] lsu_write_valid;
     reg [DATA_MEM_ADDR_BITS-1:0] lsu_write_address [NUM_LSUS-1:0];
     reg [DATA_MEM_DATA_BITS-1:0] lsu_write_data [NUM_LSUS-1:0];
-    reg [NUM_LSUS-1:0] lsu_write_ready;
+    wire [NUM_LSUS-1:0] lsu_write_ready;
 
     // Fetcher <> Program Memory Controller Channels
     localparam NUM_FETCHERS = NUM_CORES;
-    reg [NUM_FETCHERS-1:0] fetcher_read_valid;
-    reg [PROGRAM_MEM_ADDR_BITS-1:0] fetcher_read_address [NUM_FETCHERS-1:0];
-    reg [NUM_FETCHERS-1:0] fetcher_read_ready;
-    reg [PROGRAM_MEM_DATA_BITS-1:0] fetcher_read_data [NUM_FETCHERS-1:0];
+    wire [NUM_FETCHERS-1:0] fetcher_read_valid;
+    wire [PROGRAM_MEM_ADDR_BITS-1:0] fetcher_read_address [NUM_FETCHERS-1:0];
+    wire [NUM_FETCHERS-1:0] fetcher_read_ready;
+    wire [PROGRAM_MEM_DATA_BITS-1:0] fetcher_read_data [NUM_FETCHERS-1:0];
     
     // Unused write signals for program memory controller (read-only) - tied to 0
     wire [NUM_FETCHERS-1:0] prog_mem_write_ready_unused;
     wire [PROGRAM_MEM_NUM_CHANNELS-1:0] prog_ext_write_valid_unused;
     wire [PROGRAM_MEM_ADDR_BITS-1:0] prog_ext_write_address_unused [PROGRAM_MEM_NUM_CHANNELS-1:0];
     wire [PROGRAM_MEM_DATA_BITS-1:0] prog_ext_write_data_unused [PROGRAM_MEM_NUM_CHANNELS-1:0];
+    wire [PROGRAM_MEM_ADDR_BITS-1:0] fetcher_write_address_unused [NUM_FETCHERS-1:0];
+    wire [PROGRAM_MEM_DATA_BITS-1:0] fetcher_write_data_unused [NUM_FETCHERS-1:0];
+
+    genvar fw;
+    generate
+        for (fw = 0; fw < NUM_FETCHERS; fw = fw + 1) begin : prog_write_tieoff
+            assign fetcher_write_address_unused[fw] = {PROGRAM_MEM_ADDR_BITS{1'b0}};
+            assign fetcher_write_data_unused[fw] = {PROGRAM_MEM_DATA_BITS{1'b0}};
+        end
+    endgenerate
     
     // Device Control Register
     dcr dcr_instance (
@@ -137,8 +147,8 @@ module gpu #(
         .consumer_read_ready(fetcher_read_ready),
         .consumer_read_data(fetcher_read_data),
         .consumer_write_valid({NUM_FETCHERS{1'b0}}),
-        .consumer_write_address({NUM_FETCHERS*PROGRAM_MEM_ADDR_BITS{1'b0}}),
-        .consumer_write_data({NUM_FETCHERS*PROGRAM_MEM_DATA_BITS{1'b0}}),
+        .consumer_write_address(fetcher_write_address_unused),
+        .consumer_write_data(fetcher_write_data_unused),
         .consumer_write_ready(prog_mem_write_ready_unused),
 
         .mem_read_valid(program_mem_read_valid),
@@ -174,13 +184,13 @@ module gpu #(
         for (i = 0; i < NUM_CORES; i = i + 1) begin : cores
             // EDA: We create separate signals here to pass to cores because of a requirement
             // by the OpenLane EDA flow (uses Verilog 2005) that prevents slicing the top-level signals
-            reg [THREADS_PER_BLOCK-1:0] core_lsu_read_valid;
-            reg [DATA_MEM_ADDR_BITS-1:0] core_lsu_read_address [THREADS_PER_BLOCK-1:0];
+            wire [THREADS_PER_BLOCK-1:0] core_lsu_read_valid;
+            wire [DATA_MEM_ADDR_BITS-1:0] core_lsu_read_address [THREADS_PER_BLOCK-1:0];
             reg [THREADS_PER_BLOCK-1:0] core_lsu_read_ready;
             reg [DATA_MEM_DATA_BITS-1:0] core_lsu_read_data [THREADS_PER_BLOCK-1:0];
-            reg [THREADS_PER_BLOCK-1:0] core_lsu_write_valid;
-            reg [DATA_MEM_ADDR_BITS-1:0] core_lsu_write_address [THREADS_PER_BLOCK-1:0];
-            reg [DATA_MEM_DATA_BITS-1:0] core_lsu_write_data [THREADS_PER_BLOCK-1:0];
+            wire [THREADS_PER_BLOCK-1:0] core_lsu_write_valid;
+            wire [DATA_MEM_ADDR_BITS-1:0] core_lsu_write_address [THREADS_PER_BLOCK-1:0];
+            wire [DATA_MEM_DATA_BITS-1:0] core_lsu_write_data [THREADS_PER_BLOCK-1:0];
             reg [THREADS_PER_BLOCK-1:0] core_lsu_write_ready;
 
             // Pass through signals between LSUs and data memory controller
