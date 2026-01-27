@@ -35,6 +35,14 @@ module systolic_array #(
     wire signed [DATA_BITS-1:0] a_wires [ARRAY_SIZE-1:0][ARRAY_SIZE:0];
     wire signed [DATA_BITS-1:0] b_wires [ARRAY_SIZE:0][ARRAY_SIZE-1:0];
 
+    // Row-distributed control (reduces single-net fanout into the PE fabric)
+    wire [ARRAY_SIZE-1:0] row_clear_acc;
+    wire [ARRAY_SIZE-1:0] row_load_weight;
+    wire [ARRAY_SIZE-1:0] row_compute_enable;
+    assign row_clear_acc = {ARRAY_SIZE{clear_acc}};
+    assign row_load_weight = {ARRAY_SIZE{load_weights}};
+    assign row_compute_enable = {ARRAY_SIZE{compute_enable}};
+
     // Connect external inputs to array edges
     genvar row, col;
     generate
@@ -56,9 +64,9 @@ module systolic_array #(
                     .clk(clk),
                     .reset(reset),
                     .enable(enable),
-                    .clear_acc(clear_acc),
-                    .load_weight(load_weights),
-                    .compute_enable(compute_enable),
+                    .clear_acc(row_clear_acc[row]),
+                    .load_weight(row_load_weight[row]),
+                    .compute_enable(row_compute_enable[row]),
                     .a_in(a_wires[row][col]),
                     .b_in(b_wires[row][col]),
                     .a_out(a_wires[row][col+1]),
@@ -69,16 +77,7 @@ module systolic_array #(
         end
     endgenerate
 
-    // Ready signal
-    reg ready_reg;
-    assign ready = ready_reg;
-
-    always @(posedge clk) begin
-        if (reset) begin
-            ready_reg <= 1'b1;
-        end else if (enable) begin
-            ready_reg <= ~compute_enable;
-        end
-    end
+    // Ready is purely a function of the control plane; keep it combinational so
+    // higher-level clock-gating can freeze the datapath without breaking ready.
+    assign ready = ~compute_enable;
 endmodule
-
