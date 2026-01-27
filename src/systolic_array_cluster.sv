@@ -35,7 +35,6 @@ module systolic_array_cluster #(
     output wire ready,                   // Selected array ready
     output wire [NUM_ARRAYS-1:0] all_ready  // Ready status of all arrays
 );
-
     // Internal signals for each array
     wire [DATA_BITS-1:0] array_results [NUM_ARRAYS-1:0][ARRAY_SIZE-1:0][ARRAY_SIZE-1:0];
     wire [NUM_ARRAYS-1:0] array_ready;
@@ -44,18 +43,43 @@ module systolic_array_cluster #(
     wire [NUM_ARRAYS-1:0] array_clear_acc;
     wire [NUM_ARRAYS-1:0] array_load_weights;
     wire [NUM_ARRAYS-1:0] array_compute_enable;
+    wire [NUM_ARRAYS-1:0] array_selected;
+    wire [NUM_ARRAYS-1:0] array_enable;
+
+    reg [NUM_ARRAYS-1:0] compute_enable_d1;
+    reg [NUM_ARRAYS-1:0] compute_enable_d2;
 
     genvar arr;
     generate
         for (arr = 0; arr < NUM_ARRAYS; arr = arr + 1) begin : array_ctrl
+            assign array_selected[arr] = broadcast_mode ? 1'b1 : (array_select == arr);
             assign array_clear_acc[arr] = broadcast_mode ? clear_acc : 
                                           (array_select == arr) ? clear_acc : 1'b0;
             assign array_load_weights[arr] = broadcast_mode ? load_weights : 
                                              (array_select == arr) ? load_weights : 1'b0;
             assign array_compute_enable[arr] = broadcast_mode ? compute_enable : 
                                                (array_select == arr) ? compute_enable : 1'b0;
+
+            // Enable stays on long enough to drain the PE pipeline after compute deasserts.
+            assign array_enable[arr] = enable &&
+                                       array_selected[arr] &&
+                                       (array_clear_acc[arr] |
+                                        array_load_weights[arr] |
+                                        array_compute_enable[arr] |
+                                        compute_enable_d1[arr] |
+                                        compute_enable_d2[arr]);
         end
     endgenerate
+
+    always @(posedge clk) begin
+        if (reset) begin
+            compute_enable_d1 <= {NUM_ARRAYS{1'b0}};
+            compute_enable_d2 <= {NUM_ARRAYS{1'b0}};
+        end else if (enable) begin
+            compute_enable_d2 <= compute_enable_d1;
+            compute_enable_d1 <= array_compute_enable;
+        end
+    end
 
     // Instantiate systolic arrays
     generate
@@ -66,7 +90,7 @@ module systolic_array_cluster #(
             ) array_inst (
                 .clk(clk),
                 .reset(reset),
-                .enable(enable),
+                .enable(array_enable[arr]),
                 .clear_acc(array_clear_acc[arr]),
                 .load_weights(array_load_weights[arr]),
                 .compute_enable(array_compute_enable[arr]),
