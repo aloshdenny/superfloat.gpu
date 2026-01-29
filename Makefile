@@ -299,7 +299,6 @@ help:
 	@echo "  make openlane_docker          - Run OpenLane via Docker (RECOMMENDED)"
 	@echo ""
 	@echo "OpenLane Hierarchical Build (Advanced):"
-	@echo "  make openlane_pe              - Build systolic PE macro"
 	@echo "  make openlane_systolic_array  - Build 8x8 systolic array macro"
 	@echo "  make openlane_systolic_cluster - Build systolic cluster (8 arrays)"
 	@echo "  make openlane_core            - Build compute core macro"
@@ -353,11 +352,11 @@ setup_openlane_design: compile_openlane
     "DESIGN_NAME": "gpu",\n\
     "VERILOG_FILES": "dir::src/gpu.v",\n\
     "CLOCK_PORT": "clk",\n\
-    "CLOCK_PERIOD": 40.0,\n\
-    "FP_SIZING": "absolute",\n\
-    "DIE_AREA": "0 0 4000 4000",\n\
-    "FP_CORE_UTIL": 25,\n\
-    "PL_TARGET_DENSITY": 0.30,\n\
+    "CLOCK_PERIOD": 10.0,\n\
+    "FP_SIZING": "relative",\n\
+    "FP_CORE_UTIL": 48,\n\
+    "FP_ASPECT_RATIO": 1.0,\n\
+    "PL_TARGET_DENSITY": 0.50,\n\
     "GRT_ADJUSTMENT": 0.15,\n\
     "GRT_OVERFLOW_ITERS": 100,\n\
     "GRT_ALLOW_CONGESTION": true,\n\
@@ -365,21 +364,21 @@ setup_openlane_design: compile_openlane
     "ROUTING_CORES": 2,\n\
     "RUN_LINTER": false,\n\
     "RUN_CVC": false,\n\
-    "GRT_REPAIR_ANTENNAS": true,\n\
-    "DIODE_ON_PORTS": "in",\n\
-    "RUN_HEURISTIC_DIODE_INSERTION": true,\n\
+    "GRT_REPAIR_ANTENNAS": false,\n\
+    "DIODE_ON_PORTS": "none",\n\
+    "RUN_HEURISTIC_DIODE_INSERTION": false,\n\
     "FP_PDN_CHECK_NODES": false,\n\
     "RUN_KLAYOUT_XOR": false,\n\
     "RUN_KLAYOUT_DRC": false,\n\
-    "MAX_FANOUT_CONSTRAINT": 8,\n\
-    "SYNTH_STRATEGY": "DELAY 0",\n\
+    "MAX_FANOUT_CONSTRAINT": 16,\n\
+    "SYNTH_STRATEGY": "AREA 1",\n\
     "PL_RESIZER_DESIGN_OPTIMIZATIONS": true,\n\
-    "PL_RESIZER_TIMING_OPTIMIZATIONS": true,\n\
-    "GLB_RESIZER_TIMING_OPTIMIZATIONS": true,\n\
+    "PL_RESIZER_TIMING_OPTIMIZATIONS": false,\n\
+    "GLB_RESIZER_TIMING_OPTIMIZATIONS": false,\n\
     "pdk::sky130*": {\n\
-        "CLOCK_PERIOD": 40.0,\n\
+        "CLOCK_PERIOD": 10.0,\n\
         "scl::sky130_fd_sc_hd": {\n\
-            "CLOCK_PERIOD": 40.0\n\
+            "CLOCK_PERIOD": 10.0\n\
         }\n\
     }\n\
 }' > $(OPENLANE_DESIGNS)/atreides/config.json
@@ -421,18 +420,9 @@ openlane_docker: setup_openlane_design
 	cp $(OPENLANE_DESIGNS)/atreides/runs/atreides_run/results/final/gds/gpu.gds gds/atreides_v2.gds
 	@echo "Final GDS: gds/atreides_v2.gds"
 
-# Build systolic PE (leaf macro) - for hierarchical flow
-openlane_pe: compile_openlane
-	@echo "Building systolic PE macro..."
-	cd $(OPENLANE_ROOT) && \
-		./flow.tcl -design $(CURDIR)/openlane/pe \
-		-tag pe_run \
-		-overwrite
-	@echo "PE macro built! GDS at openlane/pe/runs/pe_run/results/final/gds/"
-
-# Build 8x8 systolic array (uses PE macros)
-openlane_systolic_array: openlane_pe
-	@echo "Building 8x8 systolic array macro..."
+# Build 8x8 systolic array (PEs synthesized inside the array)
+openlane_systolic_array: compile_openlane
+	@echo "Building 8x8 systolic array macro (PEs soft inside array)..."
 	cd $(OPENLANE_ROOT) && \
 		./flow.tcl -design $(CURDIR)/openlane/systolic_array \
 		-tag systolic_array_run \
@@ -481,8 +471,7 @@ openlane_all: openlane_gpu
 	@echo "  └── GPU (4 cores)"
 	@echo "      └── Core (4 threads + systolic cluster)"
 	@echo "          └── Systolic Cluster (8 arrays)"
-	@echo "              └── Systolic Array (8x8 PEs)"
-	@echo "                  └── Systolic PE (MAC unit)"
+	@echo "              └── Systolic Array (8x8 PEs, PEs soft inside)"
 	@echo ""
 	@echo "Final GDS: gds/atreides_v2.gds"
 
