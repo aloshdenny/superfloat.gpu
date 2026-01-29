@@ -28,12 +28,11 @@ module activation (
 	localparam [1:0] ACT_RELU = 2'b01;
 	localparam [1:0] ACT_LEAKY_RELU = 2'b10;
 	localparam [1:0] ACT_CLIPPED_RELU = 2'b11;
-	reg [DATA_BITS - 1:0] r5_bias;
 	reg [DATA_BITS - 1:0] activation_out_reg;
 	assign activation_out = activation_out_reg;
-	wire signed [16:0] biased_sum = $signed({unbiased_activation[15], unbiased_activation}) + $signed({r5_bias[15], r5_bias});
-	wire overflow_pos = ((~biased_sum[16] & biased_sum[15]) & ~unbiased_activation[15]) & ~r5_bias[15];
-	wire overflow_neg = ((biased_sum[16] & ~biased_sum[15]) & unbiased_activation[15]) & r5_bias[15];
+	wire signed [16:0] biased_sum = $signed({unbiased_activation[15], unbiased_activation}) + $signed({bias[15], bias});
+	wire overflow_pos = ((~biased_sum[16] & biased_sum[15]) & ~unbiased_activation[15]) & ~bias[15];
+	wire overflow_neg = ((biased_sum[16] & ~biased_sum[15]) & unbiased_activation[15]) & bias[15];
 	wire [DATA_BITS - 1:0] biased_activation = (overflow_pos ? Q115_MAX : (overflow_neg ? Q115_MIN : biased_sum[DATA_BITS - 1:0]));
 	wire is_negative = biased_activation[15];
 	wire signed [DATA_BITS - 1:0] leaky_value = $signed(biased_activation) >>> 7;
@@ -47,13 +46,9 @@ module activation (
 			default: activated_value = biased_activation;
 		endcase
 	always @(posedge clk)
-		if (reset) begin
-			r5_bias <= {DATA_BITS {1'b0}};
+		if (reset)
 			activation_out_reg <= {DATA_BITS {1'b0}};
-		end
 		else if (enable) begin
-			if (core_state == 3'b011)
-				r5_bias <= bias;
 			if ((core_state == 3'b101) && activation_enable)
 				activation_out_reg <= activated_value;
 		end
@@ -92,7 +87,7 @@ module alu (
 		else if (enable) begin
 			if (core_state == 3'b101) begin
 				if (decoded_alu_output_mux == 1)
-					alu_out_reg <= {{DATA_BITS - 3 {1'b0}}, $signed(rs) > $signed(rt), rs == rt, $signed(rs) < $signed(rt)};
+					alu_out_reg <= {{DATA_BITS - 3 {1'b0}}, $signed(rs) < $signed(rt), rs == rt, $signed(rs) > $signed(rt)};
 				else
 					case (decoded_alu_arithmetic_mux)
 						ADD: alu_out_reg <= rs + rt;
@@ -393,13 +388,13 @@ module compute_unit (
 	input wire mem_write_ready;
 	output wire [7:0] next_pc;
 	output reg [1:0] lsu_state;
-	reg [DATA_MEM_DATA_BITS - 1:0] rs;
-	reg [DATA_MEM_DATA_BITS - 1:0] rt;
-	reg [DATA_MEM_DATA_BITS - 1:0] lsu_out;
+	wire [DATA_MEM_DATA_BITS - 1:0] rs;
+	wire [DATA_MEM_DATA_BITS - 1:0] rt;
+	wire [DATA_MEM_DATA_BITS - 1:0] lsu_out;
 	wire [DATA_MEM_DATA_BITS - 1:0] alu_out;
 	wire [DATA_MEM_DATA_BITS - 1:0] fma_out;
 	wire [DATA_MEM_DATA_BITS - 1:0] act_out;
-	reg [DATA_MEM_DATA_BITS - 1:0] rd_value;
+	wire [DATA_MEM_DATA_BITS - 1:0] rd_data;
 	alu #(.DATA_BITS(DATA_MEM_DATA_BITS)) alu_inst(
 		.clk(clk),
 		.reset(reset),
@@ -419,7 +414,7 @@ module compute_unit (
 		.decoded_fma_enable(decoded_fma_enable),
 		.rs(rs),
 		.rt(rt),
-		.rq(rd_value),
+		.rq(rd_data),
 		.fma_out(fma_out)
 	);
 	activation #(.DATA_BITS(DATA_MEM_DATA_BITS)) activation_inst(
@@ -445,8 +440,6 @@ module compute_unit (
 	always @(*) mem_write_data = sv2v_tmp_lsu_inst_mem_write_data;
 	wire [2:1] sv2v_tmp_lsu_inst_lsu_state;
 	always @(*) lsu_state = sv2v_tmp_lsu_inst_lsu_state;
-	wire [DATA_MEM_DATA_BITS:1] sv2v_tmp_lsu_inst_lsu_out;
-	always @(*) lsu_out = sv2v_tmp_lsu_inst_lsu_out;
 	lsu #(
 		.ADDR_BITS(DATA_MEM_ADDR_BITS),
 		.DATA_BITS(DATA_MEM_DATA_BITS)
@@ -468,12 +461,8 @@ module compute_unit (
 		.rs(rs),
 		.rt(rt),
 		.lsu_state(sv2v_tmp_lsu_inst_lsu_state),
-		.lsu_out(sv2v_tmp_lsu_inst_lsu_out)
+		.lsu_out(lsu_out)
 	);
-	wire [DATA_MEM_DATA_BITS:1] sv2v_tmp_register_inst_rs;
-	always @(*) rs = sv2v_tmp_register_inst_rs;
-	wire [DATA_MEM_DATA_BITS:1] sv2v_tmp_register_inst_rt;
-	always @(*) rt = sv2v_tmp_register_inst_rt;
 	registers #(
 		.THREADS_PER_BLOCK(THREADS_PER_BLOCK),
 		.THREAD_ID(THREAD_ID),
@@ -494,8 +483,9 @@ module compute_unit (
 		.lsu_out(lsu_out),
 		.fma_out(fma_out),
 		.act_out(act_out),
-		.rs(sv2v_tmp_register_inst_rs),
-		.rt(sv2v_tmp_register_inst_rt)
+		.rs(rs),
+		.rt(rt),
+		.rd_data(rd_data)
 	);
 	pc #(
 		.DATA_MEM_DATA_BITS(DATA_MEM_DATA_BITS),
@@ -511,13 +501,9 @@ module compute_unit (
 		.decoded_pc_mux(decoded_pc_mux),
 		.alu_out(alu_out),
 		.current_pc(current_pc),
-		.next_pc(next_pc)
+		.next_pc(next_pc),
+		.instruction(16'b0000000000000000)
 	);
-	always @(posedge clk)
-		if (reset)
-			rd_value <= {DATA_MEM_DATA_BITS {1'b0}};
-		else if (core_state == 3'b011)
-			rd_value <= rs;
 endmodule
 `default_nettype none
 module controller (
@@ -571,46 +557,68 @@ module controller (
 	reg [2:0] controller_state [NUM_CHANNELS - 1:0];
 	reg [$clog2(NUM_CONSUMERS) - 1:0] current_consumer [NUM_CHANNELS - 1:0];
 	reg [NUM_CONSUMERS - 1:0] channel_serving_consumer;
+	reg [NUM_CONSUMERS - 1:0] serving_next;
+	integer sel;
+	reg sel_is_write;
 	integer i;
 	integer j;
 	integer k;
 	always @(posedge clk)
 		if (reset) begin
-			mem_read_valid <= 0;
-			mem_read_address <= 0;
-			mem_write_valid <= 0;
-			mem_write_address <= 0;
-			mem_write_data <= 0;
-			consumer_read_ready <= 0;
-			consumer_read_data <= 0;
-			consumer_write_ready <= 0;
+			mem_read_valid <= {NUM_CHANNELS {1'b0}};
+			mem_write_valid <= {NUM_CHANNELS {1'b0}};
+			consumer_read_ready <= {NUM_CONSUMERS {1'b0}};
+			consumer_write_ready <= {NUM_CONSUMERS {1'b0}};
 			channel_serving_consumer <= 0;
+			serving_next <= {NUM_CONSUMERS {1'b0}};
+			for (k = 0; k < NUM_CHANNELS; k = k + 1)
+				begin
+					mem_read_address[k * ADDR_BITS+:ADDR_BITS] <= {ADDR_BITS {1'b0}};
+					mem_write_address[k * ADDR_BITS+:ADDR_BITS] <= {ADDR_BITS {1'b0}};
+					mem_write_data[k * DATA_BITS+:DATA_BITS] <= {DATA_BITS {1'b0}};
+				end
+			for (k = 0; k < NUM_CONSUMERS; k = k + 1)
+				consumer_read_data[k * DATA_BITS+:DATA_BITS] <= {DATA_BITS {1'b0}};
 			for (k = 0; k < NUM_CHANNELS; k = k + 1)
 				begin
 					controller_state[k] <= IDLE;
 					current_consumer[k] <= 0;
 				end
 		end
-		else
+		else begin
+			serving_next = channel_serving_consumer;
 			for (i = 0; i < NUM_CHANNELS; i = i + 1)
 				case (controller_state[i])
-					IDLE:
+					IDLE: begin
+						sel = -1;
+						sel_is_write = 1'b0;
 						for (j = 0; j < NUM_CONSUMERS; j = j + 1)
-							if (consumer_read_valid[j] && !channel_serving_consumer[j]) begin
-								channel_serving_consumer[j] <= 1;
-								current_consumer[i] <= j;
-								mem_read_valid[i] <= 1;
-								mem_read_address[i * ADDR_BITS+:ADDR_BITS] <= consumer_read_address[j * ADDR_BITS+:ADDR_BITS];
+							if (sel == -1) begin
+								if (consumer_read_valid[j] && !serving_next[j]) begin
+									sel = j;
+									sel_is_write = 1'b0;
+								end
+								else if ((WRITE_ENABLE && consumer_write_valid[j]) && !serving_next[j]) begin
+									sel = j;
+									sel_is_write = 1'b1;
+								end
+							end
+						if (sel != -1) begin
+							serving_next[sel] = 1'b1;
+							current_consumer[i] <= sel[$clog2(NUM_CONSUMERS) - 1:0];
+							if (!sel_is_write) begin
+								mem_read_valid[i] <= 1'b1;
+								mem_read_address[i * ADDR_BITS+:ADDR_BITS] <= consumer_read_address[sel * ADDR_BITS+:ADDR_BITS];
 								controller_state[i] <= READ_WAITING;
 							end
-							else if (consumer_write_valid[j] && !channel_serving_consumer[j]) begin
-								channel_serving_consumer[j] <= 1;
-								current_consumer[i] <= j;
-								mem_write_valid[i] <= 1;
-								mem_write_address[i * ADDR_BITS+:ADDR_BITS] <= consumer_write_address[j * ADDR_BITS+:ADDR_BITS];
-								mem_write_data[i * DATA_BITS+:DATA_BITS] <= consumer_write_data[j * DATA_BITS+:DATA_BITS];
+							else begin
+								mem_write_valid[i] <= 1'b1;
+								mem_write_address[i * ADDR_BITS+:ADDR_BITS] <= consumer_write_address[sel * ADDR_BITS+:ADDR_BITS];
+								mem_write_data[i * DATA_BITS+:DATA_BITS] <= consumer_write_data[sel * DATA_BITS+:DATA_BITS];
 								controller_state[i] <= WRITE_WAITING;
 							end
+						end
+					end
 					READ_WAITING:
 						if (mem_read_ready[i]) begin
 							mem_read_valid[i] <= 0;
@@ -626,17 +634,19 @@ module controller (
 						end
 					READ_RELAYING:
 						if (!consumer_read_valid[current_consumer[i]]) begin
-							channel_serving_consumer[current_consumer[i]] <= 0;
+							serving_next[current_consumer[i]] = 1'b0;
 							consumer_read_ready[current_consumer[i]] <= 0;
 							controller_state[i] <= IDLE;
 						end
 					WRITE_RELAYING:
 						if (!consumer_write_valid[current_consumer[i]]) begin
-							channel_serving_consumer[current_consumer[i]] <= 0;
+							serving_next[current_consumer[i]] = 1'b0;
 							consumer_write_ready[current_consumer[i]] <= 0;
 							controller_state[i] <= IDLE;
 						end
 				endcase
+			channel_serving_consumer <= serving_next;
+		end
 endmodule
 `default_nettype none
 module core (
@@ -673,27 +683,27 @@ module core (
 	output wire done;
 	input wire [7:0] block_id;
 	input wire [$clog2(THREADS_PER_BLOCK):0] thread_count;
-	output reg program_mem_read_valid;
-	output reg [PROGRAM_MEM_ADDR_BITS - 1:0] program_mem_read_address;
+	output wire program_mem_read_valid;
+	output wire [PROGRAM_MEM_ADDR_BITS - 1:0] program_mem_read_address;
 	input wire program_mem_read_ready;
 	input wire [PROGRAM_MEM_DATA_BITS - 1:0] program_mem_read_data;
-	output reg [THREADS_PER_BLOCK - 1:0] data_mem_read_valid;
-	output reg [(THREADS_PER_BLOCK * DATA_MEM_ADDR_BITS) - 1:0] data_mem_read_address;
+	output wire [THREADS_PER_BLOCK - 1:0] data_mem_read_valid;
+	output wire [(THREADS_PER_BLOCK * DATA_MEM_ADDR_BITS) - 1:0] data_mem_read_address;
 	input wire [THREADS_PER_BLOCK - 1:0] data_mem_read_ready;
 	input wire [(THREADS_PER_BLOCK * DATA_MEM_DATA_BITS) - 1:0] data_mem_read_data;
-	output reg [THREADS_PER_BLOCK - 1:0] data_mem_write_valid;
-	output reg [(THREADS_PER_BLOCK * DATA_MEM_ADDR_BITS) - 1:0] data_mem_write_address;
-	output reg [(THREADS_PER_BLOCK * DATA_MEM_DATA_BITS) - 1:0] data_mem_write_data;
+	output wire [THREADS_PER_BLOCK - 1:0] data_mem_write_valid;
+	output wire [(THREADS_PER_BLOCK * DATA_MEM_ADDR_BITS) - 1:0] data_mem_write_address;
+	output wire [(THREADS_PER_BLOCK * DATA_MEM_DATA_BITS) - 1:0] data_mem_write_data;
 	input wire [THREADS_PER_BLOCK - 1:0] data_mem_write_ready;
 	reg [2:0] core_state;
 	reg [2:0] fetcher_state;
 	reg [15:0] instruction;
 	reg [PROGRAM_MEM_ADDR_BITS - 1:0] current_pc;
 	wire [(THREADS_PER_BLOCK * PROGRAM_MEM_ADDR_BITS) - 1:0] next_pc;
-	reg [DATA_MEM_DATA_BITS - 1:0] rs [THREADS_PER_BLOCK - 1:0];
-	reg [DATA_MEM_DATA_BITS - 1:0] rt [THREADS_PER_BLOCK - 1:0];
-	reg [(THREADS_PER_BLOCK * 2) - 1:0] lsu_state;
-	reg [DATA_MEM_DATA_BITS - 1:0] lsu_out [THREADS_PER_BLOCK - 1:0];
+	wire [DATA_MEM_DATA_BITS - 1:0] rs [THREADS_PER_BLOCK - 1:0];
+	wire [DATA_MEM_DATA_BITS - 1:0] rt [THREADS_PER_BLOCK - 1:0];
+	wire [(THREADS_PER_BLOCK * 2) - 1:0] lsu_state;
+	wire [DATA_MEM_DATA_BITS - 1:0] lsu_out [THREADS_PER_BLOCK - 1:0];
 	wire [DATA_MEM_DATA_BITS - 1:0] alu_out [THREADS_PER_BLOCK - 1:0];
 	wire [DATA_MEM_DATA_BITS - 1:0] fma_out [THREADS_PER_BLOCK - 1:0];
 	wire [DATA_MEM_DATA_BITS - 1:0] act_out [THREADS_PER_BLOCK - 1:0];
@@ -714,11 +724,7 @@ module core (
 	reg decoded_act_enable;
 	reg [1:0] decoded_act_func;
 	reg decoded_ret;
-	reg [DATA_MEM_DATA_BITS - 1:0] rd_value [THREADS_PER_BLOCK - 1:0];
-	wire [1:1] sv2v_tmp_fetcher_instance_mem_read_valid;
-	always @(*) program_mem_read_valid = sv2v_tmp_fetcher_instance_mem_read_valid;
-	wire [PROGRAM_MEM_ADDR_BITS:1] sv2v_tmp_fetcher_instance_mem_read_address;
-	always @(*) program_mem_read_address = sv2v_tmp_fetcher_instance_mem_read_address;
+	wire [DATA_MEM_DATA_BITS - 1:0] rd_data [THREADS_PER_BLOCK - 1:0];
 	wire [3:1] sv2v_tmp_fetcher_instance_fetcher_state;
 	always @(*) fetcher_state = sv2v_tmp_fetcher_instance_fetcher_state;
 	wire [16:1] sv2v_tmp_fetcher_instance_instruction;
@@ -731,8 +737,8 @@ module core (
 		.reset(reset),
 		.core_state(core_state),
 		.current_pc(current_pc),
-		.mem_read_valid(sv2v_tmp_fetcher_instance_mem_read_valid),
-		.mem_read_address(sv2v_tmp_fetcher_instance_mem_read_address),
+		.mem_read_valid(program_mem_read_valid),
+		.mem_read_address(program_mem_read_address),
 		.mem_read_ready(program_mem_read_ready),
 		.mem_read_data(program_mem_read_data),
 		.fetcher_state(sv2v_tmp_fetcher_instance_fetcher_state),
@@ -810,6 +816,7 @@ module core (
 		.core_state(sv2v_tmp_scheduler_instance_core_state),
 		.decoded_mem_read_enable(decoded_mem_read_enable),
 		.decoded_mem_write_enable(decoded_mem_write_enable),
+		.decoded_fma_enable(decoded_fma_enable),
 		.decoded_ret(decoded_ret),
 		.lsu_state(lsu_state),
 		.current_pc(sv2v_tmp_scheduler_instance_current_pc),
@@ -839,7 +846,7 @@ module core (
 				.decoded_fma_enable(decoded_fma_enable),
 				.rs(rs[i]),
 				.rt(rt[i]),
-				.rq(rd_value[i]),
+				.rq(rd_data[i]),
 				.fma_out(fma_out[i])
 			);
 			activation #(.DATA_BITS(DATA_MEM_DATA_BITS)) activation_instance(
@@ -853,20 +860,6 @@ module core (
 				.bias(rt[i]),
 				.activation_out(act_out[i])
 			);
-			wire [1:1] sv2v_tmp_lsu_instance_mem_read_valid;
-			always @(*) data_mem_read_valid[i] = sv2v_tmp_lsu_instance_mem_read_valid;
-			wire [DATA_MEM_ADDR_BITS * 1:1] sv2v_tmp_lsu_instance_mem_read_address;
-			always @(*) data_mem_read_address[i * DATA_MEM_ADDR_BITS+:DATA_MEM_ADDR_BITS] = sv2v_tmp_lsu_instance_mem_read_address;
-			wire [1:1] sv2v_tmp_lsu_instance_mem_write_valid;
-			always @(*) data_mem_write_valid[i] = sv2v_tmp_lsu_instance_mem_write_valid;
-			wire [DATA_MEM_ADDR_BITS * 1:1] sv2v_tmp_lsu_instance_mem_write_address;
-			always @(*) data_mem_write_address[i * DATA_MEM_ADDR_BITS+:DATA_MEM_ADDR_BITS] = sv2v_tmp_lsu_instance_mem_write_address;
-			wire [DATA_MEM_DATA_BITS * 1:1] sv2v_tmp_lsu_instance_mem_write_data;
-			always @(*) data_mem_write_data[i * DATA_MEM_DATA_BITS+:DATA_MEM_DATA_BITS] = sv2v_tmp_lsu_instance_mem_write_data;
-			wire [2:1] sv2v_tmp_lsu_instance_lsu_state;
-			always @(*) lsu_state[i * 2+:2] = sv2v_tmp_lsu_instance_lsu_state;
-			wire [DATA_MEM_DATA_BITS:1] sv2v_tmp_lsu_instance_lsu_out;
-			always @(*) lsu_out[i] = sv2v_tmp_lsu_instance_lsu_out;
 			lsu #(
 				.ADDR_BITS(DATA_MEM_ADDR_BITS),
 				.DATA_BITS(DATA_MEM_DATA_BITS)
@@ -877,23 +870,19 @@ module core (
 				.core_state(core_state),
 				.decoded_mem_read_enable(decoded_mem_read_enable),
 				.decoded_mem_write_enable(decoded_mem_write_enable),
-				.mem_read_valid(sv2v_tmp_lsu_instance_mem_read_valid),
-				.mem_read_address(sv2v_tmp_lsu_instance_mem_read_address),
+				.mem_read_valid(data_mem_read_valid[i]),
+				.mem_read_address(data_mem_read_address[i * DATA_MEM_ADDR_BITS+:DATA_MEM_ADDR_BITS]),
 				.mem_read_ready(data_mem_read_ready[i]),
 				.mem_read_data(data_mem_read_data[i * DATA_MEM_DATA_BITS+:DATA_MEM_DATA_BITS]),
-				.mem_write_valid(sv2v_tmp_lsu_instance_mem_write_valid),
-				.mem_write_address(sv2v_tmp_lsu_instance_mem_write_address),
-				.mem_write_data(sv2v_tmp_lsu_instance_mem_write_data),
+				.mem_write_valid(data_mem_write_valid[i]),
+				.mem_write_address(data_mem_write_address[i * DATA_MEM_ADDR_BITS+:DATA_MEM_ADDR_BITS]),
+				.mem_write_data(data_mem_write_data[i * DATA_MEM_DATA_BITS+:DATA_MEM_DATA_BITS]),
 				.mem_write_ready(data_mem_write_ready[i]),
 				.rs(rs[i]),
 				.rt(rt[i]),
-				.lsu_state(sv2v_tmp_lsu_instance_lsu_state),
-				.lsu_out(sv2v_tmp_lsu_instance_lsu_out)
+				.lsu_state(lsu_state[i * 2+:2]),
+				.lsu_out(lsu_out[i])
 			);
-			wire [DATA_MEM_DATA_BITS:1] sv2v_tmp_register_instance_rs;
-			always @(*) rs[i] = sv2v_tmp_register_instance_rs;
-			wire [DATA_MEM_DATA_BITS:1] sv2v_tmp_register_instance_rt;
-			always @(*) rt[i] = sv2v_tmp_register_instance_rt;
 			registers #(
 				.THREADS_PER_BLOCK(THREADS_PER_BLOCK),
 				.THREAD_ID(i),
@@ -914,8 +903,9 @@ module core (
 				.lsu_out(lsu_out[i]),
 				.fma_out(fma_out[i]),
 				.act_out(act_out[i]),
-				.rs(sv2v_tmp_register_instance_rs),
-				.rt(sv2v_tmp_register_instance_rt)
+				.rs(rs[i]),
+				.rt(rt[i]),
+				.rd_data(rd_data[i])
 			);
 			pc #(
 				.DATA_MEM_DATA_BITS(DATA_MEM_DATA_BITS),
@@ -931,13 +921,9 @@ module core (
 				.decoded_pc_mux(decoded_pc_mux),
 				.alu_out(alu_out[i]),
 				.current_pc(current_pc),
-				.next_pc(next_pc[i * PROGRAM_MEM_ADDR_BITS+:PROGRAM_MEM_ADDR_BITS])
+				.next_pc(next_pc[i * PROGRAM_MEM_ADDR_BITS+:PROGRAM_MEM_ADDR_BITS]),
+				.instruction(instruction)
 			);
-			always @(posedge clk)
-				if (reset)
-					rd_value[i] <= {DATA_MEM_DATA_BITS {1'b0}};
-				else if (core_state == 3'b011)
-					rd_value[i] <= rs[i];
 		end
 	endgenerate
 	wire [((SYSTOLIC_SIZE * SYSTOLIC_SIZE) * DATA_MEM_DATA_BITS) - 1:0] systolic_results;
@@ -1065,94 +1051,102 @@ module decoder (
 	localparam FMA = 4'b1010;
 	localparam ACT = 4'b1011;
 	localparam RET = 4'b1111;
-	always @(posedge clk)
+	always @(*)
 		if (reset) begin
-			decoded_rd_address <= 0;
-			decoded_rs_address <= 0;
-			decoded_rt_address <= 0;
-			decoded_immediate <= 0;
-			decoded_nzp <= 0;
-			decoded_reg_write_enable <= 0;
-			decoded_mem_read_enable <= 0;
-			decoded_mem_write_enable <= 0;
-			decoded_nzp_write_enable <= 0;
-			decoded_reg_input_mux <= 0;
-			decoded_alu_arithmetic_mux <= 0;
-			decoded_alu_output_mux <= 0;
-			decoded_pc_mux <= 0;
-			decoded_fma_enable <= 0;
-			decoded_act_enable <= 0;
-			decoded_act_func <= 0;
-			decoded_ret <= 0;
+			decoded_rd_address = 0;
+			decoded_rs_address = 0;
+			decoded_rt_address = 0;
+			decoded_immediate = 0;
+			decoded_nzp = 0;
+			decoded_reg_write_enable = 0;
+			decoded_mem_read_enable = 0;
+			decoded_mem_write_enable = 0;
+			decoded_nzp_write_enable = 0;
+			decoded_reg_input_mux = 0;
+			decoded_alu_arithmetic_mux = 0;
+			decoded_alu_output_mux = 0;
+			decoded_pc_mux = 0;
+			decoded_fma_enable = 0;
+			decoded_act_enable = 0;
+			decoded_act_func = 0;
+			decoded_ret = 0;
 		end
-		else if (core_state == 3'b010) begin
-			decoded_rd_address <= instruction[11:8];
-			decoded_rs_address <= instruction[7:4];
-			decoded_rt_address <= instruction[3:0];
-			decoded_immediate <= instruction[7:0];
-			decoded_nzp <= instruction[11:9];
-			decoded_reg_write_enable <= 0;
-			decoded_mem_read_enable <= 0;
-			decoded_mem_write_enable <= 0;
-			decoded_nzp_write_enable <= 0;
-			decoded_reg_input_mux <= 0;
-			decoded_alu_arithmetic_mux <= 0;
-			decoded_alu_output_mux <= 0;
-			decoded_pc_mux <= 0;
-			decoded_fma_enable <= 0;
-			decoded_act_enable <= 0;
-			decoded_act_func <= 0;
-			decoded_ret <= 0;
+		else begin
+			decoded_rd_address = instruction[11:8];
+			decoded_rs_address = instruction[7:4];
+			decoded_rt_address = instruction[3:0];
+			decoded_immediate = instruction[7:0];
+			decoded_nzp = instruction[11:9];
+			decoded_reg_write_enable = 0;
+			decoded_mem_read_enable = 0;
+			decoded_mem_write_enable = 0;
+			decoded_nzp_write_enable = 0;
+			decoded_reg_input_mux = 0;
+			decoded_alu_arithmetic_mux = 0;
+			decoded_alu_output_mux = 0;
+			decoded_pc_mux = 0;
+			decoded_fma_enable = 0;
+			decoded_act_enable = 0;
+			decoded_act_func = 0;
+			decoded_ret = 0;
 			case (instruction[15:12])
 				NOP:
 					;
-				BRnzp: decoded_pc_mux <= 1;
+				BRnzp: decoded_pc_mux = 1;
 				CMP: begin
-					decoded_alu_output_mux <= 1;
-					decoded_nzp_write_enable <= 1;
+					decoded_rs_address = instruction[11:8];
+					decoded_rt_address = instruction[7:4];
+					decoded_alu_output_mux = 1;
+					decoded_nzp_write_enable = 1;
 				end
 				ADD: begin
-					decoded_reg_write_enable <= 1;
-					decoded_reg_input_mux <= 3'b000;
-					decoded_alu_arithmetic_mux <= 2'b00;
+					decoded_reg_write_enable = 1;
+					decoded_reg_input_mux = 3'b000;
+					decoded_alu_arithmetic_mux = 2'b00;
 				end
 				SUB: begin
-					decoded_reg_write_enable <= 1;
-					decoded_reg_input_mux <= 3'b000;
-					decoded_alu_arithmetic_mux <= 2'b01;
+					decoded_reg_write_enable = 1;
+					decoded_reg_input_mux = 3'b000;
+					decoded_alu_arithmetic_mux = 2'b01;
 				end
 				MUL: begin
-					decoded_reg_write_enable <= 1;
-					decoded_reg_input_mux <= 3'b000;
-					decoded_alu_arithmetic_mux <= 2'b10;
+					decoded_reg_write_enable = 1;
+					decoded_reg_input_mux = 3'b000;
+					decoded_alu_arithmetic_mux = 2'b10;
 				end
 				DIV: begin
-					decoded_reg_write_enable <= 1;
-					decoded_reg_input_mux <= 3'b000;
-					decoded_alu_arithmetic_mux <= 2'b11;
+					decoded_reg_write_enable = 1;
+					decoded_reg_input_mux = 3'b000;
+					decoded_alu_arithmetic_mux = 2'b11;
 				end
 				LDR: begin
-					decoded_reg_write_enable <= 1;
-					decoded_reg_input_mux <= 3'b001;
-					decoded_mem_read_enable <= 1;
+					decoded_reg_write_enable = 1;
+					decoded_reg_input_mux = 3'b001;
+					decoded_mem_read_enable = 1;
 				end
-				STR: decoded_mem_write_enable <= 1;
+				STR: begin
+					decoded_rs_address = instruction[11:8];
+					decoded_rt_address = instruction[7:4];
+					decoded_mem_write_enable = 1;
+				end
 				CONST: begin
-					decoded_reg_write_enable <= 1;
-					decoded_reg_input_mux <= 3'b010;
+					decoded_reg_write_enable = 1;
+					decoded_reg_input_mux = 3'b010;
 				end
 				FMA: begin
-					decoded_reg_write_enable <= 1;
-					decoded_reg_input_mux <= 3'b011;
-					decoded_fma_enable <= 1;
+					decoded_reg_write_enable = 1;
+					decoded_reg_input_mux = 3'b011;
+					decoded_fma_enable = 1;
 				end
 				ACT: begin
-					decoded_reg_write_enable <= 1;
-					decoded_reg_input_mux <= 3'b100;
-					decoded_act_enable <= 1;
-					decoded_act_func <= instruction[9:8];
+					decoded_reg_write_enable = 1;
+					decoded_reg_input_mux = 3'b100;
+					decoded_act_enable = 1;
+					decoded_act_func = instruction[9:8];
 				end
-				RET: decoded_ret <= 1;
+				RET: decoded_ret = 1;
+				default:
+					;
 			endcase
 		end
 endmodule
@@ -1305,25 +1299,20 @@ module fma (
 	output wire [DATA_BITS - 1:0] fma_out;
 	localparam [DATA_BITS - 1:0] Q115_MAX = 16'h7fff;
 	localparam [DATA_BITS - 1:0] Q115_MIN = 16'h8000;
+	localparam signed [31:0] Q115_MAX_S32 = 32'sd32767;
+	localparam signed [31:0] Q115_MIN_S32 = -32'sd32768;
 	reg [DATA_BITS - 1:0] r1_activation;
 	reg [DATA_BITS - 1:0] r2_weight;
 	reg [DATA_BITS - 1:0] r3_weighted;
 	reg [DATA_BITS - 1:0] r4_accumulated;
 	reg [DATA_BITS - 1:0] fma_out_reg;
 	assign fma_out = fma_out_reg;
-	wire sign_r1 = r1_activation[15];
-	wire sign_r2 = r2_weight[15];
-	wire sign_product = sign_r1 ^ sign_r2;
-	wire [14:0] mantissa_r1 = (sign_r1 ? ~r1_activation[14:0] + 1'b1 : r1_activation[14:0]);
-	wire [14:0] mantissa_r2 = (sign_r2 ? ~r2_weight[14:0] + 1'b1 : r2_weight[14:0]);
-	wire [29:0] product_unsigned = mantissa_r1 * mantissa_r2;
-	wire [14:0] product_mantissa = product_unsigned[29:15];
-	wire [DATA_BITS - 1:0] weighted_input_unsigned = {1'b0, product_mantissa};
-	wire [DATA_BITS - 1:0] weighted_input = (sign_product ? ~weighted_input_unsigned + 1'b1 : weighted_input_unsigned);
-	wire signed [16:0] acc_sum = $signed({r3_weighted[15], r3_weighted}) + $signed({r4_accumulated[15], r4_accumulated});
-	wire overflow_pos = ((~acc_sum[16] & acc_sum[15]) & ~r3_weighted[15]) & ~r4_accumulated[15];
-	wire overflow_neg = ((acc_sum[16] & ~acc_sum[15]) & r3_weighted[15]) & r4_accumulated[15];
-	wire [DATA_BITS - 1:0] accumulated_saturated = (overflow_pos ? Q115_MAX : (overflow_neg ? Q115_MIN : acc_sum[DATA_BITS - 1:0]));
+	wire signed [31:0] product_full_s32 = $signed(r1_activation) * $signed(r2_weight);
+	wire signed [31:0] product_q115_s32 = product_full_s32 >>> 15;
+	wire [DATA_BITS - 1:0] product_saturated = (product_q115_s32 > Q115_MAX_S32 ? Q115_MAX : (product_q115_s32 < Q115_MIN_S32 ? Q115_MIN : product_q115_s32[DATA_BITS - 1:0]));
+	wire signed [31:0] acc_sum_s32 = $signed(r4_accumulated) + $signed(r3_weighted);
+	wire [DATA_BITS - 1:0] accumulated_saturated = (acc_sum_s32 > Q115_MAX_S32 ? Q115_MAX : (acc_sum_s32 < Q115_MIN_S32 ? Q115_MIN : acc_sum_s32[DATA_BITS - 1:0]));
+	reg exec_phase;
 	always @(posedge clk)
 		if (reset) begin
 			r1_activation <= {DATA_BITS {1'b0}};
@@ -1331,16 +1320,25 @@ module fma (
 			r3_weighted <= {DATA_BITS {1'b0}};
 			r4_accumulated <= {DATA_BITS {1'b0}};
 			fma_out_reg <= {DATA_BITS {1'b0}};
+			exec_phase <= 1'b0;
 		end
 		else if (enable) begin
+			if ((core_state != 3'b101) || !decoded_fma_enable)
+				exec_phase <= 1'b0;
 			if (core_state == 3'b011) begin
 				r1_activation <= rs;
 				r2_weight <= rt;
 				r4_accumulated <= rq;
 			end
 			if ((core_state == 3'b101) && decoded_fma_enable) begin
-				r3_weighted <= weighted_input;
-				fma_out_reg <= accumulated_saturated;
+				if (!exec_phase) begin
+					r3_weighted <= product_saturated;
+					exec_phase <= 1'b1;
+				end
+				else begin
+					fma_out_reg <= accumulated_saturated;
+					exec_phase <= 1'b0;
+				end
 			end
 		end
 endmodule
@@ -1396,27 +1394,37 @@ module gpu (
 	wire [7:0] thread_count;
 	reg [NUM_CORES - 1:0] core_start;
 	reg [NUM_CORES - 1:0] core_reset;
-	reg [NUM_CORES - 1:0] core_done;
+	wire [NUM_CORES - 1:0] core_done;
 	reg [(NUM_CORES * 8) - 1:0] core_block_id;
 	reg [($clog2(THREADS_PER_BLOCK) >= 0 ? (NUM_CORES * ($clog2(THREADS_PER_BLOCK) + 1)) - 1 : (NUM_CORES * (1 - $clog2(THREADS_PER_BLOCK))) + ($clog2(THREADS_PER_BLOCK) - 1)):($clog2(THREADS_PER_BLOCK) >= 0 ? 0 : $clog2(THREADS_PER_BLOCK) + 0)] core_thread_count;
 	localparam NUM_LSUS = NUM_CORES * THREADS_PER_BLOCK;
 	reg [NUM_LSUS - 1:0] lsu_read_valid;
 	reg [(NUM_LSUS * DATA_MEM_ADDR_BITS) - 1:0] lsu_read_address;
-	reg [NUM_LSUS - 1:0] lsu_read_ready;
-	reg [(NUM_LSUS * DATA_MEM_DATA_BITS) - 1:0] lsu_read_data;
+	wire [NUM_LSUS - 1:0] lsu_read_ready;
+	wire [(NUM_LSUS * DATA_MEM_DATA_BITS) - 1:0] lsu_read_data;
 	reg [NUM_LSUS - 1:0] lsu_write_valid;
 	reg [(NUM_LSUS * DATA_MEM_ADDR_BITS) - 1:0] lsu_write_address;
 	reg [(NUM_LSUS * DATA_MEM_DATA_BITS) - 1:0] lsu_write_data;
-	reg [NUM_LSUS - 1:0] lsu_write_ready;
+	wire [NUM_LSUS - 1:0] lsu_write_ready;
 	localparam NUM_FETCHERS = NUM_CORES;
-	reg [NUM_FETCHERS - 1:0] fetcher_read_valid;
-	reg [(NUM_FETCHERS * PROGRAM_MEM_ADDR_BITS) - 1:0] fetcher_read_address;
-	reg [NUM_FETCHERS - 1:0] fetcher_read_ready;
-	reg [(NUM_FETCHERS * PROGRAM_MEM_DATA_BITS) - 1:0] fetcher_read_data;
+	wire [NUM_FETCHERS - 1:0] fetcher_read_valid;
+	wire [(NUM_FETCHERS * PROGRAM_MEM_ADDR_BITS) - 1:0] fetcher_read_address;
+	wire [NUM_FETCHERS - 1:0] fetcher_read_ready;
+	wire [(NUM_FETCHERS * PROGRAM_MEM_DATA_BITS) - 1:0] fetcher_read_data;
 	wire [NUM_FETCHERS - 1:0] prog_mem_write_ready_unused;
 	wire [PROGRAM_MEM_NUM_CHANNELS - 1:0] prog_ext_write_valid_unused;
 	wire [(PROGRAM_MEM_NUM_CHANNELS * PROGRAM_MEM_ADDR_BITS) - 1:0] prog_ext_write_address_unused;
 	wire [(PROGRAM_MEM_NUM_CHANNELS * PROGRAM_MEM_DATA_BITS) - 1:0] prog_ext_write_data_unused;
+	wire [(NUM_FETCHERS * PROGRAM_MEM_ADDR_BITS) - 1:0] fetcher_write_address_unused;
+	wire [(NUM_FETCHERS * PROGRAM_MEM_DATA_BITS) - 1:0] fetcher_write_data_unused;
+	genvar _gv_fw_1;
+	generate
+		for (_gv_fw_1 = 0; _gv_fw_1 < NUM_FETCHERS; _gv_fw_1 = _gv_fw_1 + 1) begin : prog_write_tieoff
+			localparam fw = _gv_fw_1;
+			assign fetcher_write_address_unused[fw * PROGRAM_MEM_ADDR_BITS+:PROGRAM_MEM_ADDR_BITS] = {PROGRAM_MEM_ADDR_BITS {1'b0}};
+			assign fetcher_write_data_unused[fw * PROGRAM_MEM_DATA_BITS+:PROGRAM_MEM_DATA_BITS] = {PROGRAM_MEM_DATA_BITS {1'b0}};
+		end
+	endgenerate
 	dcr dcr_instance(
 		.clk(clk),
 		.reset(reset),
@@ -1424,12 +1432,6 @@ module gpu (
 		.device_control_data(device_control_data),
 		.thread_count(thread_count)
 	);
-	wire [NUM_LSUS:1] sv2v_tmp_data_memory_controller_consumer_read_ready;
-	always @(*) lsu_read_ready = sv2v_tmp_data_memory_controller_consumer_read_ready;
-	wire [NUM_LSUS * DATA_MEM_DATA_BITS:1] sv2v_tmp_data_memory_controller_consumer_read_data;
-	always @(*) lsu_read_data = sv2v_tmp_data_memory_controller_consumer_read_data;
-	wire [NUM_LSUS:1] sv2v_tmp_data_memory_controller_consumer_write_ready;
-	always @(*) lsu_write_ready = sv2v_tmp_data_memory_controller_consumer_write_ready;
 	controller #(
 		.ADDR_BITS(DATA_MEM_ADDR_BITS),
 		.DATA_BITS(DATA_MEM_DATA_BITS),
@@ -1440,12 +1442,12 @@ module gpu (
 		.reset(reset),
 		.consumer_read_valid(lsu_read_valid),
 		.consumer_read_address(lsu_read_address),
-		.consumer_read_ready(sv2v_tmp_data_memory_controller_consumer_read_ready),
-		.consumer_read_data(sv2v_tmp_data_memory_controller_consumer_read_data),
+		.consumer_read_ready(lsu_read_ready),
+		.consumer_read_data(lsu_read_data),
 		.consumer_write_valid(lsu_write_valid),
 		.consumer_write_address(lsu_write_address),
 		.consumer_write_data(lsu_write_data),
-		.consumer_write_ready(sv2v_tmp_data_memory_controller_consumer_write_ready),
+		.consumer_write_ready(lsu_write_ready),
 		.mem_read_valid(data_mem_read_valid),
 		.mem_read_address(data_mem_read_address),
 		.mem_read_ready(data_mem_read_ready),
@@ -1455,10 +1457,6 @@ module gpu (
 		.mem_write_data(data_mem_write_data),
 		.mem_write_ready(data_mem_write_ready)
 	);
-	wire [NUM_FETCHERS:1] sv2v_tmp_program_memory_controller_consumer_read_ready;
-	always @(*) fetcher_read_ready = sv2v_tmp_program_memory_controller_consumer_read_ready;
-	wire [NUM_FETCHERS * PROGRAM_MEM_DATA_BITS:1] sv2v_tmp_program_memory_controller_consumer_read_data;
-	always @(*) fetcher_read_data = sv2v_tmp_program_memory_controller_consumer_read_data;
 	controller #(
 		.ADDR_BITS(PROGRAM_MEM_ADDR_BITS),
 		.DATA_BITS(PROGRAM_MEM_DATA_BITS),
@@ -1470,11 +1468,11 @@ module gpu (
 		.reset(reset),
 		.consumer_read_valid(fetcher_read_valid),
 		.consumer_read_address(fetcher_read_address),
-		.consumer_read_ready(sv2v_tmp_program_memory_controller_consumer_read_ready),
-		.consumer_read_data(sv2v_tmp_program_memory_controller_consumer_read_data),
+		.consumer_read_ready(fetcher_read_ready),
+		.consumer_read_data(fetcher_read_data),
 		.consumer_write_valid({NUM_FETCHERS {1'b0}}),
-		.consumer_write_address({NUM_FETCHERS * PROGRAM_MEM_ADDR_BITS {1'b0}}),
-		.consumer_write_data({NUM_FETCHERS * PROGRAM_MEM_DATA_BITS {1'b0}}),
+		.consumer_write_address(fetcher_write_address_unused),
+		.consumer_write_data(fetcher_write_data_unused),
 		.consumer_write_ready(prog_mem_write_ready_unused),
 		.mem_read_valid(program_mem_read_valid),
 		.mem_read_address(program_mem_read_address),
@@ -1512,13 +1510,13 @@ module gpu (
 	generate
 		for (_gv_i_2 = 0; _gv_i_2 < NUM_CORES; _gv_i_2 = _gv_i_2 + 1) begin : cores
 			localparam i = _gv_i_2;
-			reg [THREADS_PER_BLOCK - 1:0] core_lsu_read_valid;
-			reg [(THREADS_PER_BLOCK * DATA_MEM_ADDR_BITS) - 1:0] core_lsu_read_address;
+			wire [THREADS_PER_BLOCK - 1:0] core_lsu_read_valid;
+			wire [(THREADS_PER_BLOCK * DATA_MEM_ADDR_BITS) - 1:0] core_lsu_read_address;
 			reg [THREADS_PER_BLOCK - 1:0] core_lsu_read_ready;
 			reg [(THREADS_PER_BLOCK * DATA_MEM_DATA_BITS) - 1:0] core_lsu_read_data;
-			reg [THREADS_PER_BLOCK - 1:0] core_lsu_write_valid;
-			reg [(THREADS_PER_BLOCK * DATA_MEM_ADDR_BITS) - 1:0] core_lsu_write_address;
-			reg [(THREADS_PER_BLOCK * DATA_MEM_DATA_BITS) - 1:0] core_lsu_write_data;
+			wire [THREADS_PER_BLOCK - 1:0] core_lsu_write_valid;
+			wire [(THREADS_PER_BLOCK * DATA_MEM_ADDR_BITS) - 1:0] core_lsu_write_address;
+			wire [(THREADS_PER_BLOCK * DATA_MEM_DATA_BITS) - 1:0] core_lsu_write_data;
 			reg [THREADS_PER_BLOCK - 1:0] core_lsu_write_ready;
 			genvar _gv_j_1;
 			for (_gv_j_1 = 0; _gv_j_1 < THREADS_PER_BLOCK; _gv_j_1 = _gv_j_1 + 1) begin : lsu_passthrough
@@ -1535,22 +1533,6 @@ module gpu (
 					core_lsu_write_ready[j] <= lsu_write_ready[lsu_index];
 				end
 			end
-			wire [1:1] sv2v_tmp_core_instance_done;
-			always @(*) core_done[i] = sv2v_tmp_core_instance_done;
-			wire [1:1] sv2v_tmp_core_instance_program_mem_read_valid;
-			always @(*) fetcher_read_valid[i] = sv2v_tmp_core_instance_program_mem_read_valid;
-			wire [PROGRAM_MEM_ADDR_BITS * 1:1] sv2v_tmp_core_instance_program_mem_read_address;
-			always @(*) fetcher_read_address[i * PROGRAM_MEM_ADDR_BITS+:PROGRAM_MEM_ADDR_BITS] = sv2v_tmp_core_instance_program_mem_read_address;
-			wire [THREADS_PER_BLOCK:1] sv2v_tmp_core_instance_data_mem_read_valid;
-			always @(*) core_lsu_read_valid = sv2v_tmp_core_instance_data_mem_read_valid;
-			wire [THREADS_PER_BLOCK * DATA_MEM_ADDR_BITS:1] sv2v_tmp_core_instance_data_mem_read_address;
-			always @(*) core_lsu_read_address = sv2v_tmp_core_instance_data_mem_read_address;
-			wire [THREADS_PER_BLOCK:1] sv2v_tmp_core_instance_data_mem_write_valid;
-			always @(*) core_lsu_write_valid = sv2v_tmp_core_instance_data_mem_write_valid;
-			wire [THREADS_PER_BLOCK * DATA_MEM_ADDR_BITS:1] sv2v_tmp_core_instance_data_mem_write_address;
-			always @(*) core_lsu_write_address = sv2v_tmp_core_instance_data_mem_write_address;
-			wire [THREADS_PER_BLOCK * DATA_MEM_DATA_BITS:1] sv2v_tmp_core_instance_data_mem_write_data;
-			always @(*) core_lsu_write_data = sv2v_tmp_core_instance_data_mem_write_data;
 			core #(
 				.DATA_MEM_ADDR_BITS(DATA_MEM_ADDR_BITS),
 				.DATA_MEM_DATA_BITS(DATA_MEM_DATA_BITS),
@@ -1564,20 +1546,20 @@ module gpu (
 				.clk(clk),
 				.reset(core_reset[i]),
 				.start(core_start[i]),
-				.done(sv2v_tmp_core_instance_done),
+				.done(core_done[i]),
 				.block_id(core_block_id[i * 8+:8]),
 				.thread_count(core_thread_count[($clog2(THREADS_PER_BLOCK) >= 0 ? 0 : $clog2(THREADS_PER_BLOCK)) + (i * ($clog2(THREADS_PER_BLOCK) >= 0 ? $clog2(THREADS_PER_BLOCK) + 1 : 1 - $clog2(THREADS_PER_BLOCK)))+:($clog2(THREADS_PER_BLOCK) >= 0 ? $clog2(THREADS_PER_BLOCK) + 1 : 1 - $clog2(THREADS_PER_BLOCK))]),
-				.program_mem_read_valid(sv2v_tmp_core_instance_program_mem_read_valid),
-				.program_mem_read_address(sv2v_tmp_core_instance_program_mem_read_address),
+				.program_mem_read_valid(fetcher_read_valid[i]),
+				.program_mem_read_address(fetcher_read_address[i * PROGRAM_MEM_ADDR_BITS+:PROGRAM_MEM_ADDR_BITS]),
 				.program_mem_read_ready(fetcher_read_ready[i]),
 				.program_mem_read_data(fetcher_read_data[i * PROGRAM_MEM_DATA_BITS+:PROGRAM_MEM_DATA_BITS]),
-				.data_mem_read_valid(sv2v_tmp_core_instance_data_mem_read_valid),
-				.data_mem_read_address(sv2v_tmp_core_instance_data_mem_read_address),
+				.data_mem_read_valid(core_lsu_read_valid),
+				.data_mem_read_address(core_lsu_read_address),
 				.data_mem_read_ready(core_lsu_read_ready),
 				.data_mem_read_data(core_lsu_read_data),
-				.data_mem_write_valid(sv2v_tmp_core_instance_data_mem_write_valid),
-				.data_mem_write_address(sv2v_tmp_core_instance_data_mem_write_address),
-				.data_mem_write_data(sv2v_tmp_core_instance_data_mem_write_data),
+				.data_mem_write_valid(core_lsu_write_valid),
+				.data_mem_write_address(core_lsu_write_address),
+				.data_mem_write_data(core_lsu_write_data),
 				.data_mem_write_ready(core_lsu_write_ready)
 			);
 		end
@@ -2051,7 +2033,8 @@ module pc (
 	decoded_pc_mux,
 	alu_out,
 	current_pc,
-	next_pc
+	next_pc,
+	instruction
 );
 	parameter DATA_MEM_DATA_BITS = 16;
 	parameter PROGRAM_MEM_ADDR_BITS = 8;
@@ -2066,7 +2049,13 @@ module pc (
 	input wire [DATA_MEM_DATA_BITS - 1:0] alu_out;
 	input wire [PROGRAM_MEM_ADDR_BITS - 1:0] current_pc;
 	output reg [PROGRAM_MEM_ADDR_BITS - 1:0] next_pc;
+	input wire [15:0] instruction;
 	reg [2:0] nzp;
+	wire signed [PROGRAM_MEM_ADDR_BITS:0] pc_plus_one_s = $signed({1'b0, current_pc}) + $signed({{PROGRAM_MEM_ADDR_BITS {1'b0}}, 1'b1});
+	localparam integer BR_OFF_W = PROGRAM_MEM_ADDR_BITS + 1;
+	wire signed [BR_OFF_W - 1:0] br_off9_s = $signed({{BR_OFF_W - 9 {instruction[8]}}, instruction[8:0]});
+	wire signed [PROGRAM_MEM_ADDR_BITS:0] br_target_s = pc_plus_one_s + br_off9_s;
+	wire [PROGRAM_MEM_ADDR_BITS - 1:0] br_target = br_target_s[PROGRAM_MEM_ADDR_BITS - 1:0];
 	always @(posedge clk)
 		if (reset) begin
 			nzp <= 3'b000;
@@ -2076,7 +2065,7 @@ module pc (
 			if (core_state == 3'b101) begin
 				if (decoded_pc_mux == 1) begin
 					if ((nzp & decoded_nzp) != 3'b000)
-						next_pc <= {{PROGRAM_MEM_ADDR_BITS - 8 {1'b0}}, decoded_immediate};
+						next_pc <= br_target;
 					else
 						next_pc <= current_pc + 1;
 				end
@@ -2305,7 +2294,8 @@ module registers (
 	fma_out,
 	act_out,
 	rs,
-	rt
+	rt,
+	rd_data
 );
 	parameter THREADS_PER_BLOCK = 4;
 	parameter THREAD_ID = 0;
@@ -2325,20 +2315,22 @@ module registers (
 	input wire [DATA_BITS - 1:0] lsu_out;
 	input wire [DATA_BITS - 1:0] fma_out;
 	input wire [DATA_BITS - 1:0] act_out;
-	output reg [DATA_BITS - 1:0] rs;
-	output reg [DATA_BITS - 1:0] rt;
+	output wire [DATA_BITS - 1:0] rs;
+	output wire [DATA_BITS - 1:0] rt;
+	output wire [DATA_BITS - 1:0] rd_data;
 	localparam [2:0] MUX_ALU = 3'b000;
 	localparam [2:0] MUX_MEMORY = 3'b001;
 	localparam [2:0] MUX_CONSTANT = 3'b010;
 	localparam [2:0] MUX_FMA = 3'b011;
 	localparam [2:0] MUX_ACT = 3'b100;
 	reg [DATA_BITS - 1:0] registers [15:0];
+	assign rs = (enable ? registers[decoded_rs_address] : {DATA_BITS {1'b0}});
+	assign rt = (enable ? registers[decoded_rt_address] : {DATA_BITS {1'b0}});
+	assign rd_data = (enable ? registers[decoded_rd_address] : {DATA_BITS {1'b0}});
 	wire [DATA_BITS - 1:0] immediate_extended;
 	assign immediate_extended = {{8 {decoded_immediate[7]}}, decoded_immediate};
 	always @(posedge clk)
 		if (reset) begin
-			rs <= {DATA_BITS {1'b0}};
-			rt <= {DATA_BITS {1'b0}};
 			registers[0] <= {DATA_BITS {1'b0}};
 			registers[1] <= {DATA_BITS {1'b0}};
 			registers[2] <= {DATA_BITS {1'b0}};
@@ -2358,10 +2350,6 @@ module registers (
 		end
 		else if (enable) begin
 			registers[13] <= {{DATA_BITS - 8 {1'b0}}, block_id};
-			if (core_state == 3'b011) begin
-				rs <= registers[decoded_rs_address];
-				rt <= registers[decoded_rt_address];
-			end
 			if (core_state == 3'b110) begin
 				if (decoded_reg_write_enable && (decoded_rd_address < 13))
 					case (decoded_reg_input_mux)
@@ -2382,6 +2370,7 @@ module scheduler (
 	start,
 	decoded_mem_read_enable,
 	decoded_mem_write_enable,
+	decoded_fma_enable,
 	decoded_ret,
 	fetcher_state,
 	lsu_state,
@@ -2397,6 +2386,7 @@ module scheduler (
 	input wire start;
 	input wire decoded_mem_read_enable;
 	input wire decoded_mem_write_enable;
+	input wire decoded_fma_enable;
 	input wire decoded_ret;
 	input wire [2:0] fetcher_state;
 	input wire [(THREADS_PER_BLOCK * 2) - 1:0] lsu_state;
@@ -2414,6 +2404,7 @@ module scheduler (
 	localparam DONE = 3'b111;
 	reg any_lsu_waiting;
 	integer i;
+	reg fma_execute_second_cycle;
 	always @(*) begin
 		any_lsu_waiting = 1'b0;
 		for (i = 0; i < THREADS_PER_BLOCK; i = i + 1)
@@ -2425,21 +2416,34 @@ module scheduler (
 			current_pc <= 0;
 			core_state <= IDLE;
 			done <= 0;
+			fma_execute_second_cycle <= 1'b0;
 		end
 		else
 			case (core_state)
 				IDLE:
-					if (start)
+					if (start) begin
 						core_state <= FETCH;
+						fma_execute_second_cycle <= 1'b0;
+					end
 				FETCH:
 					if (fetcher_state == 3'b010)
 						core_state <= DECODE;
 				DECODE: core_state <= REQUEST;
 				REQUEST: core_state <= WAIT;
 				WAIT:
-					if (!any_lsu_waiting)
+					if (!any_lsu_waiting) begin
 						core_state <= EXECUTE;
-				EXECUTE: core_state <= UPDATE;
+						fma_execute_second_cycle <= 1'b0;
+					end
+				EXECUTE:
+					if (decoded_fma_enable && !fma_execute_second_cycle) begin
+						fma_execute_second_cycle <= 1'b1;
+						core_state <= EXECUTE;
+					end
+					else begin
+						fma_execute_second_cycle <= 1'b0;
+						core_state <= UPDATE;
+					end
 				UPDATE:
 					if (decoded_ret) begin
 						done <= 1;
@@ -2480,6 +2484,12 @@ module systolic_array (
 	output wire ready;
 	wire signed [DATA_BITS - 1:0] a_wires [ARRAY_SIZE - 1:0][ARRAY_SIZE:0];
 	wire signed [DATA_BITS - 1:0] b_wires [ARRAY_SIZE:0][ARRAY_SIZE - 1:0];
+	wire [ARRAY_SIZE - 1:0] row_clear_acc;
+	wire [ARRAY_SIZE - 1:0] row_load_weight;
+	wire [ARRAY_SIZE - 1:0] row_compute_enable;
+	assign row_clear_acc = {ARRAY_SIZE {clear_acc}};
+	assign row_load_weight = {ARRAY_SIZE {load_weights}};
+	assign row_compute_enable = {ARRAY_SIZE {compute_enable}};
 	genvar _gv_row_1;
 	genvar _gv_col_1;
 	generate
@@ -2499,9 +2509,9 @@ module systolic_array (
 					.clk(clk),
 					.reset(reset),
 					.enable(enable),
-					.clear_acc(clear_acc),
-					.load_weight(load_weights),
-					.compute_enable(compute_enable),
+					.clear_acc(row_clear_acc[row]),
+					.load_weight(row_load_weight[row]),
+					.compute_enable(row_compute_enable[row]),
 					.a_in(a_wires[row][col]),
 					.b_in(b_wires[row][col]),
 					.a_out(a_wires[row][col + 1]),
@@ -2511,13 +2521,7 @@ module systolic_array (
 			end
 		end
 	endgenerate
-	reg ready_reg;
-	assign ready = ready_reg;
-	always @(posedge clk)
-		if (reset)
-			ready_reg <= 1'b1;
-		else if (enable)
-			ready_reg <= ~compute_enable;
+	assign ready = ~compute_enable;
 endmodule
 `default_nettype none
 module systolic_array_cluster (
@@ -2556,14 +2560,31 @@ module systolic_array_cluster (
 	wire [NUM_ARRAYS - 1:0] array_clear_acc;
 	wire [NUM_ARRAYS - 1:0] array_load_weights;
 	wire [NUM_ARRAYS - 1:0] array_compute_enable;
+	wire [NUM_ARRAYS - 1:0] array_selected;
+	wire [NUM_ARRAYS - 1:0] array_enable;
+	reg [NUM_ARRAYS - 1:0] compute_enable_d1;
+	reg [NUM_ARRAYS - 1:0] compute_enable_d2;
 	genvar _gv_arr_1;
 	generate
 		for (_gv_arr_1 = 0; _gv_arr_1 < NUM_ARRAYS; _gv_arr_1 = _gv_arr_1 + 1) begin : array_ctrl
 			localparam arr = _gv_arr_1;
+			assign array_selected[arr] = (broadcast_mode ? 1'b1 : array_select == arr);
 			assign array_clear_acc[arr] = (broadcast_mode ? clear_acc : (array_select == arr ? clear_acc : 1'b0));
 			assign array_load_weights[arr] = (broadcast_mode ? load_weights : (array_select == arr ? load_weights : 1'b0));
 			assign array_compute_enable[arr] = (broadcast_mode ? compute_enable : (array_select == arr ? compute_enable : 1'b0));
+			assign array_enable[arr] = (enable && array_selected[arr]) && ((((array_clear_acc[arr] | array_load_weights[arr]) | array_compute_enable[arr]) | compute_enable_d1[arr]) | compute_enable_d2[arr]);
 		end
+	endgenerate
+	always @(posedge clk)
+		if (reset) begin
+			compute_enable_d1 <= {NUM_ARRAYS {1'b0}};
+			compute_enable_d2 <= {NUM_ARRAYS {1'b0}};
+		end
+		else if (enable) begin
+			compute_enable_d2 <= compute_enable_d1;
+			compute_enable_d1 <= array_compute_enable;
+		end
+	generate
 		for (_gv_arr_1 = 0; _gv_arr_1 < NUM_ARRAYS; _gv_arr_1 = _gv_arr_1 + 1) begin : arrays
 			localparam arr = _gv_arr_1;
 			systolic_array #(
@@ -2572,7 +2593,7 @@ module systolic_array_cluster (
 			) array_inst(
 				.clk(clk),
 				.reset(reset),
-				.enable(enable),
+				.enable(array_enable[arr]),
 				.clear_acc(array_clear_acc[arr]),
 				.load_weights(array_load_weights[arr]),
 				.compute_enable(array_compute_enable[arr]),
@@ -2626,19 +2647,27 @@ module systolic_pe (
 	output wire [DATA_BITS - 1:0] acc_out;
 	localparam [DATA_BITS - 1:0] Q115_MAX = 16'h7fff;
 	localparam [DATA_BITS - 1:0] Q115_MIN = 16'h8000;
+	localparam [31:0] MAC_PIPE_LATENCY = 2;
 	reg [DATA_BITS - 1:0] weight_reg;
 	reg signed [ACC_BITS - 1:0] accumulator;
-	wire sign_a = a_in[15];
-	wire sign_w = weight_reg[15];
-	wire sign_product = sign_a ^ sign_w;
-	wire [14:0] mantissa_a = (sign_a ? ~a_in[14:0] + 1'b1 : a_in[14:0]);
-	wire [14:0] mantissa_w = (sign_w ? ~weight_reg[14:0] + 1'b1 : weight_reg[14:0]);
-	wire [29:0] product_unsigned = mantissa_a * mantissa_w;
-	wire [14:0] product_mantissa = product_unsigned[29:15];
-	wire [DATA_BITS - 1:0] product_unsigned_16 = {1'b0, product_mantissa};
-	wire signed [DATA_BITS - 1:0] product_signed = (sign_product ? -$signed(product_unsigned_16) : $signed(product_unsigned_16));
-	wire signed [ACC_BITS - 1:0] product_extended = {{ACC_BITS - DATA_BITS {product_signed[DATA_BITS - 1]}}, product_signed};
-	wire signed [ACC_BITS - 1:0] acc_sum = accumulator + product_extended;
+	wire sign_a_s0 = a_in[15];
+	wire sign_w_s0 = weight_reg[15];
+	wire sign_product_s0 = sign_a_s0 ^ sign_w_s0;
+	wire [14:0] mantissa_a_s0 = (sign_a_s0 ? ~a_in[14:0] + 1'b1 : a_in[14:0]);
+	wire [14:0] mantissa_w_s0 = (sign_w_s0 ? ~weight_reg[14:0] + 1'b1 : weight_reg[14:0]);
+	reg valid_s0;
+	reg sign_product_s0_r;
+	reg [14:0] mantissa_a_s0_r;
+	reg [14:0] mantissa_w_s0_r;
+	wire [29:0] product_unsigned_s1 = mantissa_a_s0_r * mantissa_w_s0_r;
+	wire [14:0] product_mantissa_s1 = product_unsigned_s1[29:15];
+	reg valid_s1;
+	reg sign_product_s1_r;
+	reg [14:0] product_mantissa_s1_r;
+	wire [DATA_BITS - 1:0] product_unsigned_16_s2 = {1'b0, product_mantissa_s1_r};
+	wire signed [DATA_BITS - 1:0] product_signed_s2 = (sign_product_s1_r ? -$signed(product_unsigned_16_s2) : $signed(product_unsigned_16_s2));
+	wire signed [ACC_BITS - 1:0] product_extended_s2 = {{ACC_BITS - DATA_BITS {product_signed_s2[DATA_BITS - 1]}}, product_signed_s2};
+	wire signed [ACC_BITS - 1:0] acc_sum_s2 = accumulator + product_extended_s2;
 	wire signed [ACC_BITS - 1:0] acc_shifted = accumulator;
 	wire sat_positive = accumulator > $signed({{ACC_BITS - DATA_BITS {1'b0}}, Q115_MAX});
 	wire sat_negative = accumulator < $signed({{ACC_BITS - DATA_BITS {1'b1}}, Q115_MIN});
@@ -2649,16 +2678,35 @@ module systolic_pe (
 			b_out <= {DATA_BITS {1'b0}};
 			weight_reg <= {DATA_BITS {1'b0}};
 			accumulator <= {ACC_BITS {1'b0}};
+			valid_s0 <= 1'b0;
+			valid_s1 <= 1'b0;
+			sign_product_s0_r <= 1'b0;
+			mantissa_a_s0_r <= 15'b000000000000000;
+			mantissa_w_s0_r <= 15'b000000000000000;
+			sign_product_s1_r <= 1'b0;
+			product_mantissa_s1_r <= 15'b000000000000000;
 		end
 		else if (enable) begin
 			a_out <= a_in;
 			b_out <= b_in;
 			if (load_weight)
 				weight_reg <= b_in;
-			if (clear_acc)
+			if (clear_acc) begin
 				accumulator <= {ACC_BITS {1'b0}};
-			else if (compute_enable)
-				accumulator <= acc_sum;
+				valid_s0 <= 1'b0;
+				valid_s1 <= 1'b0;
+			end
+			else begin
+				valid_s0 <= compute_enable;
+				sign_product_s0_r <= sign_product_s0;
+				mantissa_a_s0_r <= mantissa_a_s0;
+				mantissa_w_s0_r <= mantissa_w_s0;
+				valid_s1 <= valid_s0;
+				sign_product_s1_r <= sign_product_s0_r;
+				product_mantissa_s1_r <= product_mantissa_s1;
+				if (valid_s1)
+					accumulator <= acc_sum_s2;
+			end
 		end
 endmodule
 `default_nettype none

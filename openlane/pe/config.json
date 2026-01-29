@@ -4,23 +4,26 @@
         "dir::src/systolic_pe.v"
     ],
     "CLOCK_PORT": "clk",
-    "CLOCK_PERIOD": 10.0,
-    
+    "CLOCK_PERIOD": 20.0,
+
     "FP_SIZING": "relative",
-    "FP_CORE_UTIL": 50,
+    "FP_CORE_UTIL": 70,
     "FP_ASPECT_RATIO": 1.0,
-    
-    "PL_TARGET_DENSITY": 0.55,
-    
-    "GRT_ADJUSTMENT": 0.1,
-    
+
+    "PL_TARGET_DENSITY": 0.70,
+    "GRT_ADJUSTMENT": 0.12,
+
+    "MAX_FANOUT_CONSTRAINT": 16,
+    "SYNTH_STRATEGY": "AREA 1",
+    "SYNTH_CLOCK_GATING": true,
+
     "RUN_CVC": false,
-    
+    "RUN_KLAYOUT_DRC": false,
+    "RUN_KLAYOUT_XOR": false,
+
     "pdk::sky130*": {
-        "FP_CORE_UTIL": 45,
-        "PL_TARGET_DENSITY": 0.5,
         "scl::sky130_fd_sc_hd": {
-            "CLOCK_PERIOD": 12.0
+            "CLOCK_PERIOD": 20.0
         }
     }
 }

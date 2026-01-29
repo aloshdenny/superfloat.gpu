@@ -5,54 +5,71 @@
     ],
     "CLOCK_PORT": "clk",
     "CLOCK_PERIOD": 10.0,
-    
+
     "MACROS": {
         "core": {
-            "gds": ["dir::../core/runs/latest/results/final/gds/core.gds"],
-            "lef": ["dir::../core/runs/latest/results/final/lef/core.lef"],
+            "gds": [
+                "dir::../core/runs/latest/results/final/gds/core.gds"
+            ],
+            "lef": [
+                "dir::../core/runs/latest/results/final/lef/core.lef"
+            ],
             "instances": {
                 "cores[0].core_instance": {
-                    "location": [200, 200],
+                    "location": "auto",
                     "orientation": "N"
                 },
                 "cores[1].core_instance": {
-                    "location": [200, 2200],
+                    "location": "auto",
                     "orientation": "N"
                 },
                 "cores[2].core_instance": {
-                    "location": [2200, 200],
+                    "location": "auto",
                     "orientation": "N"
                 },
                 "cores[3].core_instance": {
-                    "location": [2200, 2200],
+                    "location": "auto",
                     "orientation": "N"
                 }
             }
         }
     },
-    
-    "FP_SIZING": "absolute",
-    "DIE_AREA": "0 0 5000 5000",
-    "FP_CORE_UTIL": 30,
-    
-    "PL_TARGET_DENSITY": 0.35,
-    "PL_MACRO_HALO": "50 50",
-    "PL_MACRO_CHANNEL": "50 50",
-    
-    "GRT_ADJUSTMENT": 0.25,
-    "GLB_RT_OVERFLOW_ITERS": 100,
-    
-    "RUN_CVC": false,
-    
+
+    "FP_SIZING": "relative",
+    "FP_CORE_UTIL": 48,
+    "FP_ASPECT_RATIO": 1.0,
+
+    "PL_TARGET_DENSITY": 0.50,
+    "PL_MACRO_HALO": "8 8",
+    "PL_MACRO_CHANNEL": "8 8",
+
+    "GRT_ADJUSTMENT": 0.20,
+    "GLB_RT_OVERFLOW_ITERS": 150,
+
+    "MAX_FANOUT_CONSTRAINT": 16,
+    "SYNTH_STRATEGY": "AREA 1",
+    "SYNTH_CLOCK_GATING": true,
+
+    "PL_RESIZER_DESIGN_OPTIMIZATIONS": true,
+    "PL_RESIZER_TIMING_OPTIMIZATIONS": false,
+    "GLB_RESIZER_TIMING_OPTIMIZATIONS": false,
+
     "FP_PDN_MULTILAYER": true,
     "FP_PDN_ENABLE_RAILS": true,
-    
+
+    "RUN_CVC": false,
+    "RUN_KLAYOUT_DRC": false,
+    "RUN_KLAYOUT_XOR": false,
+
+    "RUN_HEURISTIC_DIODE_INSERTION": false,
+    "DIODE_ON_PORTS": "none",
+    "GRT_REPAIR_ANTENNAS": false,
+
     "pdk::sky130*": {
-        "DIE_AREA": "0 0 6000 6000",
-        "FP_CORE_UTIL": 25,
-        "PL_TARGET_DENSITY": 0.30,
+        "FP_CORE_UTIL": 48,
+        "PL_TARGET_DENSITY": 0.50,
         "scl::sky130_fd_sc_hd": {
-            "CLOCK_PERIOD": 12.0
+            "CLOCK_PERIOD": 10.0
         }
     }
 }

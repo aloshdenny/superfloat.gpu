@@ -4,38 +4,32 @@
         "dir::src/systolic_array.v"
     ],
     "CLOCK_PORT": "clk",
-    "CLOCK_PERIOD": 10.0,
-    
-    "MACROS": {
-        "systolic_pe": {
-            "gds": ["dir::../pe/runs/latest/results/final/gds/systolic_pe.gds"],
-            "lef": ["dir::../pe/runs/latest/results/final/lef/systolic_pe.lef"],
-            "instances": {
-                "pe_rows[*].pe_cols[*].pe_inst": {
-                    "location": "auto",
-                    "orientation": "N"
-                }
-            }
-        }
-    },
-    
+    "CLOCK_PERIOD": 15.0,
+
     "FP_SIZING": "relative",
-    "FP_CORE_UTIL": 45,
+    "FP_CORE_UTIL": 65,
     "FP_ASPECT_RATIO": 1.0,
-    
-    "PL_TARGET_DENSITY": 0.50,
-    "PL_MACRO_HALO": "20 20",
-    "PL_MACRO_CHANNEL": "20 20",
-    
-    "GRT_ADJUSTMENT": 0.1,
-    
+
+    "PL_TARGET_DENSITY": 0.65,
+    "GRT_ADJUSTMENT": 0.12,
+
+    "MAX_FANOUT_CONSTRAINT": 16,
+    "SYNTH_STRATEGY": "AREA 1",
+    "SYNTH_CLOCK_GATING": true,
+
+    "PL_RESIZER_DESIGN_OPTIMIZATIONS": false,
+    "PL_RESIZER_TIMING_OPTIMIZATIONS": false,
+    "GLB_RESIZER_TIMING_OPTIMIZATIONS": false,
+
     "RUN_CVC": false,
-    
+    "RUN_KLAYOUT_DRC": false,
+    "RUN_KLAYOUT_XOR": false,
+
     "pdk::sky130*": {
-        "FP_CORE_UTIL": 40,
-        "PL_TARGET_DENSITY": 0.45,
+        "FP_CORE_UTIL": 65,
+        "PL_TARGET_DENSITY": 0.65,
         "scl::sky130_fd_sc_hd": {
-            "CLOCK_PERIOD": 12.0
+            "CLOCK_PERIOD": 15.0
         }
     }
 }

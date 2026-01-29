@@ -27,19 +27,27 @@ module systolic_pe (
 	output wire [DATA_BITS - 1:0] acc_out;
 	localparam [DATA_BITS - 1:0] Q115_MAX = 16'h7fff;
 	localparam [DATA_BITS - 1:0] Q115_MIN = 16'h8000;
+	localparam [31:0] MAC_PIPE_LATENCY = 2;
 	reg [DATA_BITS - 1:0] weight_reg;
 	reg signed [ACC_BITS - 1:0] accumulator;
-	wire sign_a = a_in[15];
-	wire sign_w = weight_reg[15];
-	wire sign_product = sign_a ^ sign_w;
-	wire [14:0] mantissa_a = (sign_a ? ~a_in[14:0] + 1'b1 : a_in[14:0]);
-	wire [14:0] mantissa_w = (sign_w ? ~weight_reg[14:0] + 1'b1 : weight_reg[14:0]);
-	wire [29:0] product_unsigned = mantissa_a * mantissa_w;
-	wire [14:0] product_mantissa = product_unsigned[29:15];
-	wire [DATA_BITS - 1:0] product_unsigned_16 = {1'b0, product_mantissa};
-	wire signed [DATA_BITS - 1:0] product_signed = (sign_product ? -$signed(product_unsigned_16) : $signed(product_unsigned_16));
-	wire signed [ACC_BITS - 1:0] product_extended = {{ACC_BITS - DATA_BITS {product_signed[DATA_BITS - 1]}}, product_signed};
-	wire signed [ACC_BITS - 1:0] acc_sum = accumulator + product_extended;
+	wire sign_a_s0 = a_in[15];
+	wire sign_w_s0 = weight_reg[15];
+	wire sign_product_s0 = sign_a_s0 ^ sign_w_s0;
+	wire [14:0] mantissa_a_s0 = (sign_a_s0 ? ~a_in[14:0] + 1'b1 : a_in[14:0]);
+	wire [14:0] mantissa_w_s0 = (sign_w_s0 ? ~weight_reg[14:0] + 1'b1 : weight_reg[14:0]);
+	reg valid_s0;
+	reg sign_product_s0_r;
+	reg [14:0] mantissa_a_s0_r;
+	reg [14:0] mantissa_w_s0_r;
+	wire [29:0] product_unsigned_s1 = mantissa_a_s0_r * mantissa_w_s0_r;
+	wire [14:0] product_mantissa_s1 = product_unsigned_s1[29:15];
+	reg valid_s1;
+	reg sign_product_s1_r;
+	reg [14:0] product_mantissa_s1_r;
+	wire [DATA_BITS - 1:0] product_unsigned_16_s2 = {1'b0, product_mantissa_s1_r};
+	wire signed [DATA_BITS - 1:0] product_signed_s2 = (sign_product_s1_r ? -$signed(product_unsigned_16_s2) : $signed(product_unsigned_16_s2));
+	wire signed [ACC_BITS - 1:0] product_extended_s2 = {{ACC_BITS - DATA_BITS {product_signed_s2[DATA_BITS - 1]}}, product_signed_s2};
+	wire signed [ACC_BITS - 1:0] acc_sum_s2 = accumulator + product_extended_s2;
 	wire signed [ACC_BITS - 1:0] acc_shifted = accumulator;
 	wire sat_positive = accumulator > $signed({{ACC_BITS - DATA_BITS {1'b0}}, Q115_MAX});
 	wire sat_negative = accumulator < $signed({{ACC_BITS - DATA_BITS {1'b1}}, Q115_MIN});
@@ -50,16 +58,35 @@ module systolic_pe (
 			b_out <= {DATA_BITS {1'b0}};
 			weight_reg <= {DATA_BITS {1'b0}};
 			accumulator <= {ACC_BITS {1'b0}};
+			valid_s0 <= 1'b0;
+			valid_s1 <= 1'b0;
+			sign_product_s0_r <= 1'b0;
+			mantissa_a_s0_r <= 15'b000000000000000;
+			mantissa_w_s0_r <= 15'b000000000000000;
+			sign_product_s1_r <= 1'b0;
+			product_mantissa_s1_r <= 15'b000000000000000;
 		end
 		else if (enable) begin
 			a_out <= a_in;
 			b_out <= b_in;
 			if (load_weight)
 				weight_reg <= b_in;
-			if (clear_acc)
+			if (clear_acc) begin
 				accumulator <= {ACC_BITS {1'b0}};
-			else if (compute_enable)
-				accumulator <= acc_sum;
+				valid_s0 <= 1'b0;
+				valid_s1 <= 1'b0;
+			end
+			else begin
+				valid_s0 <= compute_enable;
+				sign_product_s0_r <= sign_product_s0;
+				mantissa_a_s0_r <= mantissa_a_s0;
+				mantissa_w_s0_r <= mantissa_w_s0;
+				valid_s1 <= valid_s0;
+				sign_product_s1_r <= sign_product_s0_r;
+				product_mantissa_s1_r <= product_mantissa_s1;
+				if (valid_s1)
+					accumulator <= acc_sum_s2;
+			end
 		end
 endmodule
 `default_nettype none
@@ -89,6 +116,12 @@ module systolic_array (
 	output wire ready;
 	wire signed [DATA_BITS - 1:0] a_wires [ARRAY_SIZE - 1:0][ARRAY_SIZE:0];
 	wire signed [DATA_BITS - 1:0] b_wires [ARRAY_SIZE:0][ARRAY_SIZE - 1:0];
+	wire [ARRAY_SIZE - 1:0] row_clear_acc;
+	wire [ARRAY_SIZE - 1:0] row_load_weight;
+	wire [ARRAY_SIZE - 1:0] row_compute_enable;
+	assign row_clear_acc = {ARRAY_SIZE {clear_acc}};
+	assign row_load_weight = {ARRAY_SIZE {load_weights}};
+	assign row_compute_enable = {ARRAY_SIZE {compute_enable}};
 	genvar _gv_row_1;
 	genvar _gv_col_1;
 	generate
@@ -108,9 +141,9 @@ module systolic_array (
 					.clk(clk),
 					.reset(reset),
 					.enable(enable),
-					.clear_acc(clear_acc),
-					.load_weight(load_weights),
-					.compute_enable(compute_enable),
+					.clear_acc(row_clear_acc[row]),
+					.load_weight(row_load_weight[row]),
+					.compute_enable(row_compute_enable[row]),
 					.a_in(a_wires[row][col]),
 					.b_in(b_wires[row][col]),
 					.a_out(a_wires[row][col + 1]),
@@ -120,11 +153,5 @@ module systolic_array (
 			end
 		end
 	endgenerate
-	reg ready_reg;
-	assign ready = ready_reg;
-	always @(posedge clk)
-		if (reset)
-			ready_reg <= 1'b1;
-		else if (enable)
-			ready_reg <= ~compute_enable;
+	assign ready = ~compute_enable;
 endmodule
