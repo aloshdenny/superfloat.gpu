@@ -1,0 +1,28 @@
+*/**/__pycache__
+__pycache__/
+*.pyc
+
+# Build artifacts
+build/
+*.vvp
+*.vcd
+
+# Python virtual environment
+venv/
+
+# GDS intermediates
+# gds/**/*.gltf
+
+# System files
+.DS_Store
+
+# Test results
+results.xml
+results/
+logs/
+*.gtkw
+
+.venv/
+
+# **/runs/**
+.git.backup/

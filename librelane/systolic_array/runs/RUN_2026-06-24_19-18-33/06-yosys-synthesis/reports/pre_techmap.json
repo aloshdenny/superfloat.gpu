@@ -1,0 +1,87 @@
+{
+   "creator": "Yosys 0.66 (git sha1 7f8fdfd8d7bc08c749a2a969388d3425d4f369d5, clang++ 21.1.2 -fPIC -O3)",
+   "invocation": "stat -json -liberty /Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/tmp/8ba28f3797024e8d91c989b41b18fc1c.lib -liberty /Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/tmp/2222f12bfa7e4e8eb257c1d6aef4e0b6.lib -liberty /Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/tmp/f2cc69e9f6bf445d8291f247980f6f5d.lib -liberty /Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/tmp/c97d47bc03f742f68eb66ed2da755064.lib -liberty /Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/tmp/069c964d82dc4961a126892f96375b4d.lib -liberty /Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/tmp/87a6f2e14f0a4784a34a5576a278d30b.lib -liberty /Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/tmp/1497f2a2b25c47ec975ea44d18e91e66.lib -liberty /Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/tmp/e620058e308241a5a35a9ceb84e6756f.lib ",
+   "modules": {
+      "\\systolic_array": {
+         "num_wires":         28,
+         "num_wire_bits":     399,
+         "num_pub_wires":     28,
+         "num_pub_wire_bits": 399,
+         "num_ports":         10,
+         "num_port_bits":     135,
+         "num_memories":      0,
+         "num_memory_bits":   0,
+         "num_processes":     0,
+         "num_cells":         69,
+         "num_submodules":       4,
+         "area":              160.153600,
+         "sequential_area":    0.000000,
+         "num_cells_by_type": {
+            "$_NOT_": 1,
+            "$_SDFF_PP0_": 68,
+            "systolic_pe": 4
+         }
+      },
+      "\\systolic_pe": {
+         "num_wires":         1650,
+         "num_wire_bits":     1798,
+         "num_pub_wires":     21,
+         "num_pub_wire_bits": 169,
+         "num_ports":         11,
+         "num_port_bits":     86,
+         "num_memories":      0,
+         "num_memory_bits":   0,
+         "num_processes":     0,
+         "num_cells":         1755,
+         "num_submodules":       0,
+         "area":              40.038400,
+         "sequential_area":    0.000000,
+         "num_cells_by_type": {
+            "$_ANDNOT_": 616,
+            "$_AND_": 43,
+            "$_MUX_": 44,
+            "$_NAND_": 57,
+            "$_NOR_": 61,
+            "$_NOT_": 82,
+            "$_ORNOT_": 58,
+            "$_OR_": 227,
+            "$_SDFFE_PP0P_": 82,
+            "$_XNOR_": 109,
+            "$_XOR_": 374,
+            "sky130_fd_sc_hd__fa_1": 2
+         }
+      }
+   },
+      "design": {
+         "num_wires":         6628,
+         "num_wire_bits":     7591,
+         "num_pub_wires":     112,
+         "num_pub_wire_bits": 1075,
+         "num_ports":         54,
+         "num_port_bits":     479,
+         "num_memories":      0,
+         "num_memory_bits":   0,
+         "num_processes":     0,
+         "num_cells":         7089,
+         "num_submodules":       4,
+         "area":              160.153600,
+         "sequential_area":    0.000000,
+         "num_cells_by_type": {
+            "$_ANDNOT_": 2464,
+            "$_AND_": 172,
+            "$_MUX_": 176,
+            "$_NAND_": 228,
+            "$_NOR_": 244,
+            "$_NOT_": 329,
+            "$_ORNOT_": 232,
+            "$_OR_": 908,
+            "$_SDFFE_PP0P_": 328,
+            "$_SDFF_PP0_": 68,
+            "$_XNOR_": 436,
+            "$_XOR_": 1496,
+            "sky130_fd_sc_hd__fa_1": 8,
+            "systolic_pe": 4
+         }
+      }
+}
+

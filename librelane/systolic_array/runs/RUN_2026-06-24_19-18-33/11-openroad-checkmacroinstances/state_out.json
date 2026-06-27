@@ -1,0 +1,14 @@
+{
+    "json_h": "/Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/05-yosys-jsonheader/systolic_array.h.json",
+    "nl": "/Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/06-yosys-synthesis/systolic_array.nl.v",
+    "metrics": {
+        "design__lint_error__count": 0,
+        "design__lint_timing_construct__count": 0,
+        "design__lint_warning__count": 495,
+        "design__inferred_latch__count": 0,
+        "design__instance__count": 5953,
+        "design__instance__area": 65941.9936,
+        "design__instance_unmapped__count": 0,
+        "synthesis__check_error__count": 0
+    }
+}

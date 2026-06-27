@@ -1,0 +1,87 @@
+{
+  "DESIGN_NAME": "systolic_pe",
+  "VERILOG_FILES": ["dir::../../src/systolic_pe.sv"],
+  "CLOCK_PORT": "clk",
+  "CLOCK_PERIOD": 20.0,
+
+  "CLOCK_UNCERTAINTY_CONSTRAINT": 0.20,
+  "CLOCK_TRANSITION_CONSTRAINT": 0.25,
+
+  "FP_SIZING": "absolute",
+  "DIE_AREA": [0.0, 0.0, 160.0, 200.0],
+
+  "SYNTH_MUL_BOOTH": true,
+  "SYNTH_ADDER_TYPE": "FA",
+
+  "SYNTH_STRATEGY": "AREA 0",
+  "SYNTH_HIERARCHY_MODE": "flatten",
+
+  "SYNTH_SIZING": true,
+  "SYNTH_ABC_BUFFERING": true,
+
+  "MAX_FANOUT_CONSTRAINT": 8,
+  "MAX_TRANSITION_CONSTRAINT": 1.5,
+  "MAX_CAPACITANCE_CONSTRAINT": 0.25,
+
+  "RT_MAX_LAYER": "met4",
+
+  "PL_TIMING_DRIVEN": true,
+  "PL_ROUTABILITY_DRIVEN": true,
+  "GRT_ALLOW_CONGESTION": true,
+
+  "RUN_POST_CTS_RESIZER_TIMING": true,
+  "PL_RESIZER_SETUP_SLACK_MARGIN": 0.30,
+  "PL_RESIZER_HOLD_SLACK_MARGIN":  0.08,
+  "PL_RESIZER_HOLD_MAX_BUFFER_PCT": 80,
+  "PL_RESIZER_SETUP_MAX_BUFFER_PCT": 30,
+  "PL_RESIZER_ALLOW_SETUP_VIOS": false,
+  "PL_RESIZER_SETUP_GATE_CLONING": false,
+  "PL_RESIZER_SETUP_REPAIR_TNS_PCT": 50,
+
+  "RUN_POST_GRT_RESIZER_TIMING": true,
+  "GRT_RESIZER_SETUP_SLACK_MARGIN": 0.20,
+  "GRT_RESIZER_HOLD_SLACK_MARGIN":  0.08,
+  "GRT_RESIZER_HOLD_MAX_BUFFER_PCT": 80,
+  "GRT_RESIZER_SETUP_MAX_BUFFER_PCT": 20,
+  "GRT_RESIZER_ALLOW_SETUP_VIOS": false,
+  "GRT_RESIZER_SETUP_GATE_CLONING": false,
+  "GRT_RESIZER_SETUP_REPAIR_TNS_PCT": 50,
+  "GRT_RESIZER_TIMING_OPTIMIZATIONS": true,
+
+  "RUN_POST_GRT_DESIGN_REPAIR": true,
+  "GRT_DESIGN_REPAIR_MAX_SLEW_PCT": 40,
+  "GRT_DESIGN_REPAIR_MAX_CAP_PCT": 40,
+
+  "RUN_ANTENNA_REPAIR": true,
+  "DIODE_INSERTION_STRATEGY": 3,
+
+  "CTS_BALANCE_LEVELS": true,
+  "CTS_SINK_CLUSTERING_ENABLE": true,
+  "CTS_SINK_CLUSTERING_SIZE": 8,
+  "CTS_CLK_BUFFERS": [
+    "sky130_fd_sc_hd__clkbuf_2",
+    "sky130_fd_sc_hd__clkbuf_4",
+    "sky130_fd_sc_hd__clkbuf_8"
+  ],
+
+  "EXTRA_EXCLUDED_CELLS": [
+    "sky130_fd_sc_hd__clkdlybuf4s15_1",
+    "sky130_fd_sc_hd__clkdlybuf4s15_2",
+    "sky130_fd_sc_hd__clkdlybuf4s18_1",
+    "sky130_fd_sc_hd__clkdlybuf4s18_2",
+    "sky130_fd_sc_hd__clkdlybuf4s25_1",
+    "sky130_fd_sc_hd__clkdlybuf4s25_2",
+    "sky130_fd_sc_hd__clkdlybuf4s50_1",
+    "sky130_fd_sc_hd__clkdlybuf4s50_2",
+    "sky130_fd_sc_hd__dlygate4sd1_1",
+    "sky130_fd_sc_hd__dlygate4sd2_1",
+    "sky130_fd_sc_hd__dlygate4sd3_1",
+    "sky130_fd_sc_hd__dlymetal6s2s_1",
+    "sky130_fd_sc_hd__dlymetal6s4s_1",
+    "sky130_fd_sc_hd__dlymetal6s6s_1",
+    "sky130_fd_sc_hd__buf_16",
+    "sky130_fd_sc_hd__inv_16"
+  ],
+
+  "IO_PCT": 0.1
+}

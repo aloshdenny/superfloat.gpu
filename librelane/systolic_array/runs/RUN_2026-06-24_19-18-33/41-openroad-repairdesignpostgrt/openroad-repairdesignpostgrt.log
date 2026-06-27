@@ -1,0 +1,1409 @@
+Reading timing models for corner max_tt_025C_1v80…
+Reading timing library for the 'max_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib'…
+Reading timing library for the 'max_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'max_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_tt_025C_1v80_3v30.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_tt_025C_1v80_3v30.lib line 43, default_fanout_load is 0.0.
+Reading timing library for the 'max_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'max_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'max_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'max_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'max_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 43, default_fanout_load is 0.0.
+Reading timing models for corner min_ss_100C_1v60…
+Reading timing library for the 'min_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib'…
+Reading timing library for the 'min_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'min_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ss_100C_1v60_3v00.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ss_100C_1v60_3v00.lib line 43, default_fanout_load is 0.0.
+Reading timing library for the 'min_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'min_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'min_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00.lib line 33, default_fanout_load is 0.0.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+Reading timing library for the 'min_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 18, library slices_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'min_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 18, library sky130_ef_io__analog_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 43, default_fanout_load is 0.0.
+Reading timing models for corner nom_tt_025C_1v80…
+Reading timing library for the 'nom_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib line 1, library sky130_fd_sc_hd__tt_025C_1v80 already exists.
+Reading timing library for the 'nom_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 18, library sky130_ef_io__vccd_lvc_clamped_pad_tt_025C_1v80_3v30_3v30 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'nom_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_tt_025C_1v80_3v30.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_tt_025C_1v80_3v30.lib line 18, library sky130_ef_io__vssd_lvc_clamped_pad_tt_025C_1v80_3v30 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_tt_025C_1v80_3v30.lib line 43, default_fanout_load is 0.0.
+Reading timing library for the 'nom_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 18, library sky130_ef_io__vddio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'nom_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 18, library sky130_ef_io__vssio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'nom_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30.lib line 18, library sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'nom_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 18, library slices_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'nom_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 18, library sky130_ef_io__analog_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 43, default_fanout_load is 0.0.
+Reading timing models for corner max_ff_n40C_1v95…
+Reading timing library for the 'max_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v95.lib'…
+Reading timing library for the 'max_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'max_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ff_n40C_1v95_5v50.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ff_n40C_1v95_5v50.lib line 43, default_fanout_load is 0.0.
+Reading timing library for the 'max_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'max_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'max_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ff_ff_n40C_1v95_5v50.lib'…
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ff_ff_n40C_1v95_5v50.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'max_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 18, library slices_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'max_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 18, library sky130_ef_io__analog_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 43, default_fanout_load is 0.0.
+Reading timing models for corner nom_ff_n40C_1v95…
+Reading timing library for the 'nom_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v95.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v95.lib line 1, library sky130_fd_sc_hd__ff_n40C_1v95 already exists.
+Reading timing library for the 'nom_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 18, library sky130_ef_io__vccd_lvc_clamped_pad_ff_n40C_1v95_5v50_5v50 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ff_n40C_1v95_5v50.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ff_n40C_1v95_5v50.lib line 18, library sky130_ef_io__vssd_lvc_clamped_pad_ff_n40C_1v95_5v50 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ff_n40C_1v95_5v50.lib line 43, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 18, library sky130_ef_io__vddio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 18, library sky130_ef_io__vssio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ff_ff_n40C_1v95_5v50.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ff_ff_n40C_1v95_5v50.lib line 18, library sky130_ef_io__gpiov2_pad_ff_ff_n40C_1v95_5v50 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ff_ff_n40C_1v95_5v50.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 18, library slices_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 18, library sky130_ef_io__analog_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 43, default_fanout_load is 0.0.
+Reading timing models for corner max_ss_100C_1v60…
+Reading timing library for the 'max_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib line 1, library sky130_fd_sc_hd__ss_100C_1v60 already exists.
+Reading timing library for the 'max_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 18, library sky130_ef_io__vccd_lvc_clamped_pad_ss_100C_1v60_3v00_3v00 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'max_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ss_100C_1v60_3v00.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ss_100C_1v60_3v00.lib line 18, library sky130_ef_io__vssd_lvc_clamped_pad_ss_100C_1v60_3v00 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ss_100C_1v60_3v00.lib line 43, default_fanout_load is 0.0.
+Reading timing library for the 'max_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 18, library sky130_ef_io__vddio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'max_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 18, library sky130_ef_io__vssio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'max_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00.lib line 18, library sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00.lib line 33, default_fanout_load is 0.0.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+Reading timing library for the 'max_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 18, library slices_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'max_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 18, library sky130_ef_io__analog_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 43, default_fanout_load is 0.0.
+Reading timing models for corner min_tt_025C_1v80…
+Reading timing library for the 'min_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib line 1, library sky130_fd_sc_hd__tt_025C_1v80 already exists.
+Reading timing library for the 'min_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 18, library sky130_ef_io__vccd_lvc_clamped_pad_tt_025C_1v80_3v30_3v30 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'min_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_tt_025C_1v80_3v30.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_tt_025C_1v80_3v30.lib line 18, library sky130_ef_io__vssd_lvc_clamped_pad_tt_025C_1v80_3v30 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_tt_025C_1v80_3v30.lib line 43, default_fanout_load is 0.0.
+Reading timing library for the 'min_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 18, library sky130_ef_io__vddio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'min_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 18, library sky130_ef_io__vssio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_tt_025C_1v80_3v30_3v30.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'min_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30.lib line 18, library sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'min_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 18, library slices_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'min_tt_025C_1v80' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 18, library sky130_ef_io__analog_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 43, default_fanout_load is 0.0.
+Reading timing models for corner nom_ss_100C_1v60…
+Reading timing library for the 'nom_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ss_100C_1v60.lib line 1, library sky130_fd_sc_hd__ss_100C_1v60 already exists.
+Reading timing library for the 'nom_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 18, library sky130_ef_io__vccd_lvc_clamped_pad_ss_100C_1v60_3v00_3v00 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ss_100C_1v60_3v00.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ss_100C_1v60_3v00.lib line 18, library sky130_ef_io__vssd_lvc_clamped_pad_ss_100C_1v60_3v00 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ss_100C_1v60_3v00.lib line 43, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 18, library sky130_ef_io__vddio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 18, library sky130_ef_io__vssio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ss_100C_1v60_3v00_3v00.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00.lib line 18, library sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00.lib line 33, default_fanout_load is 0.0.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+[WARNING STA-1111] cell sky130_ef_io__gpiov2_pad_ss_ss_100C_1v60_3v00/sky130_ef_io__gpiov2_pad OUT -> PAD timing group combinational not found in cell sky130_ef_io__gpiov2_pad_tt_tt_025C_1v80_3v30/sky130_ef_io__gpiov2_pad.
+Reading timing library for the 'nom_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 18, library slices_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'nom_ss_100C_1v60' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 18, library sky130_ef_io__analog_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 43, default_fanout_load is 0.0.
+Reading timing models for corner min_ff_n40C_1v95…
+Reading timing library for the 'min_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v95.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__ff_n40C_1v95.lib line 1, library sky130_fd_sc_hd__ff_n40C_1v95 already exists.
+Reading timing library for the 'min_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 18, library sky130_ef_io__vccd_lvc_clamped_pad_ff_n40C_1v95_5v50_5v50 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vccd_lvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'min_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ff_n40C_1v95_5v50.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ff_n40C_1v95_5v50.lib line 18, library sky130_ef_io__vssd_lvc_clamped_pad_ff_n40C_1v95_5v50 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssd_lvc_clamped_pad_ff_n40C_1v95_5v50.lib line 43, default_fanout_load is 0.0.
+Reading timing library for the 'min_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 18, library sky130_ef_io__vddio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vddio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'min_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 18, library sky130_ef_io__vssio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__vssio_hvc_clamped_pad_ff_n40C_1v95_5v50_5v50.lib line 42, default_fanout_load is 0.0.
+Reading timing library for the 'min_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ff_ff_n40C_1v95_5v50.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ff_ff_n40C_1v95_5v50.lib line 18, library sky130_ef_io__gpiov2_pad_ff_ff_n40C_1v95_5v50 already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__gpiov2_pad_ff_ff_n40C_1v95_5v50.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'min_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 18, library slices_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/slices_stubs.lib line 33, default_fanout_load is 0.0.
+Reading timing library for the 'min_ff_n40C_1v95' corner at '/Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib'…
+[WARNING STA-1140] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 18, library sky130_ef_io__analog_stubs already exists.
+[WARNING STA-1173] /Users/aoxo/.ciel/ciel/sky130/versions/74c0e6b118a67d94c24172143d3bd597473fa63d/sky130A/libs.ref/sky130_fd_io/lib/sky130_ef_io__analog_stubs.lib line 43, default_fanout_load is 0.0.
+Reading OpenROAD database at '/Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/39-openroad-globalrouting/systolic_array.odb'…
+[WARNING ORD-2056] The following 18 liberty cell(s) do not have LEF masters and will be marked as dont-use:
+  sky130_ef_io__analog_minesd_pad
+  sky130_ef_io__analog_minesd_pad_short
+  sky130_ef_io__analog_minesd_pad
+  sky130_ef_io__analog_minesd_pad_short
+  sky130_ef_io__analog_minesd_pad
+  sky130_ef_io__analog_minesd_pad_short
+  sky130_ef_io__analog_minesd_pad
+  sky130_ef_io__analog_minesd_pad_short
+  sky130_ef_io__analog_minesd_pad
+  sky130_ef_io__analog_minesd_pad_short
+  sky130_ef_io__analog_minesd_pad
+  sky130_ef_io__analog_minesd_pad_short
+  sky130_ef_io__analog_minesd_pad
+  sky130_ef_io__analog_minesd_pad_short
+  sky130_ef_io__analog_minesd_pad
+  sky130_ef_io__analog_minesd_pad_short
+  sky130_ef_io__analog_minesd_pad
+  sky130_ef_io__analog_minesd_pad_short
+Reading design constraints file at '/nix/store/38q40jfdrbmaz6c7rq2km1bipdi0873m-python3-3.13.9-env/lib/python3.13/site-packages/librelane/scripts/base.sdc'…
+[INFO] Using clock clk…
+[INFO] Setting output delay to: 0.04
+[INFO] Setting input delay to: 0.04
+[INFO] Setting load to: 0.033442
+[INFO] Setting clock uncertainty to: 0.20
+[INFO] Setting clock transition to: 0.30
+[INFO] Setting timing derate to: 5%
+[INFO] Setting signal min routing layer to: met1 and clock min routing layer to met1. 
+[INFO] Setting signal max routing layer to: met4 and clock max routing layer to met4. 
++ global_route -congestion_iterations 50 -verbose -allow_congestion
+[INFO GRT-0020] Min routing layer: met1
+[INFO GRT-0021] Max routing layer: met4
+[INFO GRT-0022] Global adjustment: 30%
+[INFO GRT-0023] Grid origin: (0, 0)
+[INFO GRT-0088] Layer li1     Track-Pitch = 0.4600  line-2-Via Pitch: 0.3400
+[INFO GRT-0088] Layer met1    Track-Pitch = 0.3400  line-2-Via Pitch: 0.3400
+[INFO GRT-0088] Layer met2    Track-Pitch = 0.4600  line-2-Via Pitch: 0.3500
+[INFO GRT-0088] Layer met3    Track-Pitch = 0.6800  line-2-Via Pitch: 0.6150
+[INFO GRT-0088] Layer met4    Track-Pitch = 0.9200  line-2-Via Pitch: 0.6150
+[INFO GRT-0003] Macros: 0
+[INFO GRT-0004] Blockages: 12124
+[INFO GRT-0019] Found 120 clock nets.
+[INFO GRT-0001] Minimum degree: 2
+[INFO GRT-0002] Maximum degree: 17
+
+[INFO GRT-0053] Routing resources analysis:
+          Routing      Original      Derated      Resource
+Layer     Direction    Resources     Resources    Reduction (%)
+---------------------------------------------------------------
+li1        Vertical            0             0          0.00%
+met1       Horizontal      31047         20739          33.20%
+met2       Vertical        32941         21898          33.52%
+met3       Horizontal      22775         15631          31.37%
+met4       Vertical        16471          9914          39.81%
+---------------------------------------------------------------
+
+[INFO GRT-0101] Running extra iterations to remove overflow.
+[INFO GRT-0102] Start extra iteration 1/50
+[INFO GRT-0102] Start extra iteration 2/50
+[INFO GRT-0102] Start extra iteration 3/50
+[INFO GRT-0102] Start extra iteration 4/50
+[INFO GRT-0102] Start extra iteration 5/50
+[INFO GRT-0102] Start extra iteration 6/50
+[INFO GRT-0102] Start extra iteration 7/50
+[INFO GRT-0102] Start extra iteration 8/50
+[INFO GRT-0102] Start extra iteration 9/50
+[INFO GRT-0102] Start extra iteration 10/50
+[INFO GRT-0102] Start extra iteration 11/50
+[INFO GRT-0102] Start extra iteration 12/50
+[INFO GRT-0197] Via related to pin nodes: 44510
+[INFO GRT-0198] Via related Steiner nodes: 568
+[INFO GRT-0199] Via filling finished.
+[INFO GRT-0111] Final number of vias: 57891
+[INFO GRT-0112] Final usage 3D: 211427
+
+[INFO GRT-0096] Final congestion report:
+Layer         Resource        Demand        Usage (%)    Max H / Max V / Total Overflow
+---------------------------------------------------------------------------------------
+li1                  0             0            0.00%             0 /  0 /  0
+met1             20739         14632           70.55%             0 /  0 /  0
+met2             21898         13694           62.54%             0 /  0 /  0
+met3             15631          6382           40.83%             0 /  0 /  0
+met4              9914          3046           30.72%             0 /  0 /  0
+---------------------------------------------------------------------------------------
+Total            68182         37754           55.37%             0 /  0 /  0
+
+[INFO GRT-0018] Total wirelength: 392216 um
+[INFO GRT-0014] Routed nets: 8583
+[INFO GRT-0303] Global routing runtime = 00:00:08
++ repair_design -verbose -max_wire_length 0 -slew_margin 40 -cap_margin 40
+Iteration |   Area    | Resized | Buffers | Nets repaired | Remaining
+---------------------------------------------------------------------
+        0 |     +0.0% |       0 |       0 |             0 |      8615
+     1000 |     +0.0% |       0 |       0 |             1 |      7615
+     2000 |     +0.0% |       0 |       0 |             1 |      6615
+     3000 |     +0.0% |       0 |       0 |             1 |      5615
+     4000 |     +0.0% |       0 |       0 |             1 |      4615
+     5000 |     +0.0% |       0 |       0 |             1 |      3615
+     6000 |     +0.0% |       0 |       0 |             1 |      2615
+     7000 |     +0.0% |       0 |       0 |             1 |      1615
+     8000 |     +0.0% |       0 |       0 |             1 |       615
+    final |     +0.0% |       0 |       0 |             1 |         0
+---------------------------------------------------------------------
+[INFO RSZ-0034] Found 1 slew violations.
++ detailed_placement -max_displacement  500 100 
+Placement Analysis
+---------------------------------
+total displacement          0.0 u
+average displacement        0.0 u
+max displacement            0.0 u
+original HPWL          238153.6 u
+legalized HPWL         243705.4 u
+delta HPWL                    2 %
+
+[INFO DPL-0020] Mirrored 3239 instances
+[INFO DPL-0021] HPWL before          243705.4 u
+[INFO DPL-0022] HPWL after           238153.6 u
+[INFO DPL-0023] HPWL delta               -2.3 %
++ global_route -congestion_iterations 50 -verbose -allow_congestion
+[INFO GRT-0020] Min routing layer: met1
+[INFO GRT-0021] Max routing layer: met4
+[INFO GRT-0022] Global adjustment: 30%
+[INFO GRT-0023] Grid origin: (0, 0)
+[INFO GRT-0088] Layer li1     Track-Pitch = 0.4600  line-2-Via Pitch: 0.3400
+[INFO GRT-0088] Layer met1    Track-Pitch = 0.3400  line-2-Via Pitch: 0.3400
+[INFO GRT-0088] Layer met2    Track-Pitch = 0.4600  line-2-Via Pitch: 0.3500
+[INFO GRT-0088] Layer met3    Track-Pitch = 0.6800  line-2-Via Pitch: 0.6150
+[INFO GRT-0088] Layer met4    Track-Pitch = 0.9200  line-2-Via Pitch: 0.6150
+[INFO GRT-0003] Macros: 0
+[INFO GRT-0004] Blockages: 12124
+[INFO GRT-0019] Found 120 clock nets.
+[INFO GRT-0001] Minimum degree: 2
+[INFO GRT-0002] Maximum degree: 17
+
+[INFO GRT-0053] Routing resources analysis:
+          Routing      Original      Derated      Resource
+Layer     Direction    Resources     Resources    Reduction (%)
+---------------------------------------------------------------
+li1        Vertical            0             0          0.00%
+met1       Horizontal      31047         20739          33.20%
+met2       Vertical        32941         21898          33.52%
+met3       Horizontal      22775         15631          31.37%
+met4       Vertical        16471          9914          39.81%
+---------------------------------------------------------------
+
+[INFO GRT-0101] Running extra iterations to remove overflow.
+[INFO GRT-0102] Start extra iteration 1/50
+[INFO GRT-0102] Start extra iteration 2/50
+[INFO GRT-0102] Start extra iteration 3/50
+[WARNING EST-0026] Missing route to pin hold3424/A in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[16] in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin hold3424/A in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[16] in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin hold3424/A in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[16] in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin hold3424/A in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[16] in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin hold3424/A in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[16] in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin hold3424/A in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[16] in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin hold3424/A in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[16] in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin hold3424/A in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[16] in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin hold3424/A in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[16] in net a_inputs_flat[16].
+[WARNING EST-0026] Missing route to pin hold3466/A in net a_inputs_flat[15].
+[WARNING EST-0026] Missing route to pin hold3466/A in net a_inputs_flat[15].
+[WARNING EST-0026] Missing route to pin hold3466/A in net a_inputs_flat[15].
+[WARNING EST-0026] Missing route to pin hold3466/A in net a_inputs_flat[15].
+[WARNING EST-0026] Missing route to pin hold3466/A in net a_inputs_flat[15].
+[WARNING EST-0026] Missing route to pin hold3466/A in net a_inputs_flat[15].
+[WARNING EST-0026] Missing route to pin hold3466/A in net a_inputs_flat[15].
+[WARNING EST-0026] Missing route to pin hold3466/A in net a_inputs_flat[15].
+[WARNING EST-0026] Missing route to pin hold3466/A in net a_inputs_flat[15].
+[WARNING EST-0026] Missing route to pin hold3559/A in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[13] in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3559/A in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[13] in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3559/A in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[13] in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3559/A in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[13] in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3559/A in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[13] in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3559/A in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[13] in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3559/A in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[13] in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3559/A in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[13] in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3559/A in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[13] in net a_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3333/A in net a_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3333/A in net a_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3333/A in net a_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3333/A in net a_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3333/A in net a_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3333/A in net a_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3333/A in net a_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3333/A in net a_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3333/A in net a_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3305/A in net a_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3305/A in net a_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3305/A in net a_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3305/A in net a_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3305/A in net a_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3305/A in net a_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3305/A in net a_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3305/A in net a_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3305/A in net a_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3553/A in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[0] in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3553/A in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[0] in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3553/A in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[0] in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3553/A in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[0] in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3553/A in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[0] in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3553/A in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[0] in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3553/A in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[0] in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3553/A in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[0] in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3553/A in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[0] in net a_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3535/A in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[11] in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3535/A in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[11] in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3535/A in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[11] in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3535/A in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[11] in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3535/A in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[11] in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3535/A in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[11] in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3535/A in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[11] in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3535/A in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[11] in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3535/A in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[11] in net a_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3144/A in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[14] in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3144/A in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[14] in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3144/A in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[14] in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3144/A in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[14] in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3144/A in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[14] in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3144/A in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[14] in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3144/A in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[14] in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3144/A in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[14] in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3144/A in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[14] in net a_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3577/A in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[28] in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin hold3577/A in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[28] in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin hold3577/A in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[28] in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin hold3577/A in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[28] in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin hold3577/A in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[28] in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin hold3577/A in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[28] in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin hold3577/A in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[28] in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin hold3577/A in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[28] in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin hold3577/A in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[28] in net a_inputs_flat[28].
+[WARNING EST-0026] Missing route to pin hold3473/A in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[17] in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin hold3473/A in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[17] in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin hold3473/A in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[17] in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin hold3473/A in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[17] in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin hold3473/A in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[17] in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin hold3473/A in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[17] in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin hold3473/A in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[17] in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin hold3473/A in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[17] in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin hold3473/A in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[17] in net a_inputs_flat[17].
+[WARNING EST-0026] Missing route to pin hold3522/A in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[27] in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin hold3522/A in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[27] in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin hold3522/A in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[27] in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin hold3522/A in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[27] in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin hold3522/A in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[27] in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin hold3522/A in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[27] in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin hold3522/A in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[27] in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin hold3522/A in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[27] in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin hold3522/A in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[27] in net a_inputs_flat[27].
+[WARNING EST-0026] Missing route to pin hold3438/A in net a_inputs_flat[18].
+[WARNING EST-0026] Missing route to pin hold3438/A in net a_inputs_flat[18].
+[WARNING EST-0026] Missing route to pin hold3438/A in net a_inputs_flat[18].
+[WARNING EST-0026] Missing route to pin hold3438/A in net a_inputs_flat[18].
+[WARNING EST-0026] Missing route to pin hold3438/A in net a_inputs_flat[18].
+[WARNING EST-0026] Missing route to pin hold3438/A in net a_inputs_flat[18].
+[WARNING EST-0026] Missing route to pin hold3438/A in net a_inputs_flat[18].
+[WARNING EST-0026] Missing route to pin hold3438/A in net a_inputs_flat[18].
+[WARNING EST-0026] Missing route to pin hold3438/A in net a_inputs_flat[18].
+[WARNING EST-0026] Missing route to pin hold3431/A in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[19] in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin hold3431/A in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[19] in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin hold3431/A in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[19] in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin hold3431/A in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[19] in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin hold3431/A in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[19] in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin hold3431/A in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[19] in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin hold3431/A in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[19] in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin hold3431/A in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[19] in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin hold3431/A in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[19] in net a_inputs_flat[19].
+[WARNING EST-0026] Missing route to pin hold3529/A in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[25] in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin hold3529/A in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[25] in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin hold3529/A in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[25] in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin hold3529/A in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[25] in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin hold3529/A in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[25] in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin hold3529/A in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[25] in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin hold3529/A in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[25] in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin hold3529/A in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[25] in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin hold3529/A in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[25] in net a_inputs_flat[25].
+[WARNING EST-0026] Missing route to pin hold3375/A in net a_inputs_flat[21].
+[WARNING EST-0026] Missing route to pin hold3375/A in net a_inputs_flat[21].
+[WARNING EST-0026] Missing route to pin hold3375/A in net a_inputs_flat[21].
+[WARNING EST-0026] Missing route to pin hold3375/A in net a_inputs_flat[21].
+[WARNING EST-0026] Missing route to pin hold3375/A in net a_inputs_flat[21].
+[WARNING EST-0026] Missing route to pin hold3375/A in net a_inputs_flat[21].
+[WARNING EST-0026] Missing route to pin hold3375/A in net a_inputs_flat[21].
+[WARNING EST-0026] Missing route to pin hold3375/A in net a_inputs_flat[21].
+[WARNING EST-0026] Missing route to pin hold3375/A in net a_inputs_flat[21].
+[WARNING EST-0026] Missing route to pin hold3508/A in net a_inputs_flat[1].
+[WARNING EST-0026] Missing route to pin hold3508/A in net a_inputs_flat[1].
+[WARNING EST-0026] Missing route to pin hold3508/A in net a_inputs_flat[1].
+[WARNING EST-0026] Missing route to pin hold3508/A in net a_inputs_flat[1].
+[WARNING EST-0026] Missing route to pin hold3508/A in net a_inputs_flat[1].
+[WARNING EST-0026] Missing route to pin hold3508/A in net a_inputs_flat[1].
+[WARNING EST-0026] Missing route to pin hold3508/A in net a_inputs_flat[1].
+[WARNING EST-0026] Missing route to pin hold3508/A in net a_inputs_flat[1].
+[WARNING EST-0026] Missing route to pin hold3508/A in net a_inputs_flat[1].
+[WARNING EST-0026] Missing route to pin hold3515/A in net a_inputs_flat[20].
+[WARNING EST-0026] Missing route to pin hold3515/A in net a_inputs_flat[20].
+[WARNING EST-0026] Missing route to pin hold3515/A in net a_inputs_flat[20].
+[WARNING EST-0026] Missing route to pin hold3515/A in net a_inputs_flat[20].
+[WARNING EST-0026] Missing route to pin hold3515/A in net a_inputs_flat[20].
+[WARNING EST-0026] Missing route to pin hold3515/A in net a_inputs_flat[20].
+[WARNING EST-0026] Missing route to pin hold3515/A in net a_inputs_flat[20].
+[WARNING EST-0026] Missing route to pin hold3515/A in net a_inputs_flat[20].
+[WARNING EST-0026] Missing route to pin hold3515/A in net a_inputs_flat[20].
+[WARNING EST-0026] Missing route to pin hold3541/A in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[24] in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin hold3541/A in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[24] in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin hold3541/A in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[24] in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin hold3541/A in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[24] in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin hold3541/A in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[24] in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin hold3541/A in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[24] in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin hold3541/A in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[24] in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin hold3541/A in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[24] in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin hold3541/A in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[24] in net a_inputs_flat[24].
+[WARNING EST-0026] Missing route to pin hold3452/A in net a_inputs_flat[22].
+[WARNING EST-0026] Missing route to pin hold3452/A in net a_inputs_flat[22].
+[WARNING EST-0026] Missing route to pin hold3452/A in net a_inputs_flat[22].
+[WARNING EST-0026] Missing route to pin hold3452/A in net a_inputs_flat[22].
+[WARNING EST-0026] Missing route to pin hold3452/A in net a_inputs_flat[22].
+[WARNING EST-0026] Missing route to pin hold3452/A in net a_inputs_flat[22].
+[WARNING EST-0026] Missing route to pin hold3452/A in net a_inputs_flat[22].
+[WARNING EST-0026] Missing route to pin hold3452/A in net a_inputs_flat[22].
+[WARNING EST-0026] Missing route to pin hold3452/A in net a_inputs_flat[22].
+[WARNING EST-0026] Missing route to pin hold3445/A in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[23] in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin hold3445/A in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[23] in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin hold3445/A in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[23] in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin hold3445/A in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[23] in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin hold3445/A in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[23] in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin hold3445/A in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[23] in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin hold3445/A in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[23] in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin hold3445/A in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[23] in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin hold3445/A in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[23] in net a_inputs_flat[23].
+[WARNING EST-0026] Missing route to pin hold3547/A in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[26] in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin hold3547/A in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[26] in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin hold3547/A in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[26] in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin hold3547/A in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[26] in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin hold3547/A in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[26] in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin hold3547/A in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[26] in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin hold3547/A in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[26] in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin hold3547/A in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[26] in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin hold3547/A in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[26] in net a_inputs_flat[26].
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2632_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2630_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2627_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1374_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1372_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2645_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin place1257/X in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2632_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2630_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2627_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1374_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1372_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2645_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin place1257/X in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2632_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2630_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2627_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1374_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1372_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2645_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin place1257/X in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2632_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2630_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2627_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1374_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1372_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2645_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin place1257/X in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2632_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2630_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2627_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1374_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1372_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2645_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin place1257/X in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2632_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2630_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2627_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1374_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1372_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2645_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin place1257/X in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2632_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2630_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2627_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1374_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1372_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2645_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin place1257/X in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2632_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2630_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2627_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1374_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1372_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2645_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin place1257/X in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2632_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2630_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2627_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1374_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1372_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2645_/A in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2641_/A in net net1257.
+[WARNING EST-0026] Missing route to pin place1257/X in net net1257.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2677_/A2 in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2676_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2655_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2653_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2651_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2649_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2647_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2645_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/X in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2677_/A2 in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2676_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2655_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2653_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2651_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2649_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2647_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2645_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/X in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2677_/A2 in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2676_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2655_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2653_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2651_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2649_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2647_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2645_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/X in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2677_/A2 in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2676_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2655_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2653_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2651_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2649_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2647_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2645_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/X in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2677_/A2 in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2676_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2655_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2653_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2651_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2649_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2647_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2645_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/X in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2677_/A2 in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2676_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2655_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2653_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2651_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2649_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2647_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2645_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/X in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2677_/A2 in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2676_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2655_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2653_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2651_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2649_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2647_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2645_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/X in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2677_/A2 in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2676_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2655_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2653_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2651_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2649_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2647_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2645_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/X in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2677_/A2 in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2676_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2655_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2653_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2651_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2649_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2647_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2645_/A in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/X in net g_row\[1\].g_col\[0\].pe/net1258.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2404_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2267_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2236_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2198_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2158_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2114_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1947_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1407_/B1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/X in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2404_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2267_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2236_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2198_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2158_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2114_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1947_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1407_/B1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/X in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2404_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2267_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2236_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2198_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2158_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2114_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1947_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1407_/B1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/X in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2404_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2267_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2236_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2198_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2158_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2114_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1947_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1407_/B1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/X in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2404_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2267_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2236_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2198_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2158_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2114_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1947_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1407_/B1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/X in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2404_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2267_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2236_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2198_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2158_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2114_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1947_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1407_/B1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/X in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2404_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2267_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2236_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2198_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2158_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2114_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1947_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1407_/B1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/X in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2404_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2267_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2236_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2198_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2158_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2114_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1947_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1407_/B1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/X in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2404_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2267_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2236_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2198_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2158_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2114_/A1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1947_/B2 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1407_/B1 in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/X in net g_row\[1\].g_col\[0\].pe/net1259.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2663_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2659_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2401_/B2 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2395_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2360_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2334_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2306_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/X in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2663_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2659_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2401_/B2 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2395_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2360_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2334_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2306_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/X in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2663_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2659_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2401_/B2 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2395_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2360_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2334_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2306_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/X in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2663_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2659_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2401_/B2 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2395_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2360_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2334_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2306_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/X in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2663_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2659_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2401_/B2 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2395_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2360_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2334_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2306_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/X in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2663_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2659_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2401_/B2 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2395_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2360_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2334_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2306_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/X in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2663_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2659_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2401_/B2 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2395_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2360_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2334_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2306_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/X in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2663_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2659_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2401_/B2 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2395_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2360_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2334_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2306_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/X in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2663_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2659_/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2401_/B2 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2395_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2360_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2334_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2306_/A1 in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1259/A in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/X in net g_row\[1\].g_col\[0\].pe/net1260.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2669_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2667_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2665_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2661_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2657_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2643_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/X in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2669_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2667_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2665_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2661_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2657_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2643_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/X in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2669_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2667_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2665_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2661_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2657_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2643_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/X in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2669_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2667_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2665_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2661_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2657_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2643_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/X in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2669_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2667_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2665_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2661_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2657_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2643_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/X in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2669_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2667_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2665_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2661_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2657_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2643_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/X in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2669_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2667_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2665_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2661_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2657_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2643_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/X in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2669_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2667_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2665_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2661_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2657_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2643_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/X in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2669_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2667_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2665_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2661_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2657_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2643_/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1260/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1258/A in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/X in net g_row\[1\].g_col\[0\].pe/net1261.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2406_/B1 in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1374_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1372_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1257/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1262/X in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2406_/B1 in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1374_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1372_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1257/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1262/X in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2406_/B1 in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1374_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1372_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1257/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1262/X in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2406_/B1 in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1374_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1372_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1257/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1262/X in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2406_/B1 in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1374_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1372_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1257/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1262/X in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2406_/B1 in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1374_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1372_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1257/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1262/X in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2406_/B1 in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1374_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1372_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1257/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1262/X in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2406_/B1 in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1374_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1372_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1257/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1262/X in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_2406_/B1 in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1374_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1372_/A in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/place1261/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1257/A in net net1262.
+[WARNING EST-0026] Missing route to pin place1262/X in net net1262.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/place1256/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2649_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2647_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2643_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2406_/B1 in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1262/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1263/X in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/place1256/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2649_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2647_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2643_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2406_/B1 in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1262/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1263/X in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/place1256/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2649_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2647_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2643_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2406_/B1 in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1262/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1263/X in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/place1256/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2649_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2647_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2643_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2406_/B1 in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1262/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1263/X in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/place1256/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2649_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2647_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2643_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2406_/B1 in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1262/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1263/X in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/place1256/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2649_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2647_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2643_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2406_/B1 in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1262/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1263/X in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/place1256/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2649_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2647_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2643_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2406_/B1 in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1262/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1263/X in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/place1256/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2649_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2647_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2643_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2406_/B1 in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1262/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1263/X in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/place1256/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[1\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2649_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2647_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2643_/A in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_2406_/B1 in net net1263.
+[WARNING EST-0026] Missing route to pin g_row\[0\].g_col\[0\].pe/_1404_/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1262/A in net net1263.
+[WARNING EST-0026] Missing route to pin place1263/X in net net1263.
+[WARNING EST-0026] Missing route to pin hold3158/A in net a_inputs_flat[7].
+[WARNING EST-0026] Missing route to pin hold3158/A in net a_inputs_flat[7].
+[WARNING EST-0026] Missing route to pin hold3158/A in net a_inputs_flat[7].
+[WARNING EST-0026] Missing route to pin hold3158/A in net a_inputs_flat[7].
+[WARNING EST-0026] Missing route to pin hold3158/A in net a_inputs_flat[7].
+[WARNING EST-0026] Missing route to pin hold3158/A in net a_inputs_flat[7].
+[WARNING EST-0026] Missing route to pin hold3158/A in net a_inputs_flat[7].
+[WARNING EST-0026] Missing route to pin hold3158/A in net a_inputs_flat[7].
+[WARNING EST-0026] Missing route to pin hold3158/A in net a_inputs_flat[7].
+[WARNING EST-0026] Missing route to pin hold3235/A in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[8] in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin hold3235/A in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[8] in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin hold3235/A in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[8] in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin hold3235/A in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[8] in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin hold3235/A in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[8] in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin hold3235/A in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[8] in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin hold3235/A in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[8] in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin hold3235/A in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[8] in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin hold3235/A in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[8] in net a_inputs_flat[8].
+[WARNING EST-0026] Missing route to pin hold3151/A in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[9] in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin hold3151/A in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[9] in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin hold3151/A in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[9] in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin hold3151/A in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[9] in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin hold3151/A in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[9] in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin hold3151/A in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[9] in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin hold3151/A in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[9] in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin hold3151/A in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[9] in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin hold3151/A in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin a_inputs_flat[9] in net a_inputs_flat[9].
+[WARNING EST-0026] Missing route to pin hold3326/A in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[0] in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3326/A in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[0] in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3326/A in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[0] in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3326/A in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[0] in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3326/A in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[0] in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3326/A in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[0] in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3326/A in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[0] in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3326/A in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[0] in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3326/A in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[0] in net b_inputs_flat[0].
+[WARNING EST-0026] Missing route to pin hold3403/A in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[10] in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3403/A in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[10] in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3403/A in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[10] in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3403/A in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[10] in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3403/A in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[10] in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3403/A in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[10] in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3403/A in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[10] in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3403/A in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[10] in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3403/A in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[10] in net b_inputs_flat[10].
+[WARNING EST-0026] Missing route to pin hold3396/A in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[11] in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3396/A in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[11] in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3396/A in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[11] in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3396/A in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[11] in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3396/A in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[11] in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3396/A in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[11] in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3396/A in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[11] in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3396/A in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[11] in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3396/A in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[11] in net b_inputs_flat[11].
+[WARNING EST-0026] Missing route to pin hold3389/A in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[12] in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3389/A in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[12] in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3389/A in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[12] in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3389/A in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[12] in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3389/A in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[12] in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3389/A in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[12] in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3389/A in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[12] in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3389/A in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[12] in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3389/A in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[12] in net b_inputs_flat[12].
+[WARNING EST-0026] Missing route to pin hold3487/A in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[13] in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3487/A in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[13] in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3487/A in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[13] in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3487/A in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[13] in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3487/A in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[13] in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3487/A in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[13] in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3487/A in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[13] in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3487/A in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[13] in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3487/A in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[13] in net b_inputs_flat[13].
+[WARNING EST-0026] Missing route to pin hold3354/A in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[14] in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3354/A in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[14] in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3354/A in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[14] in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3354/A in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[14] in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3354/A in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[14] in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3354/A in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[14] in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3354/A in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[14] in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3354/A in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[14] in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3354/A in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin b_inputs_flat[14] in net b_inputs_flat[14].
+[WARNING EST-0026] Missing route to pin hold3284/A in net b_inputs_flat[15].
+[WARNING EST-0026] message limit (1000) reached. This message will no longer print.
+[INFO GRT-0102] Start extra iteration 4/50
+[INFO GRT-0102] Start extra iteration 5/50
+[INFO GRT-0102] Start extra iteration 6/50
+[INFO GRT-0102] Start extra iteration 7/50
+[INFO GRT-0102] Start extra iteration 8/50
+[INFO GRT-0102] Start extra iteration 9/50
+[INFO GRT-0102] Start extra iteration 10/50
+[INFO GRT-0102] Start extra iteration 11/50
+[INFO GRT-0102] Start extra iteration 12/50
+[INFO GRT-0102] Start extra iteration 13/50
+[INFO GRT-0197] Via related to pin nodes: 44498
+[INFO GRT-0198] Via related Steiner nodes: 558
+[INFO GRT-0199] Via filling finished.
+[INFO GRT-0111] Final number of vias: 57869
+[INFO GRT-0112] Final usage 3D: 211333
+
+[INFO GRT-0096] Final congestion report:
+Layer         Resource        Demand        Usage (%)    Max H / Max V / Total Overflow
+---------------------------------------------------------------------------------------
+li1                  0             0            0.00%             0 /  0 /  0
+met1             20739         14620           70.50%             0 /  0 /  0
+met2             21898         13724           62.67%             0 /  0 /  0
+met3             15631          6384           40.84%             0 /  0 /  0
+met4              9914          2998           30.24%             0 /  0 /  0
+---------------------------------------------------------------------------------------
+Total            68182         37726           55.33%             0 /  0 /  0
+
+[INFO GRT-0018] Total wirelength: 392140 um
+[INFO GRT-0014] Routed nets: 8583
+[INFO GRT-0303] Global routing runtime = 00:00:04
+Setting global connections for newly added cells…
+[INFO] Setting global connections...
+[INFO ODB-0403] 0 connections made, 0 conflicts skipped.
+Updating metrics…
+Cell type report:                       Count       Area
+  Fill cell                               188     705.68
+  Tap cell                               1440    1801.73
+  Buffer                                   10      50.05
+  Clock buffer                            136    3258.12
+  Timing Repair Buffer                   2773   16836.15
+  Inverter                                157     599.32
+  Clock inverter                            1       8.76
+  Sequential cell                         396    8423.08
+  Multi-Input combinational cell         5056   54156.94
+  Total                                 10157   85839.83
+Writing OpenROAD database to '/Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/41-openroad-repairdesignpostgrt/systolic_array.odb'…
+Writing netlist to '/Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/41-openroad-repairdesignpostgrt/systolic_array.nl.v'…
+Writing powered netlist to '/Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/41-openroad-repairdesignpostgrt/systolic_array.pnl.v'…
+Writing layout to '/Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/41-openroad-repairdesignpostgrt/systolic_array.def'…
+Writing timing constraints to '/Users/aoxo/vscode/superfloat.gpu/librelane/systolic_array/runs/RUN_2026-06-24_19-18-33/41-openroad-repairdesignpostgrt/systolic_array.sdc'…

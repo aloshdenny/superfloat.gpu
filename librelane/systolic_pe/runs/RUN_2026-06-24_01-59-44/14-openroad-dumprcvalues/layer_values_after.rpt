@@ -1,0 +1,22 @@
+ time 1ns
+ capacitance 1pF
+ resistance 1kohm
+ voltage 1v
+ current 1mA
+ power 1nW
+ distance 1um
+== Layer Values (After Set RC) ==
+=== Routing Layers ===
+Name                Direction           Res/Unit Distance   Cap/Unit Distance   
+li1                 VERTICAL            7.529412e-02        8.768172e-05        
+met1                HORIZONTAL          8.928571e-04        8.474298e-05        
+met2                VERTICAL            8.928571e-04        7.788992e-05        
+met3                HORIZONTAL          1.566667e-04        8.568987e-05        
+met4                VERTICAL            1.566667e-04        7.587661e-05        
+=== Vias ===
+Name                Cut Resistance      
+licon               0.000000e+00        
+mcon                9.300000e-03        
+via                 4.500000e-03        
+via2                3.410000e-03        
+via3                3.410000e-03        

@@ -1,0 +1,732 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  KLayout Layer Properties for SkyWater Sky130 PDK
+  ATREIDES GPU - Physical Layout Visualization
+  
+  Usage: Load this file in KLayout via File > Load Layer Properties
+         Or use: klayout -l sky130.lyp gds/atreides.gds
+-->
+<layer-properties>
+  <!-- N-Well -->
+  <properties>
+    <frame-color>#ff8c00</frame-color>
+    <fill-color>#ff8c00</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-20</fill-brightness>
+    <dither-pattern>I5</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <marked>false</marked>
+    <animation>0</animation>
+    <name>nwell.drawing - 64/20</name>
+    <source>64/20@1</source>
+  </properties>
+
+  <!-- N-Well Pin -->
+  <properties>
+    <frame-color>#ffa500</frame-color>
+    <fill-color>#ffa500</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>nwell.pin - 64/16</name>
+    <source>64/16@1</source>
+  </properties>
+
+  <!-- P-Well -->
+  <properties>
+    <frame-color>#8b4513</frame-color>
+    <fill-color>#8b4513</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-10</fill-brightness>
+    <dither-pattern>I7</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>pwell.drawing - 122/16</name>
+    <source>122/16@1</source>
+  </properties>
+
+  <!-- Diffusion (Active) -->
+  <properties>
+    <frame-color>#22dd22</frame-color>
+    <fill-color>#22dd22</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>diff.drawing - 65/20</name>
+    <source>65/20@1</source>
+  </properties>
+
+  <!-- Diffusion Label -->
+  <properties>
+    <frame-color>#00ff00</frame-color>
+    <fill-color>#00ff00</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>diff.label - 65/44</name>
+    <source>65/44@1</source>
+  </properties>
+
+  <!-- Tap -->
+  <properties>
+    <frame-color>#00cc66</frame-color>
+    <fill-color>#00cc66</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>tap.drawing - 66/20</name>
+    <source>66/20@1</source>
+  </properties>
+
+  <!-- Tap Label -->
+  <properties>
+    <frame-color>#00aa55</frame-color>
+    <fill-color>#00aa55</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>tap.label - 66/44</name>
+    <source>66/44@1</source>
+  </properties>
+
+  <!-- Poly -->
+  <properties>
+    <frame-color>#ff0000</frame-color>
+    <fill-color>#ff0000</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>poly.drawing - 66/20</name>
+    <source>67/20@1</source>
+  </properties>
+
+  <!-- Poly Resistor -->
+  <properties>
+    <frame-color>#cc0000</frame-color>
+    <fill-color>#cc0000</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I9</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>poly.res - 67/5</name>
+    <source>67/5@1</source>
+  </properties>
+
+  <!-- Poly Cut -->
+  <properties>
+    <frame-color>#aa0000</frame-color>
+    <fill-color>#aa0000</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I2</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>poly.cut - 67/16</name>
+    <source>67/16@1</source>
+  </properties>
+
+  <!-- Poly Label -->
+  <properties>
+    <frame-color>#ff4444</frame-color>
+    <fill-color>#ff4444</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>poly.label - 67/44</name>
+    <source>67/44@1</source>
+  </properties>
+
+  <!-- Local Interconnect (LI) -->
+  <properties>
+    <frame-color>#00ffff</frame-color>
+    <fill-color>#00ffff</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>li.drawing - 68/20</name>
+    <source>68/20@1</source>
+  </properties>
+
+  <!-- LI Resistor -->
+  <properties>
+    <frame-color>#00cccc</frame-color>
+    <fill-color>#00cccc</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I9</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>li.res - 68/5</name>
+    <source>68/5@1</source>
+  </properties>
+
+  <!-- LI Cut -->
+  <properties>
+    <frame-color>#00aaaa</frame-color>
+    <fill-color>#00aaaa</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I2</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>li.cut - 68/16</name>
+    <source>68/16@1</source>
+  </properties>
+
+  <!-- LI Label -->
+  <properties>
+    <frame-color>#44ffff</frame-color>
+    <fill-color>#44ffff</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>li.label - 68/44</name>
+    <source>68/44@1</source>
+  </properties>
+
+  <!-- Metal 1 -->
+  <properties>
+    <frame-color>#4444ff</frame-color>
+    <fill-color>#4444ff</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met1.drawing - 69/20</name>
+    <source>69/20@1</source>
+  </properties>
+
+  <!-- Metal 1 Resistor -->
+  <properties>
+    <frame-color>#3333cc</frame-color>
+    <fill-color>#3333cc</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I9</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met1.res - 69/5</name>
+    <source>69/5@1</source>
+  </properties>
+
+  <!-- Metal 1 Cut (Via1) -->
+  <properties>
+    <frame-color>#2222aa</frame-color>
+    <fill-color>#2222aa</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I2</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met1.cut - 69/16</name>
+    <source>69/16@1</source>
+  </properties>
+
+  <!-- Metal 1 Label -->
+  <properties>
+    <frame-color>#6666ff</frame-color>
+    <fill-color>#6666ff</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met1.label - 69/44</name>
+    <source>69/44@1</source>
+  </properties>
+
+  <!-- Metal 2 -->
+  <properties>
+    <frame-color>#ff00ff</frame-color>
+    <fill-color>#ff00ff</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met2.drawing - 70/20</name>
+    <source>70/20@1</source>
+  </properties>
+
+  <!-- Metal 2 Resistor -->
+  <properties>
+    <frame-color>#cc00cc</frame-color>
+    <fill-color>#cc00cc</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I9</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met2.res - 70/5</name>
+    <source>70/5@1</source>
+  </properties>
+
+  <!-- Metal 2 Cut (Via2) -->
+  <properties>
+    <frame-color>#aa00aa</frame-color>
+    <fill-color>#aa00aa</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I2</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met2.cut - 70/16</name>
+    <source>70/16@1</source>
+  </properties>
+
+  <!-- Metal 2 Label -->
+  <properties>
+    <frame-color>#ff44ff</frame-color>
+    <fill-color>#ff44ff</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met2.label - 70/44</name>
+    <source>70/44@1</source>
+  </properties>
+
+  <!-- Metal 3 -->
+  <properties>
+    <frame-color>#00ff00</frame-color>
+    <fill-color>#00ff00</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met3.drawing - 71/20</name>
+    <source>71/20@1</source>
+  </properties>
+
+  <!-- Metal 3 Resistor -->
+  <properties>
+    <frame-color>#00cc00</frame-color>
+    <fill-color>#00cc00</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I9</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met3.res - 71/5</name>
+    <source>71/5@1</source>
+  </properties>
+
+  <!-- Metal 3 Cut (Via3) -->
+  <properties>
+    <frame-color>#00aa00</frame-color>
+    <fill-color>#00aa00</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I2</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met3.cut - 71/16</name>
+    <source>71/16@1</source>
+  </properties>
+
+  <!-- Metal 3 Label -->
+  <properties>
+    <frame-color>#44ff44</frame-color>
+    <fill-color>#44ff44</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met3.label - 71/44</name>
+    <source>71/44@1</source>
+  </properties>
+
+  <!-- Metal 4 -->
+  <properties>
+    <frame-color>#ffff00</frame-color>
+    <fill-color>#ffff00</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met4.drawing - 72/20</name>
+    <source>72/20@1</source>
+  </properties>
+
+  <!-- Metal 4 Resistor -->
+  <properties>
+    <frame-color>#cccc00</frame-color>
+    <fill-color>#cccc00</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I9</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met4.res - 72/5</name>
+    <source>72/5@1</source>
+  </properties>
+
+  <!-- Metal 4 Cut (Via4) -->
+  <properties>
+    <frame-color>#aaaa00</frame-color>
+    <fill-color>#aaaa00</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I2</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>met4.cut - 72/16</name>
+    <source>72/16@1</source>
+  </properties>
+
+  <!-- Via (MCON) -->
+  <properties>
+    <frame-color>#ff8800</frame-color>
+    <fill-color>#ff8800</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>mcon.drawing - 67/44</name>
+    <source>67/44@1</source>
+  </properties>
+
+  <!-- Via Label -->
+  <properties>
+    <frame-color>#ffaa44</frame-color>
+    <fill-color>#ffaa44</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>via.label - 78/44</name>
+    <source>78/44@1</source>
+  </properties>
+
+  <!-- NSDM (N+ Source/Drain Marker) -->
+  <properties>
+    <frame-color>#33ff33</frame-color>
+    <fill-color>#33ff33</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-30</fill-brightness>
+    <dither-pattern>I3</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>nsdm.drawing - 93/44</name>
+    <source>93/44@1</source>
+  </properties>
+
+  <!-- PSDM (P+ Source/Drain Marker) -->
+  <properties>
+    <frame-color>#ff3333</frame-color>
+    <fill-color>#ff3333</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-30</fill-brightness>
+    <dither-pattern>I3</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>psdm.drawing - 94/20</name>
+    <source>94/20@1</source>
+  </properties>
+
+  <!-- HVI (High Voltage Implant) -->
+  <properties>
+    <frame-color>#8844ff</frame-color>
+    <fill-color>#8844ff</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-20</fill-brightness>
+    <dither-pattern>I6</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>hvi.drawing - 75/20</name>
+    <source>75/20@1</source>
+  </properties>
+
+  <!-- Area ID (Standard Cell) -->
+  <properties>
+    <frame-color>#888888</frame-color>
+    <fill-color>#888888</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-40</fill-brightness>
+    <dither-pattern>I8</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>areaid.sc - 81/4</name>
+    <source>81/4@1</source>
+  </properties>
+
+  <!-- Area ID Frame -->
+  <properties>
+    <frame-color>#666666</frame-color>
+    <fill-color>#666666</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-40</fill-brightness>
+    <dither-pattern>I8</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>areaid.frame - 81/14</name>
+    <source>81/14@1</source>
+  </properties>
+
+  <!-- Area ID Seal -->
+  <properties>
+    <frame-color>#444444</frame-color>
+    <fill-color>#444444</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-40</fill-brightness>
+    <dither-pattern>I8</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>areaid.seal - 81/23</name>
+    <source>81/23@1</source>
+  </properties>
+
+  <!-- Boundary -->
+  <properties>
+    <frame-color>#aaaaaa</frame-color>
+    <fill-color>#aaaaaa</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-50</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>2</width>
+    <name>boundary - 83/44</name>
+    <source>83/44@1</source>
+  </properties>
+
+  <!-- PR Boundary -->
+  <properties>
+    <frame-color>#ff44ff</frame-color>
+    <fill-color>#ff44ff</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-50</fill-brightness>
+    <dither-pattern>I1</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>2</width>
+    <name>prBoundary - 235/4</name>
+    <source>235/4@1</source>
+  </properties>
+
+  <!-- Pad Frame -->
+  <properties>
+    <frame-color>#dddddd</frame-color>
+    <fill-color>#dddddd</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>-40</fill-brightness>
+    <dither-pattern>I4</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>padframe - 236/0</name>
+    <source>236/0@1</source>
+  </properties>
+
+  <!-- Text Labels -->
+  <properties>
+    <frame-color>#ffffff</frame-color>
+    <fill-color>#ffffff</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>text - 83/44</name>
+    <source>83/44@1</source>
+  </properties>
+
+  <!-- Capacitor -->
+  <properties>
+    <frame-color>#ff6600</frame-color>
+    <fill-color>#ff6600</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I5</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>capacitor - 95/20</name>
+    <source>95/20@1</source>
+  </properties>
+
+  <!-- Contact (LICON) -->
+  <properties>
+    <frame-color>#ff8844</frame-color>
+    <fill-color>#ff8844</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>10</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>licon.drawing - 66/44</name>
+    <source>66/44@1</source>
+  </properties>
+
+  <!-- NPC (N+ Poly Contact) -->
+  <properties>
+    <frame-color>#cc6600</frame-color>
+    <fill-color>#cc6600</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I3</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>npc.drawing - 95/20</name>
+    <source>95/20@1</source>
+  </properties>
+
+  <!-- Inductor -->
+  <properties>
+    <frame-color>#0066ff</frame-color>
+    <fill-color>#0066ff</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I6</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>inductor - 94/20</name>
+    <source>94/20@1</source>
+  </properties>
+
+  <!-- Additional Sky130 layers -->
+  <properties>
+    <frame-color>#4488cc</frame-color>
+    <fill-color>#4488cc</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>pwell.pin - 64/59</name>
+    <source>64/59@1</source>
+  </properties>
+
+  <properties>
+    <frame-color>#448844</frame-color>
+    <fill-color>#448844</fill-color>
+    <frame-brightness>0</frame-brightness>
+    <fill-brightness>0</fill-brightness>
+    <dither-pattern>I0</dither-pattern>
+    <valid>true</valid>
+    <visible>true</visible>
+    <transparent>false</transparent>
+    <width>1</width>
+    <name>nwell.label - 64/5</name>
+    <source>64/5@1</source>
+  </properties>
+
+</layer-properties>
+

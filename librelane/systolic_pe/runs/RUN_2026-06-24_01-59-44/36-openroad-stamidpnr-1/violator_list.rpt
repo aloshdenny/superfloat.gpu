@@ -1,0 +1,73 @@
+
+===========================================================================
+Violator List
+============================================================================
+[hold in-reg] reset -> _2687_/D : -0.358130
+[hold in-reg] reset -> _2688_/D : -0.354270
+[hold in-reg] a_in[2] -> _2624_/D : -0.325788
+[hold in-reg] a_in[0] -> _2622_/D : -0.323669
+[hold in-reg] a_in[14] -> _2636_/D : -0.318219
+[hold in-reg] a_in[13] -> _2635_/D : -0.315235
+[hold in-reg] a_in[12] -> _2634_/D : -0.315111
+[hold in-reg] a_in[4] -> _2626_/D : -0.313614
+[hold in-reg] a_in[5] -> _2627_/D : -0.313558
+[hold in-reg] a_in[1] -> _2623_/D : -0.313136
+[hold in-reg] a_in[7] -> _2629_/D : -0.312930
+[hold in-reg] a_in[3] -> _2625_/D : -0.312066
+[hold in-reg] a_in[11] -> _2633_/D : -0.311877
+[hold in-reg] b_in[0] -> _2638_/D : -0.311066
+[hold in-reg] a_in[6] -> _2628_/D : -0.310976
+[hold in-reg] b_in[13] -> _2651_/D : -0.309771
+[hold in-reg] b_in[11] -> _2649_/D : -0.308120
+[hold in-reg] b_in[1] -> _2639_/D : -0.308085
+[hold in-reg] b_in[5] -> _2643_/D : -0.308034
+[hold in-reg] b_in[6] -> _2644_/D : -0.307333
+[hold in-reg] b_in[10] -> _2648_/D : -0.306788
+[hold in-reg] a_in[8] -> _2630_/D : -0.306723
+[hold in-reg] a_in[9] -> _2631_/D : -0.304969
+[hold in-reg] b_in[12] -> _2650_/D : -0.304634
+[hold in-reg] b_in[7] -> _2645_/D : -0.304412
+[hold in-reg] b_in[14] -> _2652_/D : -0.303005
+[hold in-reg] b_in[8] -> _2646_/D : -0.302975
+[hold in-reg] b_in[9] -> _2647_/D : -0.302465
+[hold in-reg] b_in[2] -> _2640_/D : -0.300980
+[hold in-reg] b_in[4] -> _2642_/D : -0.300479
+[hold in-reg] b_in[1] -> _2656_/D : -0.299934
+[hold in-reg] b_in[2] -> _2657_/D : -0.297833
+[hold in-reg] a_in[10] -> _2632_/D : -0.297673
+[hold in-reg] b_in[3] -> _2641_/D : -0.297406
+[hold in-reg] b_in[3] -> _2658_/D : -0.291872
+[hold in-reg] b_in[0] -> _2655_/D : -0.290943
+[hold in-reg] b_in[15] -> _2653_/D : -0.222024
+[hold in-reg] b_in[13] -> _2668_/D : -0.212026
+[hold in-reg] b_in[12] -> _2667_/D : -0.207591
+[hold in-reg] b_in[15] -> _2654_/D : -0.207334
+[hold in-reg] b_in[5] -> _2660_/D : -0.207297
+[hold in-reg] b_in[10] -> _2665_/D : -0.207165
+[hold in-reg] a_in[15] -> _2637_/D : -0.206256
+[hold in-reg] b_in[14] -> _2669_/D : -0.204777
+[hold in-reg] b_in[11] -> _2666_/D : -0.203685
+[hold in-reg] b_in[4] -> _2659_/D : -0.203500
+[hold in-reg] b_in[9] -> _2664_/D : -0.202824
+[hold in-reg] b_in[6] -> _2661_/D : -0.202340
+[hold in-reg] b_in[7] -> _2662_/D : -0.201977
+[hold in-reg] b_in[8] -> _2663_/D : -0.199730
+[hold in-reg] compute_enable -> _2670_/D : -0.194712
+[hold in-reg] enable -> _2686_/D : -0.174493
+[hold in-reg] clear_acc -> _2680_/D : -0.172109
+[hold in-reg] clear_acc -> _2682_/D : -0.129653
+[hold in-reg] clear_acc -> _2678_/D : -0.095474
+[hold in-reg] enable -> _2703_/D : -0.087045
+[hold in-reg] clear_acc -> _2685_/D : -0.067177
+[hold in-reg] reset -> _2673_/D : -0.019791
+[hold in-reg] reset -> _2671_/D : -0.018884
+[hold in-reg] reset -> _2681_/D : -0.018677
+[hold in-reg] reset -> _2674_/D : -0.017617
+[hold in-reg] clear_acc -> _2672_/D : -0.015606
+[hold in-reg] reset -> _2676_/D : -0.009201
+Writing metric timing__hold_vio__count__corner:nom_tt_025C_1v80: 63
+Writing metric timing__hold_r2r__ws__corner:nom_tt_025C_1v80: 1e30
+Writing metric timing__hold_r2r_vio__count__corner:nom_tt_025C_1v80: 0
+Writing metric timing__setup_vio__count__corner:nom_tt_025C_1v80: 0
+Writing metric timing__setup_r2r__ws__corner:nom_tt_025C_1v80: 13.375695
+Writing metric timing__setup_r2r_vio__count__corner:nom_tt_025C_1v80: 0
