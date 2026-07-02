@@ -1,0 +1,7 @@
+`verilator_config
+lint_off -rule DECLFILENAME
+lint_off -rule EOFNEWLINE
+lint_off -rule UNDRIVEN -file "/Users/aoxo/vscode/superfloat.gpu/librelane/core/runs/RUN_2026-07-02_10-20-07/tmp/74484f5a83f34bb592a32c152b151d08.bb.v"
+lint_off -rule UNUSEDSIGNAL -file "/Users/aoxo/vscode/superfloat.gpu/librelane/core/runs/RUN_2026-07-02_10-20-07/tmp/74484f5a83f34bb592a32c152b151d08.bb.v"
+lint_off -rule UNDRIVEN -file "/Users/aoxo/vscode/superfloat.gpu/librelane/core/runs/RUN_2026-07-02_10-20-07/tmp/6239e58de88045a782d18b1276f48b67.bb.v"
+lint_off -rule UNUSEDSIGNAL -file "/Users/aoxo/vscode/superfloat.gpu/librelane/core/runs/RUN_2026-07-02_10-20-07/tmp/6239e58de88045a782d18b1276f48b67.bb.v"

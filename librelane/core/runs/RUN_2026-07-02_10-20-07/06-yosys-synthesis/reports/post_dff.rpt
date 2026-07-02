@@ -1,0 +1,41 @@
+184. Printing statistics.
+
+=== core ===
+
+        +----------Local Count, excluding submodules.
+        |        +-Local Area, excluding submodules.
+        |        | 
+    36675        - wires
+    39895        - wire bits
+      320        - public wires
+     3539        - public wire bits
+       41        - ports
+      401        - port bits
+    39296 4.81E+04 cells
+    12203        -   $_ANDNOT_
+      735        -   $_AND_
+     5691        -   $_MUX_
+      802        -   $_NAND_
+     1848        -   $_NOR_
+     1713        -   $_NOT_
+      682        -   $_ORNOT_
+     6667        -   $_OR_
+     2124        -   $_XNOR_
+     4567        -   $_XOR_
+     2240 4.76E+04   sky130_fd_sc_hd__dfxtp_2
+       24  480.461   sky130_fd_sc_hd__fa_1
+
+   Area for cell type $_ANDNOT_ is unknown!
+   Area for cell type $_AND_ is unknown!
+   Area for cell type $_MUX_ is unknown!
+   Area for cell type $_NAND_ is unknown!
+   Area for cell type $_NOR_ is unknown!
+   Area for cell type $_NOT_ is unknown!
+   Area for cell type $_ORNOT_ is unknown!
+   Area for cell type $_OR_ is unknown!
+   Area for cell type $_XNOR_ is unknown!
+   Area for cell type $_XOR_ is unknown!
+
+   Chip area for module '\core': 48126.156800
+     of which used for sequential elements: 47645.696000 (99.00%)
+
