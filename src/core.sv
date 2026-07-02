@@ -490,15 +490,11 @@ module core #(
     genvar k;
     generate
         for (k = 0; k < NUM_SYSTOLIC_ARRAYS; k = k + 1) begin : systolic_arrays
-`ifdef __pnr__
-            systolic_array systolic_array_inst (
-`else
             systolic_array #(
                 .DATA_BITS(DATA_MEM_DATA_BITS),
                 .ARRAY_SIZE(SYSTOLIC_SIZE),
                 .PIPE_INTERVAL(SYSTOLIC_SIZE)
             ) systolic_array_inst (
-`endif
                 .clk(clk),
                 .reset(reset),
                 .enable(systolic_enable),

@@ -10,13 +10,17 @@
         "dir::../../src/lsu.sv",
         "dir::../../src/registers.sv",
         "dir::../../src/pc.sv",
-        "dir::../../src/branch_diverge.sv"
+        "dir::../../src/branch_diverge.sv",
+        "dir::../../src/systolic_array.sv",
+        "dir::../../src/systolic_pe.sv"
     ],
 
     "CLOCK_PORT": "clk",
     "DEFAULT_CORNER": "max_ss_100C_1v60",
     "SYNTH_CORNER": "nom_tt_025C_1v80",
-    "CLOCK_PERIOD": 20.0,
+    "CLOCK_PERIOD": 24.0,
+    "PNR_SDC_FILE": "dir::core.sdc",
+    "SIGNOFF_SDC_FILE": "dir::core.sdc",
     "CLOCK_UNCERTAINTY_CONSTRAINT": 0.25,
     "CLOCK_TRANSITION_CONSTRAINT": 0.30,
     "IO_DELAY_CONSTRAINT": 15,
@@ -26,7 +30,7 @@
     "SYNTH_ADDER_TYPE": "FA",
     "SYNTH_HIERARCHY_MODE": "flatten",
     "SYNTH_MAX_TRAN": 1.5,
-    "MAX_FANOUT_CONSTRAINT": 2000,
+    "MAX_FANOUT_CONSTRAINT": 10,
 
     "FP_SIZING": "absolute",
     "DIE_AREA": [0.0, 0.0, 960.0, 500.0],
@@ -36,62 +40,11 @@
     "FP_MACRO_VERTICAL_HALO": 3.0,
     "PDN_HORIZONTAL_HALO": 3.0,
     "PDN_VERTICAL_HALO": 3.0,
-    "MACROS": {
-        "systolic_array": {
-            "instances": {
-                "systolic_arrays[0].systolic_array_inst": {
-                    "location": [50.0, 110.0],
-                    "orientation": "N"
-                },
-                "systolic_arrays[1].systolic_array_inst": {
-                    "location": [510.0, 110.0],
-                    "orientation": "N"
-                }
-            },
-            "gds": [
-                "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/gds/systolic_array.gds"
-            ],
-            "lef": [
-                "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/lef/systolic_array.lef"
-            ],
-            "nl": [
-                "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/nl/systolic_array.nl.v"
-            ],
-            "lib": {
-                "max_ss_100C_1v60": [
-                    "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/lib/max_ss_100C_1v60/systolic_array__max_ss_100C_1v60.lib"
-                ],
-                "nom_ss_100C_1v60": [
-                    "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/lib/nom_ss_100C_1v60/systolic_array__nom_ss_100C_1v60.lib"
-                ],
-                "min_ss_100C_1v60": [
-                    "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/lib/min_ss_100C_1v60/systolic_array__min_ss_100C_1v60.lib"
-                ],
-                "max_tt_025C_1v80": [
-                    "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/lib/max_tt_025C_1v80/systolic_array__max_tt_025C_1v80.lib"
-                ],
-                "nom_tt_025C_1v80": [
-                    "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/lib/nom_tt_025C_1v80/systolic_array__nom_tt_025C_1v80.lib"
-                ],
-                "min_tt_025C_1v80": [
-                    "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/lib/min_tt_025C_1v80/systolic_array__min_tt_025C_1v80.lib"
-                ],
-                "max_ff_n40C_1v95": [
-                    "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/lib/max_ff_n40C_1v95/systolic_array__max_ff_n40C_1v95.lib"
-                ],
-                "nom_ff_n40C_1v95": [
-                    "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/lib/nom_ff_n40C_1v95/systolic_array__nom_ff_n40C_1v95.lib"
-                ],
-                "min_ff_n40C_1v95": [
-                    "dir::../systolic_array/runs/RUN_2026-06-24_19-18-33/final/lib/min_ff_n40C_1v95/systolic_array__min_ff_n40C_1v95.lib"
-                ]
-            }
-        }
-    },
+
     "PDN_VPITCH": 153.6,
     "PDN_HPITCH": 153.6,
 
-    "PL_TIMING_DRIVEN": false,
+    "PL_TIMING_DRIVEN": true,
     "PL_ROUTABILITY_DRIVEN": true,
     "PL_TARGET_DENSITY_PCT": 70,
 
@@ -100,18 +53,17 @@
     "CTS_CLK_BUFFERS": [
         "sky130_fd_sc_hd__clkbuf_16",
         "sky130_fd_sc_hd__clkbuf_8",
-        "sky130_fd_sc_hd__clkbuf_4",
-        "sky130_fd_sc_hd__clkbuf_2",
-        "sky130_fd_sc_hd__buf_4"
+        "sky130_fd_sc_hd__clkbuf_4"
     ],
     "CTS_MAX_CAP": 0.30,
     "CTS_MAX_SLEW": 0.30,
 
-    "MAX_TRANSITION_CONSTRAINT": 1.5,
+    "MAX_TRANSITION_CONSTRAINT": 2.5,
+    "MAX_CAPACITANCE_CONSTRAINT": 0.5,
 
     "RUN_POST_CTS_RESIZER_TIMING": true,
-    "PL_RESIZER_SETUP_BUFFERING": false,
-    "PL_RESIZER_SETUP_GATE_CLONING": false,
+    "PL_RESIZER_SETUP_BUFFERING": true,
+    "PL_RESIZER_SETUP_GATE_CLONING": true,
     "PL_RESIZER_SETUP_SLACK_MARGIN": 0.05,
     "PL_RESIZER_SETUP_MAX_BUFFER_PCT": 40,
     "PL_RESIZER_SETUP_REPAIR_TNS_PCT": 100,
@@ -125,8 +77,8 @@
     "GRT_ALLOW_CONGESTION": true,
     "GRT_OVERFLOW_ITERS": 100,
     "RUN_POST_GRT_RESIZER_TIMING": true,
-    "GRT_RESIZER_SETUP_BUFFERING": false,
-    "GRT_RESIZER_SETUP_GATE_CLONING": false,
+    "GRT_RESIZER_SETUP_BUFFERING": true,
+    "GRT_RESIZER_SETUP_GATE_CLONING": true,
     "GRT_RESIZER_SETUP_SLACK_MARGIN": 0.05,
     "GRT_RESIZER_SETUP_MAX_BUFFER_PCT": 40,
     "GRT_RESIZER_SETUP_REPAIR_TNS_PCT": 100,
@@ -167,5 +119,11 @@
         "sky130_fd_sc_hd__dlymetal6s2s_1",
         "sky130_fd_sc_hd__dlymetal6s4s_1",
         "sky130_fd_sc_hd__dlymetal6s6s_1"
-    ]
+    ],
+
+    "TIMING_VIOLATION_CORNERS": ["*"],
+    "SETUP_VIOLATION_CORNERS": ["*"],
+    "HOLD_VIOLATION_CORNERS": ["*"],
+    "MAX_SLEW_VIOLATION_CORNERS": [""],
+    "MAX_CAP_VIOLATION_CORNERS": [""]
 }

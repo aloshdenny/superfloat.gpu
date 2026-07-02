@@ -39,9 +39,9 @@ module registers #(
     input reg [DATA_BITS-1:0] systolic_out, // Systolic array result output
 
     // Register Outputs (SF16)
-    output wire [DATA_BITS-1:0] rs,
-    output wire [DATA_BITS-1:0] rt,
-    output wire [DATA_BITS-1:0] rd_data
+    output reg [DATA_BITS-1:0] rs,
+    output reg [DATA_BITS-1:0] rt,
+    output reg [DATA_BITS-1:0] rd_data
 );
     // Register input source selection (3-bit)
     localparam [2:0] MUX_ALU = 3'b000,      // ALU output (ADD, SUB, MUL, DIV)
@@ -56,25 +56,71 @@ module registers #(
     reg [DATA_BITS-1:0] registers[12:0];
 
     // Combinational register reads (used by LSU/ALU/FMA/ACT).
-    // Let registers read directly to avoid deep timing paths from thread_count/enable.
-    wire [DATA_BITS-1:0] rs_raw = (decoded_rs_address < 13) ? registers[decoded_rs_address] : {DATA_BITS{1'b0}};
-    wire [DATA_BITS-1:0] rt_raw = (decoded_rt_address < 13) ? registers[decoded_rt_address] : {DATA_BITS{1'b0}};
-    wire [DATA_BITS-1:0] rd_data_raw = (decoded_rd_address < 13) ? registers[decoded_rd_address] : {DATA_BITS{1'b0}};
+    always @(*) begin
+        case (decoded_rs_address)
+            4'd0:  rs = registers[0];
+            4'd1:  rs = registers[1];
+            4'd2:  rs = registers[2];
+            4'd3:  rs = registers[3];
+            4'd4:  rs = registers[4];
+            4'd5:  rs = registers[5];
+            4'd6:  rs = registers[6];
+            4'd7:  rs = registers[7];
+            4'd8:  rs = registers[8];
+            4'd9:  rs = registers[9];
+            4'd10: rs = registers[10];
+            4'd11: rs = registers[11];
+            4'd12: rs = registers[12];
+            4'd13: rs = {{(DATA_BITS-8){1'b0}}, block_id};
+            4'd14: rs = {{(DATA_BITS-8){1'b0}}, THREADS_PER_BLOCK[7:0]};
+            4'd15: rs = {{(DATA_BITS-8){1'b0}}, THREAD_ID[7:0]};
+            default: rs = {DATA_BITS{1'b0}};
+        endcase
+    end
 
-    assign rs = (decoded_rs_address == 13) ? {{(DATA_BITS-8){1'b0}}, block_id} :
-                (decoded_rs_address == 14) ? {{(DATA_BITS-8){1'b0}}, THREADS_PER_BLOCK[7:0]} :
-                (decoded_rs_address == 15) ? {{(DATA_BITS-8){1'b0}}, THREAD_ID[7:0]} :
-                rs_raw;
+    always @(*) begin
+        case (decoded_rt_address)
+            4'd0:  rt = registers[0];
+            4'd1:  rt = registers[1];
+            4'd2:  rt = registers[2];
+            4'd3:  rt = registers[3];
+            4'd4:  rt = registers[4];
+            4'd5:  rt = registers[5];
+            4'd6:  rt = registers[6];
+            4'd7:  rt = registers[7];
+            4'd8:  rt = registers[8];
+            4'd9:  rt = registers[9];
+            4'd10: rt = registers[10];
+            4'd11: rt = registers[11];
+            4'd12: rt = registers[12];
+            4'd13: rt = {{(DATA_BITS-8){1'b0}}, block_id};
+            4'd14: rt = {{(DATA_BITS-8){1'b0}}, THREADS_PER_BLOCK[7:0]};
+            4'd15: rt = {{(DATA_BITS-8){1'b0}}, THREAD_ID[7:0]};
+            default: rt = {DATA_BITS{1'b0}};
+        endcase
+    end
 
-    assign rt = (decoded_rt_address == 13) ? {{(DATA_BITS-8){1'b0}}, block_id} :
-                (decoded_rt_address == 14) ? {{(DATA_BITS-8){1'b0}}, THREADS_PER_BLOCK[7:0]} :
-                (decoded_rt_address == 15) ? {{(DATA_BITS-8){1'b0}}, THREAD_ID[7:0]} :
-                rt_raw;
-
-    assign rd_data = (decoded_rd_address == 13) ? {{(DATA_BITS-8){1'b0}}, block_id} :
-                     (decoded_rd_address == 14) ? {{(DATA_BITS-8){1'b0}}, THREADS_PER_BLOCK[7:0]} :
-                     (decoded_rd_address == 15) ? {{(DATA_BITS-8){1'b0}}, THREAD_ID[7:0]} :
-                     rd_data_raw;
+    always @(*) begin
+        case (decoded_rd_address)
+            4'd0:  rd_data = registers[0];
+            4'd1:  rd_data = registers[1];
+            4'd2:  rd_data = registers[2];
+            4'd3:  rd_data = registers[3];
+            4'd4:  rd_data = registers[4];
+            4'd5:  rd_data = registers[5];
+            4'd6:  rd_data = registers[6];
+            4'd7:  rd_data = registers[7];
+            4'd8:  rd_data = registers[8];
+            4'd9:  rd_data = registers[9];
+            4'd10: rd_data = registers[10];
+            4'd11: rd_data = registers[11];
+            4'd12: rd_data = registers[12];
+            4'd13: rd_data = {{(DATA_BITS-8){1'b0}}, block_id};
+            4'd14: rd_data = {{(DATA_BITS-8){1'b0}}, THREADS_PER_BLOCK[7:0]};
+            4'd15: rd_data = {{(DATA_BITS-8){1'b0}}, THREAD_ID[7:0]};
+            default: rd_data = {DATA_BITS{1'b0}};
+        endcase
+    end
 
     // Sign-extend 8-bit immediate to 16-bit
     wire [DATA_BITS-1:0] immediate_extended;
