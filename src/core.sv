@@ -244,7 +244,8 @@ module core #(
     // Scheduler
     scheduler #(
         .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
-        .PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS)
+        .PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS),
+        .ENABLE_BRANCH_DIVERGE(0)   // Disabled: saves ~300 cells; re-enable for divergent kernels
     ) scheduler_instance (
         .clk(clk),
         .reset(reset),

@@ -14,7 +14,8 @@
 // > Branch divergence handled by branch_diverge unit
 module scheduler #(
     parameter THREADS_PER_BLOCK = 4,
-    parameter PROGRAM_MEM_ADDR_BITS = 8
+    parameter PROGRAM_MEM_ADDR_BITS = 8,
+    parameter ENABLE_BRANCH_DIVERGE = 0  // Set 1 to synthesize divergence stack
 ) (
     input wire clk,
     input wire reset,
@@ -76,28 +77,39 @@ module scheduler #(
     reg fma_execute_second_cycle;
     
     // Branch divergence unit
+    // Set ENABLE_BRANCH_DIVERGE=0 to remove ~300 cells for non-divergent workloads.
     wire [PROGRAM_MEM_ADDR_BITS-1:0] diverge_next_pc;
     wire diverge_stall;
     
-    branch_diverge #(
-        .THREADS_PER_WARP(THREADS_PER_BLOCK),
-        .STACK_DEPTH(2),
-        .PC_BITS(PROGRAM_MEM_ADDR_BITS)
-    ) branch_diverge_inst (
-        .clk(clk),
-        .reset(reset),
-        .enable(1'b1),
-        .branch_instruction(decoded_branch),
-        .branch_taken(branch_taken),
-        .branch_target(branch_target),
-        .fallthrough_pc(current_pc + 1'b1),
-        .reconverge_pc(reconverge_pc),
-        .current_pc(current_pc),
-        .active_mask(active_mask),
-        .next_pc(diverge_next_pc),
-        .diverged(diverged),
-        .stall(diverge_stall)
-    );
+    generate
+        if (ENABLE_BRANCH_DIVERGE) begin : gen_branch_diverge
+            branch_diverge #(
+                .THREADS_PER_WARP(THREADS_PER_BLOCK),
+                .STACK_DEPTH(2),
+                .PC_BITS(PROGRAM_MEM_ADDR_BITS)
+            ) branch_diverge_inst (
+                .clk(clk),
+                .reset(reset),
+                .enable(1'b1),
+                .branch_instruction(decoded_branch),
+                .branch_taken(branch_taken),
+                .branch_target(branch_target),
+                .fallthrough_pc(current_pc + 1'b1),
+                .reconverge_pc(reconverge_pc),
+                .current_pc(current_pc),
+                .active_mask(active_mask),
+                .next_pc(diverge_next_pc),
+                .diverged(diverged),
+                .stall(diverge_stall)
+            );
+        end else begin : gen_no_diverge
+            // Tie off: all threads always active, no divergence, no stall
+            assign active_mask    = {THREADS_PER_BLOCK{1'b1}};
+            assign diverged       = 1'b0;
+            assign diverge_stall  = 1'b0;
+            assign diverge_next_pc = {PROGRAM_MEM_ADDR_BITS{1'b0}};
+        end
+    endgenerate
     
     always @(*) begin
         any_lsu_waiting = 1'b0;

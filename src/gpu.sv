@@ -21,7 +21,7 @@ module gpu #(
     parameter THREADS_PER_BLOCK = 4,        // 4 threads per block
     parameter SYSTOLIC_SIZE = 2,             // 2x2 systolic array per core
     parameter NUM_SYSTOLIC_ARRAYS = 2,       // Two systolic arrays per core
-    parameter CACHE_SIZE = 4                // Instruction cache entries per core
+    parameter CACHE_SIZE = 2                // Instruction cache entries per core (2 sufficient for short kernels)
 ) (
     input wire clk,
     input wire reset,

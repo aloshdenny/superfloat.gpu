@@ -39,9 +39,9 @@ module registers #(
     input reg [DATA_BITS-1:0] systolic_out, // Systolic array result output
 
     // Register Outputs (SF16)
-    output reg [DATA_BITS-1:0] rs,
-    output reg [DATA_BITS-1:0] rt,
-    output reg [DATA_BITS-1:0] rd_data
+    output wire [DATA_BITS-1:0] rs,
+    output wire [DATA_BITS-1:0] rt,
+    output wire [DATA_BITS-1:0] rd_data
 );
     // Register input source selection (3-bit)
     localparam [2:0] MUX_ALU = 3'b000,      // ALU output (ADD, SUB, MUL, DIV)
@@ -55,72 +55,25 @@ module registers #(
     // All registers are 16-bit for SF16 fixed-point
     reg [DATA_BITS-1:0] registers[12:0];
 
-    // Combinational register reads (used by LSU/ALU/FMA/ACT).
-    always @(*) begin
-        case (decoded_rs_address)
-            4'd0:  rs = registers[0];
-            4'd1:  rs = registers[1];
-            4'd2:  rs = registers[2];
-            4'd3:  rs = registers[3];
-            4'd4:  rs = registers[4];
-            4'd5:  rs = registers[5];
-            4'd6:  rs = registers[6];
-            4'd7:  rs = registers[7];
-            4'd8:  rs = registers[8];
-            4'd9:  rs = registers[9];
-            4'd10: rs = registers[10];
-            4'd11: rs = registers[11];
-            4'd12: rs = registers[12];
-            4'd13: rs = {{(DATA_BITS-8){1'b0}}, block_id};
-            4'd14: rs = {{(DATA_BITS-8){1'b0}}, THREADS_PER_BLOCK[7:0]};
-            4'd15: rs = {{(DATA_BITS-8){1'b0}}, THREAD_ID[7:0]};
-            default: rs = {DATA_BITS{1'b0}};
-        endcase
-    end
+    // ============================================
+    // Unified register read view — one 16-entry source, three indexed reads.
+    // Three separate case-mux trees are replaced with a shared wire array;
+    // Yosys can CSE the decode logic across all three addresses.
+    // ============================================
+    wire [DATA_BITS-1:0] reg_view [15:0];
+    genvar gv;
+    generate
+        for (gv = 0; gv < 13; gv = gv + 1) begin : gen_regview
+            assign reg_view[gv] = registers[gv];
+        end
+    endgenerate
+    assign reg_view[13] = {{(DATA_BITS-8){1'b0}}, block_id};
+    assign reg_view[14] = {{(DATA_BITS-8){1'b0}}, THREADS_PER_BLOCK[7:0]};
+    assign reg_view[15] = {{(DATA_BITS-8){1'b0}}, THREAD_ID[7:0]};
 
-    always @(*) begin
-        case (decoded_rt_address)
-            4'd0:  rt = registers[0];
-            4'd1:  rt = registers[1];
-            4'd2:  rt = registers[2];
-            4'd3:  rt = registers[3];
-            4'd4:  rt = registers[4];
-            4'd5:  rt = registers[5];
-            4'd6:  rt = registers[6];
-            4'd7:  rt = registers[7];
-            4'd8:  rt = registers[8];
-            4'd9:  rt = registers[9];
-            4'd10: rt = registers[10];
-            4'd11: rt = registers[11];
-            4'd12: rt = registers[12];
-            4'd13: rt = {{(DATA_BITS-8){1'b0}}, block_id};
-            4'd14: rt = {{(DATA_BITS-8){1'b0}}, THREADS_PER_BLOCK[7:0]};
-            4'd15: rt = {{(DATA_BITS-8){1'b0}}, THREAD_ID[7:0]};
-            default: rt = {DATA_BITS{1'b0}};
-        endcase
-    end
-
-    always @(*) begin
-        case (decoded_rd_address)
-            4'd0:  rd_data = registers[0];
-            4'd1:  rd_data = registers[1];
-            4'd2:  rd_data = registers[2];
-            4'd3:  rd_data = registers[3];
-            4'd4:  rd_data = registers[4];
-            4'd5:  rd_data = registers[5];
-            4'd6:  rd_data = registers[6];
-            4'd7:  rd_data = registers[7];
-            4'd8:  rd_data = registers[8];
-            4'd9:  rd_data = registers[9];
-            4'd10: rd_data = registers[10];
-            4'd11: rd_data = registers[11];
-            4'd12: rd_data = registers[12];
-            4'd13: rd_data = {{(DATA_BITS-8){1'b0}}, block_id};
-            4'd14: rd_data = {{(DATA_BITS-8){1'b0}}, THREADS_PER_BLOCK[7:0]};
-            4'd15: rd_data = {{(DATA_BITS-8){1'b0}}, THREAD_ID[7:0]};
-            default: rd_data = {DATA_BITS{1'b0}};
-        endcase
-    end
+    assign rs      = reg_view[decoded_rs_address];
+    assign rt      = reg_view[decoded_rt_address];
+    assign rd_data = reg_view[decoded_rd_address];
 
     // Sign-extend 8-bit immediate to 16-bit
     wire [DATA_BITS-1:0] immediate_extended;

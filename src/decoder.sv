@@ -58,57 +58,34 @@ module decoder (
         SYS          = 4'b1100,  // Systolic array: op=instruction[7:6], inputs from R0/R1
         RET          = 4'b1111;  // Return (end thread execution)
 
-    // Combinational decode. The instruction is stable across the core FSM’s
-    // multi-cycle execution, so driving control signals combinationally avoids
-    // off-by-one-cycle issues between DECODE/REQUEST/EXECUTE phases.
+    // Combinational decode — purely stateless. Reset is handled upstream
+    // by the pipe_* register stage in core.sv; no reset mux needed here.
     always @(*) begin
-        if (reset) begin
-            decoded_rd_address = 0;
-            decoded_rs_address = 0;
-            decoded_rt_address = 0;
-            decoded_immediate = 0;
-            decoded_nzp = 0;
-            decoded_reg_write_enable = 0;
-            decoded_mem_read_enable = 0;
-            decoded_mem_write_enable = 0;
-            decoded_nzp_write_enable = 0;
-            decoded_reg_input_mux = 0;
-            decoded_alu_arithmetic_mux = 0;
-            decoded_alu_output_mux = 0;
-            decoded_pc_mux = 0;
-            decoded_fma_enable = 0;
-            decoded_branch = 0;
-            decoded_act_enable = 0;
-            decoded_act_func = 0;
-            decoded_systolic_enable = 0;
-            decoded_systolic_op = 0;
-            decoded_systolic_idx = 0;
-            decoded_ret = 0;
-        end else begin
-            decoded_rd_address = instruction[11:8];
-            decoded_rs_address = instruction[7:4];
-            decoded_rt_address = instruction[3:0];
-            decoded_immediate = instruction[7:0];
-            decoded_nzp = instruction[11:9];
+        decoded_rd_address       = instruction[11:8];
+        decoded_rs_address       = instruction[7:4];
+        decoded_rt_address       = instruction[3:0];
+        decoded_immediate        = instruction[7:0];
+        decoded_nzp              = instruction[11:9];
 
-            decoded_reg_write_enable = 0;
-            decoded_mem_read_enable = 0;
-            decoded_mem_write_enable = 0;
-            decoded_nzp_write_enable = 0;
-            decoded_reg_input_mux = 0;
-            decoded_alu_arithmetic_mux = 0;
-            decoded_alu_output_mux = 0;
-            decoded_pc_mux = 0;
-            decoded_fma_enable = 0;
-            decoded_act_enable = 0;
-            decoded_act_func = 0;
-            decoded_systolic_enable = 0;
-            decoded_systolic_op = 0;
-            decoded_systolic_idx = 0;
-            decoded_ret = 0;
-            decoded_branch = 0;
+        // Default all controls to inactive
+        decoded_reg_write_enable  = 0;
+        decoded_mem_read_enable   = 0;
+        decoded_mem_write_enable  = 0;
+        decoded_nzp_write_enable  = 0;
+        decoded_reg_input_mux     = 0;
+        decoded_alu_arithmetic_mux= 0;
+        decoded_alu_output_mux    = 0;
+        decoded_pc_mux            = 0;
+        decoded_fma_enable        = 0;
+        decoded_act_enable        = 0;
+        decoded_act_func          = 0;
+        decoded_systolic_enable   = 0;
+        decoded_systolic_op       = 0;
+        decoded_systolic_idx      = 0;
+        decoded_ret               = 0;
+        decoded_branch            = 0;
 
-            case (instruction[15:12])
+        case (instruction[15:12])
                 NOP: begin end
                 BRnzp: begin
                     decoded_pc_mux = 1;
@@ -183,6 +160,5 @@ module decoder (
                 end
                 default: begin end
             endcase
-        end
     end
 endmodule

@@ -66,26 +66,29 @@ module fma #(
     // Accumulate (SF16 sign-magnitude) with saturation
     // Convert to signed for addition, then back to sign-magnitude
     // ============================================
-    // Convert SF16 sign-magnitude to signed integer (mantissa with sign)
-    wire signed [15:0] r4_signed = rq[15] ? -$signed({1'b0, rq[14:0]}) :
-                                            $signed({1'b0, rq[14:0]});
-    wire signed [15:0] r3_signed = r3_weighted[15] ? -$signed({1'b0, r3_weighted[14:0]}) :
-                                                     $signed({1'b0, r3_weighted[14:0]});
+    // Extract sign and magnitude from SF16 inputs
+    wire S_A = rq[15];
+    wire [14:0] M_A = rq[14:0];
+    wire S_B = r3_weighted[15];
+    wire [14:0] M_B = r3_weighted[14:0];
 
-    // Add with overflow detection
-    wire signed [16:0] acc_sum_ext = {r4_signed[15], r4_signed} + {r3_signed[15], r3_signed};
+    // Compute arithmetic options in parallel (single carry-propagate level)
+    wire [15:0] sum_M = M_A + M_B;
+    wire [15:0] diff_A_B = M_A - M_B;
+    wire [15:0] diff_B_A = M_B - M_A;
 
-    // Saturate to ±32767 (no -32768 in SF16, no -1.0)
-    wire signed [15:0] acc_sum_sat = (acc_sum_ext > 32767)  ? 16'sd32767 :
-                                     (acc_sum_ext < -32767) ? -16'sd32767 :
-                                     acc_sum_ext[15:0];
+    // Fast decision logic
+    wire signs_equal = (S_A == S_B);
+    wire A_gte_B = (M_A >= M_B);
 
-    // Convert signed result back to SF16 sign-magnitude
-    wire [15:0] abs_acc_sum_sat = -acc_sum_sat;
-    wire [DATA_BITS-1:0] acc_sm = (acc_sum_sat < 0) ? {1'b1, abs_acc_sum_sat[14:0]} :
-                                                       {1'b0, acc_sum_sat[14:0]};
-    // Canonicalize negative zero
-    wire [DATA_BITS-1:0] accumulated_saturated = (acc_sm == NEG_ZERO) ? {DATA_BITS{1'b0}} : acc_sm;
+    // Mux final sign and magnitude
+    wire res_S = signs_equal ? S_A : (A_gte_B ? S_A : S_B);
+    wire [14:0] res_M = signs_equal ? 
+                        ((sum_M > 15'd32767) ? 15'd32767 : sum_M[14:0]) : 
+                        (A_gte_B ? diff_A_B[14:0] : diff_B_A[14:0]);
+
+    // Construct final sign-magnitude value and canonicalize negative zero
+    wire [DATA_BITS-1:0] accumulated_saturated = (res_M == 15'b0) ? {DATA_BITS{1'b0}} : {res_S, res_M};
 
     // ============================================
     // Pipeline control

@@ -29,8 +29,7 @@ module tb_cache #(
     cache #(
         .ADDR_BITS(ADDR_BITS),
         .DATA_BITS(DATA_BITS),
-        .CACHE_SIZE(CACHE_SIZE),
-        .LINE_SIZE(LINE_SIZE)
+        .CACHE_SIZE(CACHE_SIZE)
     ) cache_inst (
         .clk(clk),
         .reset(reset),

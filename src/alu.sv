@@ -65,13 +65,13 @@ module alu #(
                             case (rt[7:0])
                                 8'd1:    alu_out_reg <= rs;
                                 8'd2:    alu_out_reg <= rs >> 1;
-                                8'd3:    alu_out_reg <= {{(DATA_BITS-8){1'b0}}, rs[7:0] / 8'd3};
+                                8'd3:    alu_out_reg <= {{(DATA_BITS-8){1'b0}}, 8'((32'(rs[7:0]) * 32'd21846) >> 16)};
                                 8'd4:    alu_out_reg <= rs >> 2;
                                 8'd8:    alu_out_reg <= rs >> 3;
-                                8'd9:    alu_out_reg <= {{(DATA_BITS-8){1'b0}}, rs[7:0] / 8'd9};
-                                8'd10:   alu_out_reg <= {{(DATA_BITS-8){1'b0}}, rs[7:0] / 8'd10};
-                                8'd11:   alu_out_reg <= {{(DATA_BITS-8){1'b0}}, rs[7:0] / 8'd11};
-                                8'd12:   alu_out_reg <= {{(DATA_BITS-8){1'b0}}, rs[7:0] / 8'd12};
+                                8'd9:    alu_out_reg <= {{(DATA_BITS-8){1'b0}}, 8'((32'(rs[7:0]) * 32'd7282) >> 16)};
+                                8'd10:   alu_out_reg <= {{(DATA_BITS-8){1'b0}}, 8'((32'(rs[7:0]) * 32'd6554) >> 16)};
+                                8'd11:   alu_out_reg <= {{(DATA_BITS-8){1'b0}}, 8'((32'(rs[7:0]) * 32'd5958) >> 16)};
+                                8'd12:   alu_out_reg <= {{(DATA_BITS-8){1'b0}}, 8'((32'(rs[7:0]) * 32'd5462) >> 16)};
                                 8'd16:   alu_out_reg <= rs >> 4;
                                 8'd32:   alu_out_reg <= rs >> 5;
                                 8'd64:   alu_out_reg <= rs >> 6;

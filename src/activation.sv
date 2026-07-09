@@ -50,26 +50,29 @@ module activation #(
     // ============================================
     // Stage 1: Bias Addition with Saturation (SF16 sign-magnitude)
     // ============================================
-    // Convert SF16 sign-magnitude to signed integer
-    wire signed [15:0] act_signed = unbiased_activation[15] ? -$signed({1'b0, unbiased_activation[14:0]}) :
-                                                              $signed({1'b0, unbiased_activation[14:0]});
-    wire signed [15:0] bias_signed = bias[15] ? -$signed({1'b0, bias[14:0]}) :
-                                                 $signed({1'b0, bias[14:0]});
+    // Extract sign and magnitude from SF16 inputs
+    wire S_A = unbiased_activation[15];
+    wire [14:0] M_A = unbiased_activation[14:0];
+    wire S_B = bias[15];
+    wire [14:0] M_B = bias[14:0];
 
-    // Add with overflow detection
-    wire signed [16:0] biased_sum_ext = {act_signed[15], act_signed} + {bias_signed[15], bias_signed};
+    // Compute arithmetic options in parallel (single carry-propagate level)
+    wire [15:0] sum_M = M_A + M_B;
+    wire [15:0] diff_A_B = M_A - M_B;
+    wire [15:0] diff_B_A = M_B - M_A;
 
-    // Saturate to ±32767 (symmetric SF16 range)
-    wire signed [15:0] biased_sum_sat = (biased_sum_ext > 32767)  ? 16'sd32767 :
-                                        (biased_sum_ext < -32767) ? -16'sd32767 :
-                                        biased_sum_ext[15:0];
+    // Fast decision logic
+    wire signs_equal = (S_A == S_B);
+    wire A_gte_B = (M_A >= M_B);
 
-    // Convert back to SF16 sign-magnitude
-    wire [15:0] abs_biased_sum_sat = -biased_sum_sat;
-    wire [DATA_BITS-1:0] biased_sm = (biased_sum_sat < 0) ? {1'b1, abs_biased_sum_sat[14:0]} :
-                                                              {1'b0, biased_sum_sat[14:0]};
-    // Canonicalize negative zero
-    wire [DATA_BITS-1:0] biased_activation = (biased_sm == 16'h8000) ? 16'h0000 : biased_sm;
+    // Mux final sign and magnitude
+    wire res_S = signs_equal ? S_A : (A_gte_B ? S_A : S_B);
+    wire [14:0] res_M = signs_equal ? 
+                        ((sum_M > 15'd32767) ? 15'd32767 : sum_M[14:0]) : 
+                        (A_gte_B ? diff_A_B[14:0] : diff_B_A[14:0]);
+
+    // Construct final sign-magnitude value and canonicalize negative zero
+    wire [DATA_BITS-1:0] biased_activation = (res_M == 15'b0) ? {DATA_BITS{1'b0}} : {res_S, res_M};
 
     // ============================================
     // Stage 2: Activation Function
@@ -83,33 +86,15 @@ module activation #(
     wire [DATA_BITS-1:0] leaky_value = (leaky_mantissa == 15'b0) ? Q115_ZERO :
                                         {1'b1, leaky_mantissa};  // negative with reduced magnitude
 
-    // Activation function selection
-    reg [DATA_BITS-1:0] activated_value;
-    
-    always @(*) begin
-        case (activation_func)
-            ACT_NONE: begin
-                // Pass-through: no activation
-                activated_value = biased_activation;
-            end
-            ACT_RELU: begin
-                // ReLU: max(0, x)
-                activated_value = is_negative ? Q115_ZERO : biased_activation;
-            end
-            ACT_LEAKY_RELU: begin
-                // Leaky ReLU: x if x > 0, else ~0.01*x
-                activated_value = is_negative ? leaky_value : biased_activation;
-            end
-            ACT_CLIPPED_RELU: begin
-                // Clipped ReLU: min(max_val, max(0, x))
-                // In SF16, max is already ~1.0 (0x7FFF)
-                activated_value = is_negative ? Q115_ZERO : biased_activation;
-            end
-            default: begin
-                activated_value = biased_activation;
-            end
-        endcase
-    end
+    // Activation function selection — wire ternary for synthesis efficiency.
+    // Yosys maps this to a 2-level mux tree and can share biased_activation/is_negative.
+    wire [DATA_BITS-1:0] relu_out      = is_negative ? Q115_ZERO : biased_activation;
+    wire [DATA_BITS-1:0] leaky_out     = is_negative ? leaky_value : biased_activation;
+    wire [DATA_BITS-1:0] activated_value =
+        (activation_func == ACT_RELU)        ? relu_out      :
+        (activation_func == ACT_LEAKY_RELU)  ? leaky_out     :
+        (activation_func == ACT_CLIPPED_RELU)? relu_out      : // same as ReLU (max already ≤1 in SF16)
+                                               biased_activation; // ACT_NONE pass-through
 
     // ============================================
     // Pipeline control
