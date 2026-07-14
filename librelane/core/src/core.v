@@ -30,25 +30,24 @@ module activation (
 	localparam [1:0] ACT_CLIPPED_RELU = 2'b11;
 	reg [DATA_BITS - 1:0] activation_out_reg;
 	assign activation_out = activation_out_reg;
-	wire signed [15:0] act_signed = (unbiased_activation[15] ? -$signed({1'b0, unbiased_activation[14:0]}) : $signed({1'b0, unbiased_activation[14:0]}));
-	wire signed [15:0] bias_signed = (bias[15] ? -$signed({1'b0, bias[14:0]}) : $signed({1'b0, bias[14:0]}));
-	wire signed [16:0] biased_sum_ext = {act_signed[15], act_signed} + {bias_signed[15], bias_signed};
-	wire signed [15:0] biased_sum_sat = (biased_sum_ext > 32767 ? 16'sd32767 : (biased_sum_ext < -32767 ? -16'sd32767 : biased_sum_ext[15:0]));
-	wire [15:0] abs_biased_sum_sat = -biased_sum_sat;
-	wire [DATA_BITS - 1:0] biased_sm = (biased_sum_sat < 0 ? {1'b1, abs_biased_sum_sat[14:0]} : {1'b0, biased_sum_sat[14:0]});
-	wire [DATA_BITS - 1:0] biased_activation = (biased_sm == 16'h8000 ? 16'h0000 : biased_sm);
+	wire S_A = unbiased_activation[15];
+	wire [14:0] M_A = unbiased_activation[14:0];
+	wire S_B = bias[15];
+	wire [14:0] M_B = bias[14:0];
+	wire [15:0] sum_M = M_A + M_B;
+	wire [15:0] diff_A_B = M_A - M_B;
+	wire [15:0] diff_B_A = M_B - M_A;
+	wire signs_equal = S_A == S_B;
+	wire A_gte_B = M_A >= M_B;
+	wire res_S = (signs_equal ? S_A : (A_gte_B ? S_A : S_B));
+	wire [14:0] res_M = (signs_equal ? (sum_M > 15'd32767 ? 15'd32767 : sum_M[14:0]) : (A_gte_B ? diff_A_B[14:0] : diff_B_A[14:0]));
+	wire [DATA_BITS - 1:0] biased_activation = (res_M == 15'b000000000000000 ? {DATA_BITS {1'b0}} : {res_S, res_M});
 	wire is_negative = biased_activation[15];
 	wire [14:0] leaky_mantissa = biased_activation[14:0] >> 7;
 	wire [DATA_BITS - 1:0] leaky_value = (leaky_mantissa == 15'b000000000000000 ? Q115_ZERO : {1'b1, leaky_mantissa});
-	reg [DATA_BITS - 1:0] activated_value;
-	always @(*)
-		case (activation_func)
-			ACT_NONE: activated_value = biased_activation;
-			ACT_RELU: activated_value = (is_negative ? Q115_ZERO : biased_activation);
-			ACT_LEAKY_RELU: activated_value = (is_negative ? leaky_value : biased_activation);
-			ACT_CLIPPED_RELU: activated_value = (is_negative ? Q115_ZERO : biased_activation);
-			default: activated_value = biased_activation;
-		endcase
+	wire [DATA_BITS - 1:0] relu_out = (is_negative ? Q115_ZERO : biased_activation);
+	wire [DATA_BITS - 1:0] leaky_out = (is_negative ? leaky_value : biased_activation);
+	wire [DATA_BITS - 1:0] activated_value = (activation_func == ACT_RELU ? relu_out : (activation_func == ACT_LEAKY_RELU ? leaky_out : (activation_func == ACT_CLIPPED_RELU ? relu_out : biased_activation)));
 	always @(posedge clk)
 		if (reset)
 			activation_out_reg <= {DATA_BITS {1'b0}};
@@ -85,6 +84,14 @@ module alu (
 	localparam DIV = 2'b11;
 	reg [DATA_BITS - 1:0] alu_out_reg;
 	assign alu_out = alu_out_reg;
+	function automatic [31:0] sv2v_cast_32;
+		input reg [31:0] inp;
+		sv2v_cast_32 = inp;
+	endfunction
+	function automatic [7:0] sv2v_cast_8;
+		input reg [7:0] inp;
+		sv2v_cast_8 = inp;
+	endfunction
 	always @(posedge clk)
 		if (reset)
 			alu_out_reg <= {DATA_BITS {1'b0}};
@@ -96,18 +103,18 @@ module alu (
 					case (decoded_alu_arithmetic_mux)
 						ADD: alu_out_reg <= rs + rt;
 						SUB: alu_out_reg <= rs - rt;
-						MUL: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, rs[7:0] * rt[7:0]};
+						MUL: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, rs[7:0]} * {{DATA_BITS - 8 {1'b0}}, rt[7:0]};
 						DIV:
 							case (rt[7:0])
 								8'd1: alu_out_reg <= rs;
 								8'd2: alu_out_reg <= rs >> 1;
-								8'd3: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, rs[7:0] / 8'd3};
+								8'd3: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, sv2v_cast_8((sv2v_cast_32(rs[7:0]) * 32'd21846) >> 16)};
 								8'd4: alu_out_reg <= rs >> 2;
 								8'd8: alu_out_reg <= rs >> 3;
-								8'd9: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, rs[7:0] / 8'd9};
-								8'd10: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, rs[7:0] / 8'd10};
-								8'd11: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, rs[7:0] / 8'd11};
-								8'd12: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, rs[7:0] / 8'd12};
+								8'd9: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, sv2v_cast_8((sv2v_cast_32(rs[7:0]) * 32'd7282) >> 16)};
+								8'd10: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, sv2v_cast_8((sv2v_cast_32(rs[7:0]) * 32'd6554) >> 16)};
+								8'd11: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, sv2v_cast_8((sv2v_cast_32(rs[7:0]) * 32'd5958) >> 16)};
+								8'd12: alu_out_reg <= {{DATA_BITS - 8 {1'b0}}, sv2v_cast_8((sv2v_cast_32(rs[7:0]) * 32'd5462) >> 16)};
 								8'd16: alu_out_reg <= rs >> 4;
 								8'd32: alu_out_reg <= rs >> 5;
 								8'd64: alu_out_reg <= rs >> 6;
@@ -365,162 +372,185 @@ module controller (
 	input wire reset;
 	input wire [NUM_CONSUMERS - 1:0] consumer_read_valid;
 	input wire [(ADDR_BITS * NUM_CONSUMERS) - 1:0] consumer_read_address_flat;
-	output reg [NUM_CONSUMERS - 1:0] consumer_read_ready;
+	output wire [NUM_CONSUMERS - 1:0] consumer_read_ready;
 	output wire [(DATA_BITS * NUM_CONSUMERS) - 1:0] consumer_read_data_flat;
 	input wire [NUM_CONSUMERS - 1:0] consumer_write_valid;
 	input wire [(ADDR_BITS * NUM_CONSUMERS) - 1:0] consumer_write_address_flat;
 	input wire [(DATA_BITS * NUM_CONSUMERS) - 1:0] consumer_write_data_flat;
-	output reg [NUM_CONSUMERS - 1:0] consumer_write_ready;
-	output reg [NUM_CHANNELS - 1:0] mem_read_valid;
+	output wire [NUM_CONSUMERS - 1:0] consumer_write_ready;
+	output wire [NUM_CHANNELS - 1:0] mem_read_valid;
 	output wire [(ADDR_BITS * NUM_CHANNELS) - 1:0] mem_read_address_flat;
 	input wire [NUM_CHANNELS - 1:0] mem_read_ready;
 	input wire [(DATA_BITS * NUM_CHANNELS) - 1:0] mem_read_data_flat;
-	output reg [NUM_CHANNELS - 1:0] mem_write_valid;
+	output wire [NUM_CHANNELS - 1:0] mem_write_valid;
 	output wire [(ADDR_BITS * NUM_CHANNELS) - 1:0] mem_write_address_flat;
 	output wire [(DATA_BITS * NUM_CHANNELS) - 1:0] mem_write_data_flat;
 	input wire [NUM_CHANNELS - 1:0] mem_write_ready;
-	wire [ADDR_BITS - 1:0] consumer_read_address [NUM_CONSUMERS - 1:0];
-	reg [DATA_BITS - 1:0] consumer_read_data [NUM_CONSUMERS - 1:0];
-	wire [ADDR_BITS - 1:0] consumer_write_address [NUM_CONSUMERS - 1:0];
-	wire [DATA_BITS - 1:0] consumer_write_data [NUM_CONSUMERS - 1:0];
-	reg [ADDR_BITS - 1:0] mem_read_address [NUM_CHANNELS - 1:0];
-	wire [DATA_BITS - 1:0] mem_read_data [NUM_CHANNELS - 1:0];
-	reg [ADDR_BITS - 1:0] mem_write_address [NUM_CHANNELS - 1:0];
-	reg [DATA_BITS - 1:0] mem_write_data [NUM_CHANNELS - 1:0];
-	genvar _gv_c_1;
 	generate
-		for (_gv_c_1 = 0; _gv_c_1 < NUM_CONSUMERS; _gv_c_1 = _gv_c_1 + 1) begin : unflatten_consumer
-			localparam c = _gv_c_1;
-			assign consumer_read_address[c] = consumer_read_address_flat[((c + 1) * ADDR_BITS) - 1:c * ADDR_BITS];
-			assign consumer_write_address[c] = consumer_write_address_flat[((c + 1) * ADDR_BITS) - 1:c * ADDR_BITS];
-			assign consumer_write_data[c] = consumer_write_data_flat[((c + 1) * DATA_BITS) - 1:c * DATA_BITS];
+		if (NUM_CONSUMERS == NUM_CHANNELS) begin : bypass_1to1
+			assign mem_read_valid = consumer_read_valid;
+			assign mem_read_address_flat = consumer_read_address_flat;
+			assign consumer_read_ready = mem_read_ready;
+			assign consumer_read_data_flat = mem_read_data_flat;
+			if (WRITE_ENABLE) begin : write_path
+				assign mem_write_valid = consumer_write_valid;
+				assign mem_write_address_flat = consumer_write_address_flat;
+				assign mem_write_data_flat = consumer_write_data_flat;
+				assign consumer_write_ready = mem_write_ready;
+			end
+			else begin : no_write_path
+				assign mem_write_valid = {NUM_CHANNELS {1'b0}};
+				assign mem_write_address_flat = {ADDR_BITS * NUM_CHANNELS {1'b0}};
+				assign mem_write_data_flat = {DATA_BITS * NUM_CHANNELS {1'b0}};
+				assign consumer_write_ready = {NUM_CONSUMERS {1'b0}};
+			end
 		end
-	endgenerate
-	genvar _gv_m_1;
-	generate
-		for (_gv_m_1 = 0; _gv_m_1 < NUM_CHANNELS; _gv_m_1 = _gv_m_1 + 1) begin : unflatten_mem
-			localparam m = _gv_m_1;
-			assign mem_read_data[m] = mem_read_data_flat[((m + 1) * DATA_BITS) - 1:m * DATA_BITS];
-		end
-	endgenerate
-	genvar _gv_f_1;
-	generate
-		for (_gv_f_1 = 0; _gv_f_1 < NUM_CONSUMERS; _gv_f_1 = _gv_f_1 + 1) begin : flatten_consumer_outputs
-			localparam f = _gv_f_1;
-			assign consumer_read_data_flat[((f + 1) * DATA_BITS) - 1:f * DATA_BITS] = consumer_read_data[f];
-		end
-		for (_gv_f_1 = 0; _gv_f_1 < NUM_CHANNELS; _gv_f_1 = _gv_f_1 + 1) begin : flatten_mem_outputs
-			localparam f = _gv_f_1;
-			assign mem_read_address_flat[((f + 1) * ADDR_BITS) - 1:f * ADDR_BITS] = mem_read_address[f];
-			assign mem_write_address_flat[((f + 1) * ADDR_BITS) - 1:f * ADDR_BITS] = mem_write_address[f];
-			assign mem_write_data_flat[((f + 1) * DATA_BITS) - 1:f * DATA_BITS] = mem_write_data[f];
-		end
-	endgenerate
-	localparam IDLE = 3'b000;
-	localparam READ_WAITING = 3'b010;
-	localparam WRITE_WAITING = 3'b011;
-	localparam READ_RELAYING = 3'b100;
-	localparam WRITE_RELAYING = 3'b101;
-	localparam SEL_WIDTH = ($clog2(NUM_CONSUMERS) > 0 ? $clog2(NUM_CONSUMERS) : 1);
-	reg [2:0] controller_state [NUM_CHANNELS - 1:0];
-	reg [SEL_WIDTH - 1:0] current_consumer [NUM_CHANNELS - 1:0];
-	reg [NUM_CONSUMERS - 1:0] channel_serving_consumer;
-	reg [NUM_CONSUMERS - 1:0] serving_next;
-	integer sel;
-	reg sel_is_write;
-	integer i;
-	integer j;
-	integer k;
-	function automatic signed [SEL_WIDTH - 1:0] sv2v_cast_61068_signed;
-		input reg signed [SEL_WIDTH - 1:0] inp;
-		sv2v_cast_61068_signed = inp;
-	endfunction
-	always @(posedge clk)
-		if (reset) begin
-			mem_read_valid <= {NUM_CHANNELS {1'b0}};
-			mem_write_valid <= {NUM_CHANNELS {1'b0}};
-			consumer_read_ready <= {NUM_CONSUMERS {1'b0}};
-			consumer_write_ready <= {NUM_CONSUMERS {1'b0}};
-			channel_serving_consumer <= 0;
-			serving_next = {NUM_CONSUMERS {1'b0}};
-			for (k = 0; k < NUM_CHANNELS; k = k + 1)
-				begin
-					mem_read_address[k] <= {ADDR_BITS {1'b0}};
-					mem_write_address[k] <= {ADDR_BITS {1'b0}};
-					mem_write_data[k] <= {DATA_BITS {1'b0}};
+		else begin : dynamic_arbitration
+			wire [ADDR_BITS - 1:0] consumer_read_address [NUM_CONSUMERS - 1:0];
+			reg [DATA_BITS - 1:0] consumer_read_data [NUM_CONSUMERS - 1:0];
+			wire [ADDR_BITS - 1:0] consumer_write_address [NUM_CONSUMERS - 1:0];
+			wire [DATA_BITS - 1:0] consumer_write_data [NUM_CONSUMERS - 1:0];
+			reg [ADDR_BITS - 1:0] mem_read_address [NUM_CHANNELS - 1:0];
+			wire [DATA_BITS - 1:0] mem_read_data [NUM_CHANNELS - 1:0];
+			reg [ADDR_BITS - 1:0] mem_write_address [NUM_CHANNELS - 1:0];
+			reg [DATA_BITS - 1:0] mem_write_data [NUM_CHANNELS - 1:0];
+			reg [NUM_CONSUMERS - 1:0] consumer_read_ready_reg;
+			reg [NUM_CONSUMERS - 1:0] consumer_write_ready_reg;
+			reg [NUM_CHANNELS - 1:0] mem_read_valid_reg;
+			reg [NUM_CHANNELS - 1:0] mem_write_valid_reg;
+			assign consumer_read_ready = consumer_read_ready_reg;
+			assign consumer_write_ready = consumer_write_ready_reg;
+			assign mem_read_valid = mem_read_valid_reg;
+			assign mem_write_valid = mem_write_valid_reg;
+			genvar _gv_c_1;
+			for (_gv_c_1 = 0; _gv_c_1 < NUM_CONSUMERS; _gv_c_1 = _gv_c_1 + 1) begin : unflatten_consumer
+				localparam c = _gv_c_1;
+				assign consumer_read_address[c] = consumer_read_address_flat[((c + 1) * ADDR_BITS) - 1:c * ADDR_BITS];
+				assign consumer_write_address[c] = consumer_write_address_flat[((c + 1) * ADDR_BITS) - 1:c * ADDR_BITS];
+				assign consumer_write_data[c] = consumer_write_data_flat[((c + 1) * DATA_BITS) - 1:c * DATA_BITS];
+			end
+			genvar _gv_m_1;
+			for (_gv_m_1 = 0; _gv_m_1 < NUM_CHANNELS; _gv_m_1 = _gv_m_1 + 1) begin : unflatten_mem
+				localparam m = _gv_m_1;
+				assign mem_read_data[m] = mem_read_data_flat[((m + 1) * DATA_BITS) - 1:m * DATA_BITS];
+			end
+			genvar _gv_f_1;
+			for (_gv_f_1 = 0; _gv_f_1 < NUM_CONSUMERS; _gv_f_1 = _gv_f_1 + 1) begin : flatten_consumer_outputs
+				localparam f = _gv_f_1;
+				assign consumer_read_data_flat[((f + 1) * DATA_BITS) - 1:f * DATA_BITS] = consumer_read_data[f];
+			end
+			for (_gv_f_1 = 0; _gv_f_1 < NUM_CHANNELS; _gv_f_1 = _gv_f_1 + 1) begin : flatten_mem_outputs
+				localparam f = _gv_f_1;
+				assign mem_read_address_flat[((f + 1) * ADDR_BITS) - 1:f * ADDR_BITS] = mem_read_address[f];
+				assign mem_write_address_flat[((f + 1) * ADDR_BITS) - 1:f * ADDR_BITS] = mem_write_address[f];
+				assign mem_write_data_flat[((f + 1) * DATA_BITS) - 1:f * DATA_BITS] = mem_write_data[f];
+			end
+			localparam IDLE = 3'b000;
+			localparam READ_WAITING = 3'b010;
+			localparam WRITE_WAITING = 3'b011;
+			localparam READ_RELAYING = 3'b100;
+			localparam WRITE_RELAYING = 3'b101;
+			localparam SEL_WIDTH = ($clog2(NUM_CONSUMERS) > 0 ? $clog2(NUM_CONSUMERS) : 1);
+			reg [2:0] controller_state [NUM_CHANNELS - 1:0];
+			reg [SEL_WIDTH - 1:0] current_consumer [NUM_CHANNELS - 1:0];
+			reg [NUM_CONSUMERS - 1:0] channel_serving_consumer;
+			reg [NUM_CONSUMERS - 1:0] serving_next;
+			integer sel;
+			reg sel_is_write;
+			integer i;
+			integer j;
+			integer k;
+			always @(posedge clk)
+				if (reset) begin
+					mem_read_valid_reg <= {NUM_CHANNELS {1'b0}};
+					mem_write_valid_reg <= {NUM_CHANNELS {1'b0}};
+					consumer_read_ready_reg <= {NUM_CONSUMERS {1'b0}};
+					consumer_write_ready_reg <= {NUM_CONSUMERS {1'b0}};
+					channel_serving_consumer <= 0;
+					serving_next = {NUM_CONSUMERS {1'b0}};
+					for (k = 0; k < NUM_CHANNELS; k = k + 1)
+						begin
+							mem_read_address[k] <= {ADDR_BITS {1'b0}};
+							mem_write_address[k] <= {ADDR_BITS {1'b0}};
+							mem_write_data[k] <= {DATA_BITS {1'b0}};
+						end
+					for (k = 0; k < NUM_CONSUMERS; k = k + 1)
+						consumer_read_data[k] <= {DATA_BITS {1'b0}};
+					for (k = 0; k < NUM_CHANNELS; k = k + 1)
+						begin
+							controller_state[k] <= IDLE;
+							current_consumer[k] <= {SEL_WIDTH {1'b0}};
+						end
 				end
-			for (k = 0; k < NUM_CONSUMERS; k = k + 1)
-				consumer_read_data[k] <= {DATA_BITS {1'b0}};
-			for (k = 0; k < NUM_CHANNELS; k = k + 1)
-				begin
-					controller_state[k] <= IDLE;
-					current_consumer[k] <= {SEL_WIDTH {1'b0}};
+				else begin
+					serving_next = channel_serving_consumer;
+					for (i = 0; i < NUM_CHANNELS; i = i + 1)
+						case (controller_state[i])
+							IDLE: begin
+								sel = -1;
+								sel_is_write = 1'b0;
+								for (j = 0; j < NUM_CONSUMERS; j = j + 1)
+									if (sel == -1) begin
+										if (consumer_read_valid[j] && !serving_next[j]) begin
+											sel = j;
+											sel_is_write = 1'b0;
+										end
+										else if ((WRITE_ENABLE && consumer_write_valid[j]) && !serving_next[j]) begin
+											sel = j;
+											sel_is_write = 1'b1;
+										end
+									end
+								if (sel != -1) begin
+									serving_next[sel] = 1'b1;
+									begin : sv2v_autoblock_1
+										reg signed [SEL_WIDTH - 1:0] sv2v_tmp_cast;
+										sv2v_tmp_cast = sel;
+										current_consumer[i] <= sv2v_tmp_cast;
+									end
+									if (!sel_is_write) begin
+										mem_read_valid_reg[i] <= 1'b1;
+										mem_read_address[i] <= consumer_read_address[sel];
+										controller_state[i] <= READ_WAITING;
+									end
+									else begin
+										mem_write_valid_reg[i] <= 1'b1;
+										mem_write_address[i] <= consumer_write_address[sel];
+										mem_write_data[i] <= consumer_write_data[sel];
+										controller_state[i] <= WRITE_WAITING;
+									end
+								end
+							end
+							READ_WAITING:
+								if (mem_read_ready[i]) begin
+									mem_read_valid_reg[i] <= 0;
+									consumer_read_ready_reg[current_consumer[i]] <= 1;
+									consumer_read_data[current_consumer[i]] <= mem_read_data[i];
+									controller_state[i] <= READ_RELAYING;
+								end
+							WRITE_WAITING:
+								if (mem_write_ready[i]) begin
+									mem_write_valid_reg[i] <= 0;
+									consumer_write_ready_reg[current_consumer[i]] <= 1;
+									controller_state[i] <= WRITE_RELAYING;
+								end
+							READ_RELAYING:
+								if (!consumer_read_valid[current_consumer[i]]) begin
+									serving_next[current_consumer[i]] = 1'b0;
+									consumer_read_ready_reg[current_consumer[i]] <= 0;
+									controller_state[i] <= IDLE;
+								end
+							WRITE_RELAYING:
+								if (!consumer_write_valid[current_consumer[i]]) begin
+									serving_next[current_consumer[i]] = 1'b0;
+									consumer_write_ready_reg[current_consumer[i]] <= 0;
+									controller_state[i] <= IDLE;
+								end
+							default: controller_state[i] <= IDLE;
+						endcase
+					channel_serving_consumer <= serving_next;
 				end
 		end
-		else begin
-			serving_next = channel_serving_consumer;
-			for (i = 0; i < NUM_CHANNELS; i = i + 1)
-				case (controller_state[i])
-					IDLE: begin
-						sel = -1;
-						sel_is_write = 1'b0;
-						for (j = 0; j < NUM_CONSUMERS; j = j + 1)
-							if (sel == -1) begin
-								if (consumer_read_valid[j] && !serving_next[j]) begin
-									sel = j;
-									sel_is_write = 1'b0;
-								end
-								else if ((WRITE_ENABLE && consumer_write_valid[j]) && !serving_next[j]) begin
-									sel = j;
-									sel_is_write = 1'b1;
-								end
-							end
-						if (sel != -1) begin
-							serving_next[sel] = 1'b1;
-							current_consumer[i] <= sv2v_cast_61068_signed(sel);
-							if (!sel_is_write) begin
-								mem_read_valid[i] <= 1'b1;
-								mem_read_address[i] <= consumer_read_address[sel];
-								controller_state[i] <= READ_WAITING;
-							end
-							else begin
-								mem_write_valid[i] <= 1'b1;
-								mem_write_address[i] <= consumer_write_address[sel];
-								mem_write_data[i] <= consumer_write_data[sel];
-								controller_state[i] <= WRITE_WAITING;
-							end
-						end
-					end
-					READ_WAITING:
-						if (mem_read_ready[i]) begin
-							mem_read_valid[i] <= 0;
-							consumer_read_ready[current_consumer[i]] <= 1;
-							consumer_read_data[current_consumer[i]] <= mem_read_data[i];
-							controller_state[i] <= READ_RELAYING;
-						end
-					WRITE_WAITING:
-						if (mem_write_ready[i]) begin
-							mem_write_valid[i] <= 0;
-							consumer_write_ready[current_consumer[i]] <= 1;
-							controller_state[i] <= WRITE_RELAYING;
-						end
-					READ_RELAYING:
-						if (!consumer_read_valid[current_consumer[i]]) begin
-							serving_next[current_consumer[i]] = 1'b0;
-							consumer_read_ready[current_consumer[i]] <= 0;
-							controller_state[i] <= IDLE;
-						end
-					WRITE_RELAYING:
-						if (!consumer_write_valid[current_consumer[i]]) begin
-							serving_next[current_consumer[i]] = 1'b0;
-							consumer_write_ready[current_consumer[i]] <= 0;
-							controller_state[i] <= IDLE;
-						end
-					default: controller_state[i] <= IDLE;
-				endcase
-			channel_serving_consumer <= serving_next;
-			channel_serving_consumer <= serving_next;
-		end
+	endgenerate
 endmodule
 `default_nettype none
 module core (
@@ -767,7 +797,8 @@ module core (
 	always @(*) current_pc = sv2v_tmp_scheduler_instance_current_pc;
 	scheduler #(
 		.THREADS_PER_BLOCK(THREADS_PER_BLOCK),
-		.PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS)
+		.PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS),
+		.ENABLE_BRANCH_DIVERGE(0)
 	) scheduler_instance(
 		.clk(clk),
 		.reset(reset),
@@ -1078,126 +1109,102 @@ module decoder (
 	localparam ACT = 4'b1011;
 	localparam SYS = 4'b1100;
 	localparam RET = 4'b1111;
-	always @(*)
-		if (reset) begin
-			decoded_rd_address = 0;
-			decoded_rs_address = 0;
-			decoded_rt_address = 0;
-			decoded_immediate = 0;
-			decoded_nzp = 0;
-			decoded_reg_write_enable = 0;
-			decoded_mem_read_enable = 0;
-			decoded_mem_write_enable = 0;
-			decoded_nzp_write_enable = 0;
-			decoded_reg_input_mux = 0;
-			decoded_alu_arithmetic_mux = 0;
-			decoded_alu_output_mux = 0;
-			decoded_pc_mux = 0;
-			decoded_fma_enable = 0;
-			decoded_branch = 0;
-			decoded_act_enable = 0;
-			decoded_act_func = 0;
-			decoded_systolic_enable = 0;
-			decoded_systolic_op = 0;
-			decoded_systolic_idx = 0;
-			decoded_ret = 0;
-		end
-		else begin
-			decoded_rd_address = instruction[11:8];
-			decoded_rs_address = instruction[7:4];
-			decoded_rt_address = instruction[3:0];
-			decoded_immediate = instruction[7:0];
-			decoded_nzp = instruction[11:9];
-			decoded_reg_write_enable = 0;
-			decoded_mem_read_enable = 0;
-			decoded_mem_write_enable = 0;
-			decoded_nzp_write_enable = 0;
-			decoded_reg_input_mux = 0;
-			decoded_alu_arithmetic_mux = 0;
-			decoded_alu_output_mux = 0;
-			decoded_pc_mux = 0;
-			decoded_fma_enable = 0;
-			decoded_act_enable = 0;
-			decoded_act_func = 0;
-			decoded_systolic_enable = 0;
-			decoded_systolic_op = 0;
-			decoded_systolic_idx = 0;
-			decoded_ret = 0;
-			decoded_branch = 0;
-			case (instruction[15:12])
-				NOP:
-					;
-				BRnzp: begin
-					decoded_pc_mux = 1;
-					decoded_branch = 1;
-				end
-				CMP: begin
-					decoded_rs_address = instruction[11:8];
-					decoded_rt_address = instruction[7:4];
-					decoded_alu_output_mux = 1;
-					decoded_nzp_write_enable = 1;
-				end
-				ADD: begin
+	always @(*) begin
+		decoded_rd_address = instruction[11:8];
+		decoded_rs_address = instruction[7:4];
+		decoded_rt_address = instruction[3:0];
+		decoded_immediate = instruction[7:0];
+		decoded_nzp = instruction[11:9];
+		decoded_reg_write_enable = 0;
+		decoded_mem_read_enable = 0;
+		decoded_mem_write_enable = 0;
+		decoded_nzp_write_enable = 0;
+		decoded_reg_input_mux = 0;
+		decoded_alu_arithmetic_mux = 0;
+		decoded_alu_output_mux = 0;
+		decoded_pc_mux = 0;
+		decoded_fma_enable = 0;
+		decoded_act_enable = 0;
+		decoded_act_func = 0;
+		decoded_systolic_enable = 0;
+		decoded_systolic_op = 0;
+		decoded_systolic_idx = 0;
+		decoded_ret = 0;
+		decoded_branch = 0;
+		case (instruction[15:12])
+			NOP:
+				;
+			BRnzp: begin
+				decoded_pc_mux = 1;
+				decoded_branch = 1;
+			end
+			CMP: begin
+				decoded_rs_address = instruction[11:8];
+				decoded_rt_address = instruction[7:4];
+				decoded_alu_output_mux = 1;
+				decoded_nzp_write_enable = 1;
+			end
+			ADD: begin
+				decoded_reg_write_enable = 1;
+				decoded_reg_input_mux = 3'b000;
+				decoded_alu_arithmetic_mux = 2'b00;
+			end
+			SUB: begin
+				decoded_reg_write_enable = 1;
+				decoded_reg_input_mux = 3'b000;
+				decoded_alu_arithmetic_mux = 2'b01;
+			end
+			MUL: begin
+				decoded_reg_write_enable = 1;
+				decoded_reg_input_mux = 3'b000;
+				decoded_alu_arithmetic_mux = 2'b10;
+			end
+			DIV: begin
+				decoded_reg_write_enable = 1;
+				decoded_reg_input_mux = 3'b000;
+				decoded_alu_arithmetic_mux = 2'b11;
+			end
+			LDR: begin
+				decoded_reg_write_enable = 1;
+				decoded_reg_input_mux = 3'b001;
+				decoded_mem_read_enable = 1;
+			end
+			STR: begin
+				decoded_rs_address = instruction[11:8];
+				decoded_rt_address = instruction[7:4];
+				decoded_mem_write_enable = 1;
+			end
+			CONST: begin
+				decoded_reg_write_enable = 1;
+				decoded_reg_input_mux = 3'b010;
+			end
+			FMA: begin
+				decoded_reg_write_enable = 1;
+				decoded_reg_input_mux = 3'b011;
+				decoded_fma_enable = 1;
+			end
+			ACT: begin
+				decoded_reg_write_enable = 1;
+				decoded_reg_input_mux = 3'b100;
+				decoded_act_enable = 1;
+				decoded_act_func = instruction[9:8];
+			end
+			SYS: begin
+				decoded_rs_address = 4'd0;
+				decoded_rt_address = 4'd1;
+				decoded_systolic_enable = 1;
+				decoded_systolic_op = instruction[7:6];
+				decoded_systolic_idx = instruction[0];
+				if (instruction[7:6] == 2'b11) begin
 					decoded_reg_write_enable = 1;
-					decoded_reg_input_mux = 3'b000;
-					decoded_alu_arithmetic_mux = 2'b00;
+					decoded_reg_input_mux = 3'b101;
 				end
-				SUB: begin
-					decoded_reg_write_enable = 1;
-					decoded_reg_input_mux = 3'b000;
-					decoded_alu_arithmetic_mux = 2'b01;
-				end
-				MUL: begin
-					decoded_reg_write_enable = 1;
-					decoded_reg_input_mux = 3'b000;
-					decoded_alu_arithmetic_mux = 2'b10;
-				end
-				DIV: begin
-					decoded_reg_write_enable = 1;
-					decoded_reg_input_mux = 3'b000;
-					decoded_alu_arithmetic_mux = 2'b11;
-				end
-				LDR: begin
-					decoded_reg_write_enable = 1;
-					decoded_reg_input_mux = 3'b001;
-					decoded_mem_read_enable = 1;
-				end
-				STR: begin
-					decoded_rs_address = instruction[11:8];
-					decoded_rt_address = instruction[7:4];
-					decoded_mem_write_enable = 1;
-				end
-				CONST: begin
-					decoded_reg_write_enable = 1;
-					decoded_reg_input_mux = 3'b010;
-				end
-				FMA: begin
-					decoded_reg_write_enable = 1;
-					decoded_reg_input_mux = 3'b011;
-					decoded_fma_enable = 1;
-				end
-				ACT: begin
-					decoded_reg_write_enable = 1;
-					decoded_reg_input_mux = 3'b100;
-					decoded_act_enable = 1;
-					decoded_act_func = instruction[9:8];
-				end
-				SYS: begin
-					decoded_rs_address = 4'd0;
-					decoded_rt_address = 4'd1;
-					decoded_systolic_enable = 1;
-					decoded_systolic_op = instruction[7:6];
-					decoded_systolic_idx = instruction[0];
-					if (instruction[7:6] == 2'b11) begin
-						decoded_reg_write_enable = 1;
-						decoded_reg_input_mux = 3'b101;
-					end
-				end
-				RET: decoded_ret = 1;
-				default:
-					;
-			endcase
-		end
+			end
+			RET: decoded_ret = 1;
+			default:
+				;
+		endcase
+	end
 endmodule
 `default_nettype none
 module dispatch (
@@ -1406,13 +1413,18 @@ module fma (
 	wire [14:0] product_mag = product_unsigned[29:15];
 	wire [DATA_BITS - 1:0] product_sm = {sign_product, product_mag};
 	wire [DATA_BITS - 1:0] product_saturated = (product_mag == 15'b000000000000000 ? {DATA_BITS {1'b0}} : product_sm);
-	wire signed [15:0] r4_signed = (rq[15] ? -$signed({1'b0, rq[14:0]}) : $signed({1'b0, rq[14:0]}));
-	wire signed [15:0] r3_signed = (r3_weighted[15] ? -$signed({1'b0, r3_weighted[14:0]}) : $signed({1'b0, r3_weighted[14:0]}));
-	wire signed [16:0] acc_sum_ext = {r4_signed[15], r4_signed} + {r3_signed[15], r3_signed};
-	wire signed [15:0] acc_sum_sat = (acc_sum_ext > 32767 ? 16'sd32767 : (acc_sum_ext < -32767 ? -16'sd32767 : acc_sum_ext[15:0]));
-	wire [15:0] abs_acc_sum_sat = -acc_sum_sat;
-	wire [DATA_BITS - 1:0] acc_sm = (acc_sum_sat < 0 ? {1'b1, abs_acc_sum_sat[14:0]} : {1'b0, acc_sum_sat[14:0]});
-	wire [DATA_BITS - 1:0] accumulated_saturated = (acc_sm == NEG_ZERO ? {DATA_BITS {1'b0}} : acc_sm);
+	wire S_A = rq[15];
+	wire [14:0] M_A = rq[14:0];
+	wire S_B = r3_weighted[15];
+	wire [14:0] M_B = r3_weighted[14:0];
+	wire [15:0] sum_M = M_A + M_B;
+	wire [15:0] diff_A_B = M_A - M_B;
+	wire [15:0] diff_B_A = M_B - M_A;
+	wire signs_equal = S_A == S_B;
+	wire A_gte_B = M_A >= M_B;
+	wire res_S = (signs_equal ? S_A : (A_gte_B ? S_A : S_B));
+	wire [14:0] res_M = (signs_equal ? (sum_M > 15'd32767 ? 15'd32767 : sum_M[14:0]) : (A_gte_B ? diff_A_B[14:0] : diff_B_A[14:0]));
+	wire [DATA_BITS - 1:0] accumulated_saturated = (res_M == 15'b000000000000000 ? {DATA_BITS {1'b0}} : {res_S, res_M});
 	reg exec_phase;
 	always @(posedge clk)
 		if (reset) begin
@@ -1466,7 +1478,7 @@ module gpu (
 	parameter THREADS_PER_BLOCK = 4;
 	parameter SYSTOLIC_SIZE = 2;
 	parameter NUM_SYSTOLIC_ARRAYS = 2;
-	parameter CACHE_SIZE = 4;
+	parameter CACHE_SIZE = 2;
 	input wire clk;
 	input wire reset;
 	input wire start;
@@ -2351,12 +2363,20 @@ module registers (
 	localparam [2:0] MUX_ACT = 3'b100;
 	localparam [2:0] MUX_SYSTOLIC = 3'b101;
 	reg [DATA_BITS - 1:0] registers [12:0];
-	wire [DATA_BITS - 1:0] rs_raw = (decoded_rs_address < 13 ? registers[decoded_rs_address] : {DATA_BITS {1'b0}});
-	wire [DATA_BITS - 1:0] rt_raw = (decoded_rt_address < 13 ? registers[decoded_rt_address] : {DATA_BITS {1'b0}});
-	wire [DATA_BITS - 1:0] rd_data_raw = (decoded_rd_address < 13 ? registers[decoded_rd_address] : {DATA_BITS {1'b0}});
-	assign rs = (decoded_rs_address == 13 ? {{DATA_BITS - 8 {1'b0}}, block_id} : (decoded_rs_address == 14 ? {{DATA_BITS - 8 {1'b0}}, THREADS_PER_BLOCK[7:0]} : (decoded_rs_address == 15 ? {{DATA_BITS - 8 {1'b0}}, THREAD_ID[7:0]} : rs_raw)));
-	assign rt = (decoded_rt_address == 13 ? {{DATA_BITS - 8 {1'b0}}, block_id} : (decoded_rt_address == 14 ? {{DATA_BITS - 8 {1'b0}}, THREADS_PER_BLOCK[7:0]} : (decoded_rt_address == 15 ? {{DATA_BITS - 8 {1'b0}}, THREAD_ID[7:0]} : rt_raw)));
-	assign rd_data = (decoded_rd_address == 13 ? {{DATA_BITS - 8 {1'b0}}, block_id} : (decoded_rd_address == 14 ? {{DATA_BITS - 8 {1'b0}}, THREADS_PER_BLOCK[7:0]} : (decoded_rd_address == 15 ? {{DATA_BITS - 8 {1'b0}}, THREAD_ID[7:0]} : rd_data_raw)));
+	wire [DATA_BITS - 1:0] reg_view [15:0];
+	genvar _gv_gv_1;
+	generate
+		for (_gv_gv_1 = 0; _gv_gv_1 < 13; _gv_gv_1 = _gv_gv_1 + 1) begin : gen_regview
+			localparam gv = _gv_gv_1;
+			assign reg_view[gv] = registers[gv];
+		end
+	endgenerate
+	assign reg_view[13] = {{DATA_BITS - 8 {1'b0}}, block_id};
+	assign reg_view[14] = {{DATA_BITS - 8 {1'b0}}, THREADS_PER_BLOCK[7:0]};
+	assign reg_view[15] = {{DATA_BITS - 8 {1'b0}}, THREAD_ID[7:0]};
+	assign rs = reg_view[decoded_rs_address];
+	assign rt = reg_view[decoded_rt_address];
+	assign rd_data = reg_view[decoded_rd_address];
 	wire [DATA_BITS - 1:0] immediate_extended;
 	assign immediate_extended = {{8 {decoded_immediate[7]}}, decoded_immediate};
 	reg [DATA_BITS - 1:0] write_data;
@@ -2415,6 +2435,7 @@ module scheduler (
 );
 	parameter THREADS_PER_BLOCK = 4;
 	parameter PROGRAM_MEM_ADDR_BITS = 8;
+	parameter ENABLE_BRANCH_DIVERGE = 0;
 	input wire clk;
 	input wire reset;
 	input wire start;
@@ -2455,25 +2476,35 @@ module scheduler (
 	reg fma_execute_second_cycle;
 	wire [PROGRAM_MEM_ADDR_BITS - 1:0] diverge_next_pc;
 	wire diverge_stall;
-	branch_diverge #(
-		.THREADS_PER_WARP(THREADS_PER_BLOCK),
-		.STACK_DEPTH(2),
-		.PC_BITS(PROGRAM_MEM_ADDR_BITS)
-	) branch_diverge_inst(
-		.clk(clk),
-		.reset(reset),
-		.enable(1'b1),
-		.branch_instruction(decoded_branch),
-		.branch_taken(branch_taken),
-		.branch_target(branch_target),
-		.fallthrough_pc(current_pc + 1'b1),
-		.reconverge_pc(reconverge_pc),
-		.current_pc(current_pc),
-		.active_mask(active_mask),
-		.next_pc(diverge_next_pc),
-		.diverged(diverged),
-		.stall(diverge_stall)
-	);
+	generate
+		if (ENABLE_BRANCH_DIVERGE) begin : gen_branch_diverge
+			branch_diverge #(
+				.THREADS_PER_WARP(THREADS_PER_BLOCK),
+				.STACK_DEPTH(2),
+				.PC_BITS(PROGRAM_MEM_ADDR_BITS)
+			) branch_diverge_inst(
+				.clk(clk),
+				.reset(reset),
+				.enable(1'b1),
+				.branch_instruction(decoded_branch),
+				.branch_taken(branch_taken),
+				.branch_target(branch_target),
+				.fallthrough_pc(current_pc + 1'b1),
+				.reconverge_pc(reconverge_pc),
+				.current_pc(current_pc),
+				.active_mask(active_mask),
+				.next_pc(diverge_next_pc),
+				.diverged(diverged),
+				.stall(diverge_stall)
+			);
+		end
+		else begin : gen_no_diverge
+			assign active_mask = {THREADS_PER_BLOCK {1'b1}};
+			assign diverged = 1'b0;
+			assign diverge_stall = 1'b0;
+			assign diverge_next_pc = {PROGRAM_MEM_ADDR_BITS {1'b0}};
+		end
+	endgenerate
 	always @(*) begin
 		any_lsu_waiting = 1'b0;
 		for (i = 0; i < THREADS_PER_BLOCK; i = i + 1)
@@ -2738,6 +2769,405 @@ module systolic_pe (
 				if (valid_s1)
 					r4_acc <= s2_sat;
 			end
+		end
+endmodule
+`default_nettype none
+module tt_um_aloshdenny_gpu (
+	ui_in,
+	uo_out,
+	uio_in,
+	uio_out,
+	uio_oe,
+	ena,
+	clk,
+	rst_n
+);
+	input wire [7:0] ui_in;
+	output wire [7:0] uo_out;
+	input wire [7:0] uio_in;
+	output wire [7:0] uio_out;
+	output wire [7:0] uio_oe;
+	input wire ena;
+	input wire clk;
+	input wire rst_n;
+	reg rst_sync_0;
+	reg rst_sync_1;
+	always @(posedge clk or negedge rst_n)
+		if (!rst_n) begin
+			rst_sync_0 <= 1'b0;
+			rst_sync_1 <= 1'b0;
+		end
+		else begin
+			rst_sync_0 <= 1'b1;
+			rst_sync_1 <= rst_sync_0;
+		end
+	wire gpu_reset = !rst_sync_1;
+	wire start = ui_in[7];
+	wire [7:0] device_control_data = {1'b0, ui_in[6:0]};
+	wire device_control_write_enable = ui_in[6:0] != 7'd0;
+	localparam DATA_MEM_ADDR_BITS = 19;
+	localparam DATA_MEM_DATA_BITS = 16;
+	localparam DATA_MEM_NUM_CHANNELS = 8;
+	localparam PROGRAM_MEM_ADDR_BITS = 9;
+	localparam PROGRAM_MEM_DATA_BITS = 16;
+	localparam PROGRAM_MEM_NUM_CHANNELS = 2;
+	wire gpu_done;
+	wire [1:0] program_mem_read_valid;
+	wire [17:0] program_mem_read_address_flat;
+	reg [1:0] program_mem_read_ready;
+	reg [31:0] program_mem_read_data_flat;
+	wire [7:0] data_mem_read_valid;
+	wire [151:0] data_mem_read_address_flat;
+	reg [7:0] data_mem_read_ready;
+	reg [127:0] data_mem_read_data_flat;
+	wire [7:0] data_mem_write_valid;
+	wire [151:0] data_mem_write_address_flat;
+	wire [127:0] data_mem_write_data_flat;
+	reg [7:0] data_mem_write_ready;
+	gpu #(
+		.DATA_MEM_ADDR_BITS(DATA_MEM_ADDR_BITS),
+		.DATA_MEM_DATA_BITS(DATA_MEM_DATA_BITS),
+		.DATA_MEM_NUM_CHANNELS(DATA_MEM_NUM_CHANNELS),
+		.PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS),
+		.PROGRAM_MEM_DATA_BITS(PROGRAM_MEM_DATA_BITS),
+		.PROGRAM_MEM_NUM_CHANNELS(PROGRAM_MEM_NUM_CHANNELS)
+	) gpu_core(
+		.clk(clk),
+		.reset(gpu_reset),
+		.start(start),
+		.done(gpu_done),
+		.device_control_write_enable(device_control_write_enable),
+		.device_control_data(device_control_data),
+		.program_mem_read_valid(program_mem_read_valid),
+		.program_mem_read_address_flat(program_mem_read_address_flat),
+		.program_mem_read_ready(program_mem_read_ready),
+		.program_mem_read_data_flat(program_mem_read_data_flat),
+		.data_mem_read_valid(data_mem_read_valid),
+		.data_mem_read_address_flat(data_mem_read_address_flat),
+		.data_mem_read_ready(data_mem_read_ready),
+		.data_mem_read_data_flat(data_mem_read_data_flat),
+		.data_mem_write_valid(data_mem_write_valid),
+		.data_mem_write_address_flat(data_mem_write_address_flat),
+		.data_mem_write_data_flat(data_mem_write_data_flat),
+		.data_mem_write_ready(data_mem_write_ready)
+	);
+	reg [3:0] state;
+	localparam STATE_IDLE = 4'd0;
+	localparam STATE_ADDR0 = 4'd1;
+	localparam STATE_ADDR1 = 4'd2;
+	localparam STATE_ADDR2 = 4'd3;
+	localparam STATE_DATA0 = 4'd4;
+	localparam STATE_DATA1 = 4'd5;
+	localparam STATE_ACK = 4'd6;
+	reg [18:0] active_addr;
+	reg [15:0] active_write_data;
+	reg active_is_write;
+	reg active_mem_sel;
+	reg [3:0] active_channel_id;
+	reg [7:0] bus_out;
+	reg [7:0] bus_oe;
+	reg mem_we;
+	reg mem_re;
+	reg ale;
+	reg mem_sel;
+	reg [15:0] read_data_latch;
+	assign uio_out = bus_out;
+	assign uio_oe = bus_oe;
+	assign uo_out[7:5] = 3'b000;
+	assign uo_out[4] = mem_sel;
+	assign uo_out[3] = ale;
+	assign uo_out[2] = mem_re;
+	assign uo_out[1] = mem_we;
+	assign uo_out[0] = gpu_done;
+	always @(posedge clk)
+		if (gpu_reset) begin
+			state <= STATE_IDLE;
+			active_addr <= 0;
+			active_write_data <= 0;
+			active_is_write <= 0;
+			active_mem_sel <= 0;
+			active_channel_id <= 0;
+			bus_out <= 8'h00;
+			bus_oe <= 8'h00;
+			mem_we <= 1'b0;
+			mem_re <= 1'b0;
+			ale <= 1'b0;
+			mem_sel <= 1'b0;
+			read_data_latch <= 0;
+			program_mem_read_ready <= 2'b00;
+			program_mem_read_data_flat <= 0;
+			data_mem_read_ready <= 8'h00;
+			data_mem_read_data_flat <= 0;
+			data_mem_write_ready <= 8'h00;
+		end
+		else begin
+			program_mem_read_ready <= 2'b00;
+			data_mem_read_ready <= 8'h00;
+			data_mem_write_ready <= 8'h00;
+			case (state)
+				STATE_IDLE: begin
+					bus_oe <= 8'h00;
+					mem_we <= 1'b0;
+					mem_re <= 1'b0;
+					ale <= 1'b0;
+					if (program_mem_read_valid[0]) begin
+						active_addr <= {{10 {1'b0}}, program_mem_read_address_flat[8:0]};
+						active_is_write <= 1'b0;
+						active_mem_sel <= 1'b0;
+						active_channel_id <= 4'd0;
+						state <= STATE_ADDR0;
+					end
+					else if (program_mem_read_valid[1]) begin
+						active_addr <= {{10 {1'b0}}, program_mem_read_address_flat[17:PROGRAM_MEM_ADDR_BITS]};
+						active_is_write <= 1'b0;
+						active_mem_sel <= 1'b0;
+						active_channel_id <= 4'd1;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_read_valid[0]) begin
+						active_addr <= data_mem_read_address_flat[18:0];
+						active_is_write <= 1'b0;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd2;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_write_valid[0]) begin
+						active_addr <= data_mem_write_address_flat[18:0];
+						active_write_data <= data_mem_write_data_flat[15:0];
+						active_is_write <= 1'b1;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd2;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_read_valid[1]) begin
+						active_addr <= data_mem_read_address_flat[37:DATA_MEM_ADDR_BITS];
+						active_is_write <= 1'b0;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd3;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_write_valid[1]) begin
+						active_addr <= data_mem_write_address_flat[37:DATA_MEM_ADDR_BITS];
+						active_write_data <= data_mem_write_data_flat[31:DATA_MEM_DATA_BITS];
+						active_is_write <= 1'b1;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd3;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_read_valid[2]) begin
+						active_addr <= data_mem_read_address_flat[56:38];
+						active_is_write <= 1'b0;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd4;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_write_valid[2]) begin
+						active_addr <= data_mem_write_address_flat[56:38];
+						active_write_data <= data_mem_write_data_flat[47:32];
+						active_is_write <= 1'b1;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd4;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_read_valid[3]) begin
+						active_addr <= data_mem_read_address_flat[75:57];
+						active_is_write <= 1'b0;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd5;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_write_valid[3]) begin
+						active_addr <= data_mem_write_address_flat[75:57];
+						active_write_data <= data_mem_write_data_flat[63:48];
+						active_is_write <= 1'b1;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd5;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_read_valid[4]) begin
+						active_addr <= data_mem_read_address_flat[94:76];
+						active_is_write <= 1'b0;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd6;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_write_valid[4]) begin
+						active_addr <= data_mem_write_address_flat[94:76];
+						active_write_data <= data_mem_write_data_flat[79:64];
+						active_is_write <= 1'b1;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd6;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_read_valid[5]) begin
+						active_addr <= data_mem_read_address_flat[113:95];
+						active_is_write <= 1'b0;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd7;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_write_valid[5]) begin
+						active_addr <= data_mem_write_address_flat[113:95];
+						active_write_data <= data_mem_write_data_flat[95:80];
+						active_is_write <= 1'b1;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd7;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_read_valid[6]) begin
+						active_addr <= data_mem_read_address_flat[132:114];
+						active_is_write <= 1'b0;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd8;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_write_valid[6]) begin
+						active_addr <= data_mem_write_address_flat[132:114];
+						active_write_data <= data_mem_write_data_flat[111:96];
+						active_is_write <= 1'b1;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd8;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_read_valid[7]) begin
+						active_addr <= data_mem_read_address_flat[151:133];
+						active_is_write <= 1'b0;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd9;
+						state <= STATE_ADDR0;
+					end
+					else if (data_mem_write_valid[7]) begin
+						active_addr <= data_mem_write_address_flat[151:133];
+						active_write_data <= data_mem_write_data_flat[127:112];
+						active_is_write <= 1'b1;
+						active_mem_sel <= 1'b1;
+						active_channel_id <= 4'd9;
+						state <= STATE_ADDR0;
+					end
+				end
+				STATE_ADDR0: begin
+					bus_out <= active_addr[7:0];
+					bus_oe <= 8'hff;
+					ale <= 1'b1;
+					mem_sel <= active_mem_sel;
+					state <= STATE_ADDR1;
+				end
+				STATE_ADDR1: begin
+					bus_out <= active_addr[15:8];
+					bus_oe <= 8'hff;
+					ale <= 1'b1;
+					state <= STATE_ADDR2;
+				end
+				STATE_ADDR2: begin
+					bus_out <= {active_mem_sel, active_is_write, 3'b000, active_addr[18:16]};
+					bus_oe <= 8'hff;
+					ale <= 1'b1;
+					state <= STATE_DATA0;
+				end
+				STATE_DATA0: begin
+					ale <= 1'b0;
+					if (active_is_write) begin
+						bus_out <= active_write_data[7:0];
+						bus_oe <= 8'hff;
+						mem_we <= 1'b1;
+					end
+					else begin
+						bus_oe <= 8'h00;
+						mem_re <= 1'b1;
+					end
+					state <= STATE_DATA1;
+				end
+				STATE_DATA1: begin
+					if (active_is_write) begin
+						bus_out <= active_write_data[15:8];
+						bus_oe <= 8'hff;
+						mem_we <= 1'b1;
+					end
+					else begin
+						read_data_latch[7:0] <= uio_in;
+						bus_oe <= 8'h00;
+						mem_re <= 1'b1;
+					end
+					state <= STATE_ACK;
+				end
+				STATE_ACK: begin
+					mem_we <= 1'b0;
+					mem_re <= 1'b0;
+					bus_oe <= 8'h00;
+					if (!active_is_write)
+						read_data_latch[15:8] <= uio_in;
+					case (active_channel_id)
+						4'd0: begin
+							program_mem_read_ready[0] <= 1'b1;
+							program_mem_read_data_flat[15:0] <= (!active_is_write ? {uio_in, read_data_latch[7:0]} : 16'd0);
+						end
+						4'd1: begin
+							program_mem_read_ready[1] <= 1'b1;
+							program_mem_read_data_flat[31:PROGRAM_MEM_DATA_BITS] <= (!active_is_write ? {uio_in, read_data_latch[7:0]} : 16'd0);
+						end
+						4'd2:
+							if (active_is_write)
+								data_mem_write_ready[0] <= 1'b1;
+							else begin
+								data_mem_read_ready[0] <= 1'b1;
+								data_mem_read_data_flat[15:0] <= {uio_in, read_data_latch[7:0]};
+							end
+						4'd3:
+							if (active_is_write)
+								data_mem_write_ready[1] <= 1'b1;
+							else begin
+								data_mem_read_ready[1] <= 1'b1;
+								data_mem_read_data_flat[31:DATA_MEM_DATA_BITS] <= {uio_in, read_data_latch[7:0]};
+							end
+						4'd4:
+							if (active_is_write)
+								data_mem_write_ready[2] <= 1'b1;
+							else begin
+								data_mem_read_ready[2] <= 1'b1;
+								data_mem_read_data_flat[47:32] <= {uio_in, read_data_latch[7:0]};
+							end
+						4'd5:
+							if (active_is_write)
+								data_mem_write_ready[3] <= 1'b1;
+							else begin
+								data_mem_read_ready[3] <= 1'b1;
+								data_mem_read_data_flat[63:48] <= {uio_in, read_data_latch[7:0]};
+							end
+						4'd6:
+							if (active_is_write)
+								data_mem_write_ready[4] <= 1'b1;
+							else begin
+								data_mem_read_ready[4] <= 1'b1;
+								data_mem_read_data_flat[79:64] <= {uio_in, read_data_latch[7:0]};
+							end
+						4'd7:
+							if (active_is_write)
+								data_mem_write_ready[5] <= 1'b1;
+							else begin
+								data_mem_read_ready[5] <= 1'b1;
+								data_mem_read_data_flat[95:80] <= {uio_in, read_data_latch[7:0]};
+							end
+						4'd8:
+							if (active_is_write)
+								data_mem_write_ready[6] <= 1'b1;
+							else begin
+								data_mem_read_ready[6] <= 1'b1;
+								data_mem_read_data_flat[111:96] <= {uio_in, read_data_latch[7:0]};
+							end
+						4'd9:
+							if (active_is_write)
+								data_mem_write_ready[7] <= 1'b1;
+							else begin
+								data_mem_read_ready[7] <= 1'b1;
+								data_mem_read_data_flat[127:112] <= {uio_in, read_data_latch[7:0]};
+							end
+						default:
+							;
+					endcase
+					state <= STATE_IDLE;
+				end
+				default: state <= STATE_IDLE;
+			endcase
 		end
 endmodule
 `default_nettype none

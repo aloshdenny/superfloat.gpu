@@ -1,0 +1,78 @@
+---
+# Automatically generated for TinyTapeout submission
+# See https://tinytapeout.com/specs/
+
+project:
+  title:      "Atreides — Q1.15 Neural Network Accelerator GPU"
+  author:     "Alosh Denny"
+  discord:    ""
+  description: |
+    A minimal GPU implementation in SystemVerilog optimized for neural network inference
+    using Q1.15 fixed-point arithmetic. Features 2 parallel compute cores with systolic
+    arrays (4×4 FMA grids), a hardware memory arbiter for 8 data + 2 program memory
+    channels multiplexed over the bidirectional I/O bus, a KV-Cache, and memory
+    coalescing. Targets 50 MHz operation on Sky130 technology.
+  language:   "SystemVerilog"
+  clock_hz:   50000000
+
+  # Source files — all SVs required by Yosys synthesis
+  source_files:
+    - src/tt_um_aloshdenny_gpu.sv
+    - src/gpu.sv
+    - src/dcr.sv
+    - src/controller.sv
+    - src/dispatch.sv
+    - src/core.sv
+    - src/decoder.sv
+    - src/fetcher.sv
+    - src/scheduler.sv
+    - src/alu.sv
+    - src/fma.sv
+    - src/activation.sv
+    - src/lsu.sv
+    - src/registers.sv
+    - src/pc.sv
+    - src/systolic_array.sv
+    - src/systolic_pe.sv
+    - src/cache.sv
+    - src/branch_diverge.sv
+    - src/kv_cache.sv
+    - src/mem_coalesce.sv
+    - src/weight_mem.sv
+
+  top_module: "tt_um_aloshdenny_gpu"
+
+  # Tile size: 10 wide × 6 tall = 60 tiles (1600 µm × 600 µm)
+  tiles: "10x6"
+
+# I/O Pin Assignments — must exactly match tt_um_aloshdenny_gpu.sv
+pinout:
+  # Dedicated Inputs ui_in[7:0]
+  ui[0]: "Thread count [bit 0] — device control register LSB"
+  ui[1]: "Thread count [bit 1]"
+  ui[2]: "Thread count [bit 2]"
+  ui[3]: "Thread count [bit 3]"
+  ui[4]: "Thread count [bit 4]"
+  ui[5]: "Thread count [bit 5]"
+  ui[6]: "Thread count [bit 6] — device control register MSB"
+  ui[7]: "Start — pulse HIGH to launch kernel execution"
+
+  # Dedicated Outputs uo_out[7:0]
+  uo[0]: "GPU done — HIGH when kernel execution completes"
+  uo[1]: "mem_we — external SRAM write enable"
+  uo[2]: "mem_re — external SRAM read enable"
+  uo[3]: "ale — address latch enable"
+  uo[4]: "mem_sel — 0=Program memory, 1=Data memory"
+  uo[5]: "Reserved (GND)"
+  uo[6]: "Reserved (GND)"
+  uo[7]: "Reserved (GND)"
+
+  # Bidirectional uio[7:0] — time-multiplexed address/data bus
+  uio[0]: "Address/Data bus bit 0 (time-multiplexed)"
+  uio[1]: "Address/Data bus bit 1 (time-multiplexed)"
+  uio[2]: "Address/Data bus bit 2 (time-multiplexed)"
+  uio[3]: "Address/Data bus bit 3 (time-multiplexed)"
+  uio[4]: "Address/Data bus bit 4 (time-multiplexed)"
+  uio[5]: "Address/Data bus bit 5 (time-multiplexed)"
+  uio[6]: "Address/Data bus bit 6 (time-multiplexed)"
+  uio[7]: "Address/Data bus bit 7 (time-multiplexed)"

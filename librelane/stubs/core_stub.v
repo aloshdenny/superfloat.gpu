@@ -398,6 +398,18 @@ module systolic_pe (
 );
 endmodule
 
+module tt_um_aloshdenny_gpu (
+	ui_in,
+	uo_out,
+	uio_in,
+	uio_out,
+	uio_oe,
+	ena,
+	clk,
+	rst_n
+);
+endmodule
+
 module weight_mem (
 	clk,
 	reset,

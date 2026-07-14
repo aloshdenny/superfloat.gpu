@@ -1,0 +1,39 @@
+name: GDS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  gds:
+    env:
+      PYTHONIOENCODING: utf-8
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: run tt-gds-action
+        uses: TinyTapeout/tt-gds-action@v3
+
+  viewer:
+    needs: gds
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

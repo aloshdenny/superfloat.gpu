@@ -56,7 +56,7 @@ module alu #(
                             alu_out_reg <= rs - rt;
                         end
                         MUL: begin 
-                            alu_out_reg <= {{(DATA_BITS-8){1'b0}}, rs[7:0] * rt[7:0]};
+                            alu_out_reg <= {{(DATA_BITS-8){1'b0}}, rs[7:0]} * {{(DATA_BITS-8){1'b0}}, rt[7:0]};
                         end
                         DIV: begin 
                             // Integer division for indexing (row = i / N)

@@ -36,14 +36,14 @@
     "RT_MAX_LAYER": "met4",
 
     "FP_SIZING": "absolute",
-    "DIE_AREA": [0.0, 0.0, 1600.0, 500.0],
+    "DIE_AREA": [0.0, 0.0, 1600.0, 600.0],
     "DECAP_CELLS": [],
     "PDN_VPITCH": 153.6,
     "PDN_HPITCH": 153.6,
 
     "PL_TIMING_DRIVEN": true,
     "PL_ROUTABILITY_DRIVEN": true,
-    "PL_TARGET_DENSITY_PCT": 85,
+    "PL_TARGET_DENSITY_PCT": 65,
 
     "CTS_SINK_CLUSTERING_ENABLE": true,
     "CTS_SINK_CLUSTERING_SIZE": 4,
@@ -90,7 +90,7 @@
     "GRT_ANTENNA_REPAIR_JUMPER_ONLY": false,
     "DRT_ANTENNA_REPAIR_JUMPER_ONLY": false,
     "GRT_ANTENNA_REPAIR_ITERS": 3,
-    "DRT_ANTENNA_REPAIR_ITERS": 3,
+    "DRT_ANTENNA_REPAIR_ITERS": 6,
     "DRT_OPT_ITERS": 40,
     "DIODE_CELL": "sky130_fd_sc_hd__diode_2/DIODE",
 
