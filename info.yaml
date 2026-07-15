@@ -34,9 +34,6 @@ project:
     - systolic_pe.sv
     - cache.sv
     - branch_diverge.sv
-    - kv_cache.sv
-    - mem_coalesce.sv
-    - weight_mem.sv
 
   top_module: "tt_um_aloshdenny_gpu"
 
