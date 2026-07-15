@@ -19,13 +19,13 @@ Built with fully documented SystemVerilog, complete documentation on architectur
 
 | Feature               | Specification                                                            |
 | --------------------- | ------------------------------------------------------------------------ |
-| **Compute Cores**     | 2 parallel cores                                                         |
+| **Compute Cores**     | 1 core                                                                   |
 | **Threads/Block**     | 4 threads per block                                                      |
 | **Systolic Arrays**   | 2 arrays per core, 2×2 FMAs each                                         |
-| **Total FMAs**         | 16 processing elements (2 cores × 2 arrays × 4)                          |
+| **Total FMAs**         | 8 processing elements (1 core × 2 arrays × 4)                            |
 | **Data Memory**       | 2^19 rows × 16-bit (1 MiB total data space)                              |
 | **Program Memory**    | 512 instructions                                                         |
-| **Memory Channels**   | 8 data + 2 program channels                                              |
+| **Memory Channels**   | 4 data + 1 program channels                                              |
 | **Instruction Cache** | 2 entries per core                                                       |
 | **Arithmetic**        | Q1.15 fixed-point                                                        |
 | **Clock (GPU top)**   | 50 MHz (20 ns period)                                                    |
@@ -77,7 +77,7 @@ Built with fully documented SystemVerilog, complete documentation on architectur
 
 - **Q1.15 Fixed-Point Arithmetic** — Bounded [-1, 1] range perfect for normalized weights and activations
 - **Fused Multiply-Add (FMA)** — 2-cycle pipelined MAC operations with 32-bit internal accumulation
-- **Systolic Arrays** — 2 arrays of 4×4 FMAs per core for efficient parallelism (64 FMAs total)
+- **Systolic Arrays** — 2 arrays of 2×2 FMAs per core for efficient parallelism (8 FMAs total)
 - **KV-Cache** — Native support for transformer attention mechanisms
 - **Memory Coalescing** — Efficient memory access patterns for tensor operations
 
@@ -137,10 +137,10 @@ The GPU top-level (`gpu.sv`) consists of:
 | Unit                      | Description                                       |
 | ------------------------- | ------------------------------------------------- |
 | Device Control Register   | Stores kernel execution metadata (`thread_count`) |
-| Dispatcher                | Distributes thread blocks to 2 compute cores      |
-| Compute Cores             | 2 parallel processing units with systolic arrays  |
-| Data Memory Controller    | 8-channel controller (2 cores × 4 threads)        |
-| Program Memory Controller | 2-channel read-only controller (1 per core)       |
+| Dispatcher                | Distributes thread blocks to 1 compute core       |
+| Compute Cores             | 1 processing unit with systolic arrays            |
+| Data Memory Controller    | 4-channel controller (1 core × 4 threads)         |
+| Program Memory Controller | 1-channel read-only controller                    |
 
 
 ### Top-Level Parameters (`gpu.sv`)
@@ -150,14 +150,14 @@ The GPU top-level (`gpu.sv`) consists of:
 | -------------------------- | ------- | ------------------------ |
 | `DATA_MEM_ADDR_BITS`       | 19      | 1 MiB data memory space  |
 | `DATA_MEM_DATA_BITS`       | 16      | Q1.15 word width         |
-| `DATA_MEM_NUM_CHANNELS`    | 8       | 2 cores × 4 threads      |
+| `DATA_MEM_NUM_CHANNELS`    | 4       | 1 core × 4 threads       |
 | `PROGRAM_MEM_ADDR_BITS`    | 12      | 4096 instructions        |
 | `PROGRAM_MEM_DATA_BITS`    | 16      | 16-bit instruction width |
-| `PROGRAM_MEM_NUM_CHANNELS` | 2       | 1 per core               |
-| `NUM_CORES`                | 2       | Compute cores            |
+| `PROGRAM_MEM_NUM_CHANNELS` | 1       | 1 per core               |
+| `NUM_CORES`                | 1       | Compute cores            |
 | `THREADS_FMAR_BLOCK`        | 4       | Threads per block        |
-| `SYSTOLIC_SIZE`            | 4       | 4×4 FMA grid              |
-| `NUM_ARRAYS`      | 32      | Arrays per core          |
+| `SYSTOLIC_SIZE`            | 2       | 2×2 FMA grid             |
+| `NUM_ARRAYS`      | 2       | Arrays per core          |
 
 
 ### Device Control Register
@@ -186,8 +186,8 @@ Handle throttling of memory requests based on external bandwidth and relay respo
 
 | Controller     | Channels | Purpose                |
 | -------------- | -------- | ---------------------- |
-| Data Memory    | 8        | 2 cores × 4 threads    |
-| Program Memory | 2        | 1 per core (read-only) |
+| Data Memory    | 4        | 1 core × 4 threads     |
+| Program Memory | 1        | 1 per core (read-only) |
 
 
 ### Instruction Cache
@@ -255,21 +255,21 @@ Each core instantiates:
 
 ## Systolic Arrays
 
-Atreides v3.0 features 2 systolic arrays per core (4 total), each a 4×4 grid of processing elements:
+Atreides v3.0 features 2 systolic arrays per core (2 total), each a 2×2 grid of processing elements:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        SYSTOLIC ARRAYS (per core)                       │
-│                         (2 Arrays × 4×4 FMAs)                            │
+│                         (2 Arrays × 2×2 FMAs)                            │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
 │  ┌──────────────────────┐  ┌──────────────────────┐                     │
 │  │      Array 0         │  │      Array 1         │                     │
-│  │      4×4 FMAs         │  │      4×4 FMAs         │                     │
-│  │     (16 FMAs)         │  │     (16 FMAs)         │                     │
+│  │      2×2 FMAs         │  │      2×2 FMAs         │                     │
+│  │     (4 FMAs)          │  │     (4 FMAs)          │                     │
 │  └──────────────────────┘  └──────────────────────┘                     │
 │                                                                         │
-│  32 FMAs per core × 2 cores = 64 FMAs total                              │
+│  8 FMAs total                                                           │
 │                                                                         │
 │  Control:                                                               │
 │  • array_select[0]    - Select individual array (0–1)                   │
@@ -740,7 +740,7 @@ Features:
 
 Atreides features two modes of operation:
 1. **Standard FMA Mode**: Threads execute standard instructions sequentially through the scheduler's 7-state FSM. FMA operations run at a throughput of **0.208 FLOPs/cycle** per thread due to load-store latencies and loop overhead.
-2. **Systolic Array Mode**: Matrix computations are accelerated using the weight-stationary systolic arrays (2 arrays of 2×2 PEs per core, 16 total PEs across 2 cores). At peak utilization, this delivers **19.2 FLOPs/cycle** at a safe 50 MHz clock speed, representing a **92.4× speedup** over sequential execution.
+2. **Systolic Array Mode**: Matrix computations are accelerated using the weight-stationary systolic arrays (2 arrays of 2×2 PEs per core, 8 total PEs). At peak utilization, this delivers **9.6 FLOPs/cycle** at a safe 50 MHz clock speed, representing a **46.2× speedup** over sequential execution.
 
 ### Measured Hardware Microbenchmarks (100 MHz Simulation)
 
@@ -760,12 +760,12 @@ Estimated decode latency per token (1 token generation step with context length 
 
 | Model | Parameters | Layers | $d_{\text{model}}$ | FLOPs/token | Standard FMA Latency | Standard FMA Token/s | Systolic Array Latency | Systolic Array Token/s | Speedup |
 |---|---|---|---|---|---|---|---|---|---|
-| **GPT-2 (Small)** | 117M | 12 | 768 | $1.71 \times 10^8$ | 16.46 s | 0.0607 | 178.2 ms | 5.61 | 92.4x |
-| **Transformer-500M** | 500M | 24 | 1024 | $6.07 \times 10^8$ | 58.43 s | 0.0171 | 632.4 ms | 1.58 | 92.4x |
-| **Transformer-1B** | 1.0B | 32 | 1536 | $1.82 \times 10^9$ | 175.00 s | 0.0057 | 1.89 s | 0.53 | 92.4x |
-| **Transformer-2B** | 2.0B | 32 | 2048 | $3.23 \times 10^9$ | 310.84 s | 0.0032 | 3.36 s | 0.30 | 92.4x |
-| **Transformer-4B** | 4.0B | 40 | 3072 | $9.08 \times 10^9$ | 873.48 s | 0.0011 | 9.45 s | 0.11 | 92.4x |
-| **Transformer-8B** | 8.0B | 80 | 4096 | $3.23 \times 10^{10}$ | 3104.35 s | 0.0003 | 33.60 s | 0.03 | 92.4x |
+| **GPT-2 (Small)** | 117M | 12 | 768 | $1.71 \times 10^8$ | 16.46 s | 0.0607 | 356.4 ms | 2.81 | 46.2x |
+| **Transformer-500M** | 500M | 24 | 1024 | $6.07 \times 10^8$ | 58.43 s | 0.0171 | 1.26 s | 0.79 | 46.2x |
+| **Transformer-1B** | 1.0B | 32 | 1536 | $1.82 \times 10^9$ | 175.00 s | 0.0057 | 3.79 s | 0.26 | 46.2x |
+| **Transformer-2B** | 2.0B | 32 | 2048 | $3.23 \times 10^9$ | 310.84 s | 0.0032 | 6.73 s | 0.15 | 46.2x |
+| **Transformer-4B** | 4.0B | 40 | 3072 | $9.08 \times 10^9$ | 873.48 s | 0.0011 | 18.91 s | 0.05 | 46.2x |
+| **Transformer-8B** | 8.0B | 80 | 4096 | $3.23 \times 10^{10}$ | 3104.35 s | 0.0003 | 67.20 s | 0.01 | 46.2x |
 
 ---
 
@@ -1076,10 +1076,10 @@ Each directory is executed independently using `librelane config.json`.
 The hierarchy matches the RTL module composition. Each level is built bottom-up:
 
 ```
-└── GPU (2 cores)                         ← librelane/gpu/
-    └── Core (4 threads + 2 SA + subsystems) ← librelane/core/
-        └── Systolic Array (4×4 FMAs)         ← librelane/array/
-            └── Systolic FMA (3-stage MAC)    ← librelane/fma/
+└── GPU (1 core)                           ← librelane/gpu/
+    └── Core (4 threads + 2 SA + subsystems)   ← librelane/core/
+        └── Systolic Array (2×2 FMAs)           ← librelane/array/
+            └── Systolic FMA (3-stage MAC)      ← librelane/fma/
 ```
 
 ### Build Order
@@ -1089,7 +1089,7 @@ The hierarchy matches the RTL module composition. Each level is built bottom-up:
 cd librelane/fma
 librelane config.json
 
-# 2. Build the 4×4 systolic array
+# 2. Build the 2×2 systolic array
 cd ../array
 librelane config.json
 
@@ -1097,7 +1097,7 @@ librelane config.json
 cd ../core
 librelane config.json
 
-# 4. Build the full GPU (2 cores + controllers + dispatcher)
+# 4. Build the full GPU (1 core + controllers + dispatcher)
 cd ../gpu
 librelane config.json
 ```
@@ -1238,7 +1238,7 @@ A complete compute core containing the scheduler pipeline, 4 threads (each with 
 
 ### Macro: `gpu`
 
-The top-level design integrating 2 cores, memory controllers, dispatcher, and DCR.
+The top-level design integrating 1 core, memory controllers, dispatcher, and DCR.
 
 **Config** (`librelane/gpu/config.json`):
 
@@ -1265,12 +1265,12 @@ See `librelane/gpu/config.json` for the full configuration. Key settings:
 
 | Parameter                  | Value | Description             |
 | -------------------------- | ----- | ----------------------- |
-| `NUM_CORES`                | 2     | Parallel compute cores  |
+| `NUM_CORES`                | 1     | Parallel compute cores  |
 | `THREADS_FMAR_BLOCK`        | 4     | Threads per block       |
-| `DATA_MEM_NUM_CHANNELS`    | 8     | Data memory channels    |
-| `PROGRAM_MEM_NUM_CHANNELS` | 2     | Program memory channels |
-| `SYSTOLIC_SIZE`            | 4     | 4×4 FMA grid             |
-| `NUM_ARRAYS`      | 32    | Arrays per core         |
+| `DATA_MEM_NUM_CHANNELS`    | 4     | Data memory channels    |
+| `PROGRAM_MEM_NUM_CHANNELS` | 1     | Program memory channels |
+| `SYSTOLIC_SIZE`            | 2     | 2×2 FMA grid             |
+| `NUM_ARRAYS`      | 2     | Arrays per core         |
 
 
 **Key physical design settings:**
@@ -1280,7 +1280,7 @@ See `librelane/gpu/config.json` for the full configuration. Key settings:
 - **Aggressive antenna repair** — 10 iterations with 20% safety margin for both GRT and DRT
 - **Target: Artix-7 FPGA** — sized to fit XC7A100T with comfortable margin
 
-**Contains:** All 21 source modules — 2 cores (64 total FMAs), 2 memory controllers, dispatcher, and DCR.
+**Contains:** All 21 source modules — 1 core (8 total FMAs), 2 memory controllers (1 program, 1 data), dispatcher, and DCR.
 
 ---
 
