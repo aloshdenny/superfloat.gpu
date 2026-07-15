@@ -5,9 +5,9 @@ set_clock_transition 0.3000 [get_clocks {clk}]
 set_clock_uncertainty 0.1500 clk
 set_propagated_clock [get_clocks {clk}]
 
-# Set typical input/output delays (4 ns leaves more guard band for internal paths)
-set_input_delay 4.0000 -clock [get_clocks {clk}] [all_inputs]
-set_output_delay 4.0000 -clock [get_clocks {clk}] [all_outputs]
+# Set typical input/output delays (2 ns leaves more guard band for internal paths)
+set_input_delay 2.0000 -clock [get_clocks {clk}] [all_inputs]
+set_output_delay 2.0000 -clock [get_clocks {clk}] [all_outputs]
 
 # Remove delays from clock port to prevent timing loops
 set_input_delay 0.0 -clock [get_clocks {clk}] [get_ports {clk}]
@@ -15,6 +15,10 @@ set_input_delay 0.0 -clock [get_clocks {clk}] [get_ports {clk}]
 # False path input/output hold checks to prevent artificial buffer insertion
 set_false_path -hold -from [all_inputs]
 set_false_path -hold -to [all_outputs]
+
+# Asynchronous input signals
+set_false_path -from [get_ports {rst_n}]
+set_false_path -from [get_ports {ena}]
 
 # =======================================================================
 # False paths for cross-functional flattening artifacts
