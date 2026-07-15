@@ -15,28 +15,28 @@ project:
 
   # Source files — all SVs required by Yosys synthesis
   source_files:
-    - src/tt_um_aloshdenny_gpu.sv
-    - src/gpu.sv
-    - src/dcr.sv
-    - src/controller.sv
-    - src/dispatch.sv
-    - src/core.sv
-    - src/decoder.sv
-    - src/fetcher.sv
-    - src/scheduler.sv
-    - src/alu.sv
-    - src/fma.sv
-    - src/activation.sv
-    - src/lsu.sv
-    - src/registers.sv
-    - src/pc.sv
-    - src/systolic_array.sv
-    - src/systolic_pe.sv
-    - src/cache.sv
-    - src/branch_diverge.sv
-    - src/kv_cache.sv
-    - src/mem_coalesce.sv
-    - src/weight_mem.sv
+    - tt_um_aloshdenny_gpu.sv
+    - gpu.sv
+    - dcr.sv
+    - controller.sv
+    - dispatch.sv
+    - core.sv
+    - decoder.sv
+    - fetcher.sv
+    - scheduler.sv
+    - alu.sv
+    - fma.sv
+    - activation.sv
+    - lsu.sv
+    - registers.sv
+    - pc.sv
+    - systolic_array.sv
+    - systolic_pe.sv
+    - cache.sv
+    - branch_diverge.sv
+    - kv_cache.sv
+    - mem_coalesce.sv
+    - weight_mem.sv
 
   top_module: "tt_um_aloshdenny_gpu"
 
