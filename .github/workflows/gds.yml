@@ -19,6 +19,27 @@ jobs:
 
       - name: run tt-gds-action
         uses: TinyTapeout/tt-gds-action@ttsky26c
+        with:
+          pdk: sky130A
+
+  precheck:
+    needs: gds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Tiny Tapeout Precheck
+        uses: TinyTapeout/tt-gds-action/precheck@ttsky26c
+
+  gl_test:
+    needs: gds
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: GL test
+        uses: TinyTapeout/tt-gds-action/gl_test@ttsky26c
 
   viewer:
     needs: gds
@@ -26,14 +47,5 @@ jobs:
     permissions:
       pages: write
       id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-      - name: deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: TinyTapeout/tt-gds-action/viewer@ttsky26c
