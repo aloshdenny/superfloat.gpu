@@ -18,7 +18,7 @@ jobs:
           submodules: recursive
 
       - name: run tt-gds-action
-        uses: TinyTapeout/tt-gds-action@v3
+        uses: TinyTapeout/tt-gds-action@ttsky26c
 
   viewer:
     needs: gds
