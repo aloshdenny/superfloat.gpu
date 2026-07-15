@@ -1,5 +1,12 @@
-# area_opt.abc — Custom ABC optimization script for Sky130 area reduction
+# area_opt.abc — Custom ABC optimization script for Sky130
 # Applied after technology-independent synthesis, before cell mapping.
+#
+# NOTE: `map -a` forces ABC's *area-oriented* one-pass mapper instead of its
+# default delay-oriented mapper. On this design that trades away timing
+# margin we don't have (setup violations at max_ss_100C_1v60/nom_ss_100C_1v60)
+# for area margin we do have (~49% utilization against a 60% density target).
+# Dropping `-a` restores delay-driven mapping/area-recovery, which is what
+# we actually need given the available area headroom.
 strash
 ifraig
 rewrite -z
@@ -7,6 +14,6 @@ refactor -z
 balance
 rewrite -z
 share
-map -a
+map
 topo
 stime

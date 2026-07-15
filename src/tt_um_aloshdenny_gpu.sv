@@ -59,7 +59,10 @@ module tt_um_aloshdenny_gpu (
     reg  [DATA_MEM_DATA_BITS*DATA_MEM_NUM_CHANNELS-1:0] data_mem_read_data_flat;
     wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_valid;
     wire [DATA_MEM_ADDR_BITS*DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_address_flat;
-    wire [DATA_MEM_DATA_BITS*DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_data_flat;
+    // (* keep *) so this net survives synth flattening/opt under its RTL
+    // name — gpu.sdc exempts it from timing via a false-path net glob, which
+    // silently does nothing if the net gets merged/renamed away.
+    (* keep *) wire [DATA_MEM_DATA_BITS*DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_data_flat;
     reg  [DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_ready;
 
     // GPU Instantiation

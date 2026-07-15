@@ -241,7 +241,10 @@ module gpu #(
             wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] core_lsu_read_data_flat;
             wire [THREADS_PER_BLOCK-1:0] core_lsu_write_valid;
             wire [DATA_MEM_ADDR_BITS*THREADS_PER_BLOCK-1:0] core_lsu_write_address_flat;
-            wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] core_lsu_write_data_flat;
+            // (* keep *) so this net survives synth flattening/opt under its
+            // RTL name — gpu.sdc exempts it from timing via a false-path net
+            // glob, which silently does nothing if the net is renamed away.
+            (* keep *) wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] core_lsu_write_data_flat;
             wire [THREADS_PER_BLOCK-1:0] core_lsu_write_ready;
             
             // Unflatten core signals for controller interface
