@@ -1,0 +1,12 @@
+# area_opt.abc — Custom ABC optimization script for Sky130 area reduction
+# Applied after technology-independent synthesis, before cell mapping.
+strash
+ifraig
+rewrite -z
+refactor -z
+balance
+rewrite -z
+share
+map -a
+topo
+stime

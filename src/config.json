@@ -8,6 +8,8 @@
   "SYNTH_CORNER": "nom_tt_025C_1v80",
   "CLOCK_UNCERTAINTY_CONSTRAINT": 0.15,
   "CLOCK_TRANSITION_CONSTRAINT": 0.30,
+  "PNR_SDC_FILE": "dir::gpu.sdc",
+  "SIGNOFF_SDC_FILE": "dir::gpu.sdc",
 
   "PL_TARGET_DENSITY_PCT": 65,
 
