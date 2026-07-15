@@ -6,10 +6,10 @@ project:
   discord:    ""
   description: |
     A minimal GPU implementation in SystemVerilog optimized for neural network inference
-    using Q1.15 fixed-point arithmetic. Features 2 parallel compute cores with systolic
-    arrays (4×4 FMA grids), a hardware memory arbiter for 8 data + 2 program memory
-    channels multiplexed over the bidirectional I/O bus, a KV-Cache, and memory
-    coalescing. Targets 50 MHz operation on Sky130 technology.
+    using Q1.15 fixed-point arithmetic. Features 1 compute core with 2 systolic arrays
+    (2×2 FMA grids), a hardware memory arbiter for 4 data + 1 program memory channels
+    multiplexed over the bidirectional I/O bus, a KV-Cache, and memory coalescing.
+    Targets 50 MHz operation on Sky130 technology.
   language:   "SystemVerilog"
   clock_hz:   50000000
 
