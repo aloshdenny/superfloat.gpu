@@ -16,8 +16,6 @@ You can also include images in this folder and reference them in the markdown. E
 - **2 Compute Cores**, each with 4 threads per block and 2 systolic arrays of 2×2 FMA grids (8 FMAs per core, 16 total)
 - **Q1.15 Fixed-Point Arithmetic** — bounded `[-1, 1]` range optimised for normalised neural network weights and activations
 - **Instruction Cache** — 2-entry per-core cache for program memory
-- **KV-Cache** — Native hardware support for transformer attention patterns
-- **Memory Coalescing** — Efficient tensor memory access patterns
 - **8 data + 2 program** external memory channels, time-multiplexed over the bidirectional I/O bus
 
 ### External Memory Interface
