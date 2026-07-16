@@ -37,8 +37,9 @@ project:
 
   top_module: "tt_um_aloshdenny_gpu"
 
-  # Tile size: 10 wide × 6 tall = 60 tiles (dual-core footprint from e7fad73)
-  tiles: "10x6"
+  # Tile size: 8 wide × 4 tall = 32 tiles — max allowed for sky130A / ttsky26c
+  # (10x6 from older dual-core docs is NOT a valid tiles value; TT rejects it.)
+  tiles: "8x4"
 
 # I/O Pin Assignments — must exactly match tt_um_aloshdenny_gpu.sv
 pinout:

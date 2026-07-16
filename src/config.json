@@ -11,7 +11,7 @@
   "PNR_SDC_FILE": "dir::gpu.sdc",
   "SIGNOFF_SDC_FILE": "dir::gpu.sdc",
 
-  "PL_TARGET_DENSITY_PCT": 65,
+  "PL_TARGET_DENSITY_PCT": 55,
 
   "PL_TIMING_DRIVEN": true,
   "PL_ROUTABILITY_DRIVEN": true,
