@@ -36,15 +36,15 @@
     "DIE_AREA": [
         0.0,
         0.0,
-        1378.16,
-        511.36
+        1600.0,
+        600.0
     ],
     "DECAP_CELLS": [],
     "PDN_VPITCH": 153.6,
     "PDN_HPITCH": 153.6,
     "PL_TIMING_DRIVEN": true,
     "PL_ROUTABILITY_DRIVEN": true,
-    "PL_TARGET_DENSITY_PCT": 55,
+    "PL_TARGET_DENSITY_PCT": 65,
     "CTS_SINK_CLUSTERING_ENABLE": true,
     "CTS_SINK_CLUSTERING_SIZE": 4,
     "CTS_CLK_BUFFERS": [
