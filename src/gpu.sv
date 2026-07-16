@@ -13,11 +13,11 @@
 module gpu #(
     parameter DATA_MEM_ADDR_BITS = 19,       // 1 MiB total data memory: 2^19 x 16-bit
     parameter DATA_MEM_DATA_BITS = 16,       // 16-bit SF16 fixed-point
-    parameter DATA_MEM_NUM_CHANNELS = 4,     // 4 channels for 1 core × 4 threads
+    parameter DATA_MEM_NUM_CHANNELS = 8,     // 8 channels for 2 cores × 4 threads
     parameter PROGRAM_MEM_ADDR_BITS = 9,     // 512 instructions
     parameter PROGRAM_MEM_DATA_BITS = 16,    // 16 bit instruction
-    parameter PROGRAM_MEM_NUM_CHANNELS = 1,  // 1 channel for 1 core
-    parameter NUM_CORES = 1,                 // 1 compute core
+    parameter PROGRAM_MEM_NUM_CHANNELS = 2,  // 2 channels for 2 cores
+    parameter NUM_CORES = 2,                 // 2 compute cores
     parameter THREADS_PER_BLOCK = 4,        // 4 threads per block
     parameter SYSTOLIC_SIZE = 2,             // 2x2 systolic array per core
     parameter NUM_SYSTOLIC_ARRAYS = 2,       // Two systolic arrays per core
@@ -241,10 +241,7 @@ module gpu #(
             wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] core_lsu_read_data_flat;
             wire [THREADS_PER_BLOCK-1:0] core_lsu_write_valid;
             wire [DATA_MEM_ADDR_BITS*THREADS_PER_BLOCK-1:0] core_lsu_write_address_flat;
-            // (* keep *) so this net survives synth flattening/opt under its
-            // RTL name — gpu.sdc exempts it from timing via a false-path net
-            // glob, which silently does nothing if the net is renamed away.
-            (* keep *) wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] core_lsu_write_data_flat;
+            wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] core_lsu_write_data_flat;
             wire [THREADS_PER_BLOCK-1:0] core_lsu_write_ready;
             
             // Unflatten core signals for controller interface
