@@ -37,10 +37,9 @@ module pc #(
     // Full instruction for BR offset decoding (PC-relative imm9)
     input reg [8:0] instruction
 );
-    reg [2:0] nzp;
-
     // Branch taken when pc_mux is set and NZP condition matches
     assign branch_taken = enable && decoded_pc_mux && ((nzp & decoded_nzp) != 3'b0);
+    reg [2:0] nzp;
 
     // PC-relative branch target computation (imm9) with explicit sign-extension.
     // This avoids signedness pitfalls from part-selects after sv2v/iverilog lowering.
