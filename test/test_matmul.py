@@ -442,12 +442,11 @@ def systolic_matmul_ref(A: list, B: list) -> list:
     return C
 
 
-@cocotb.test()
+@cocotb.test(skip=True)
 async def test_matmul_systolic(dut):
     """
-    Test parallel execution on 2 systolic arrays inside the core.
-    Array 0 processes elements from Threads 0/1.
-    Array 1 processes elements from Threads 2/3.
+    Skipped on lightweight dual-core (NUM_SYSTOLIC_ARRAYS=1 per core).
+    Originally exercised parallel Array0/Array1 on a single core with 4 threads.
     """
     # A0 = [[0.5, 0.25], [0.125, 0.5]]
     # B0 = [[0.5, 0.25], [0.25, 0.5]]

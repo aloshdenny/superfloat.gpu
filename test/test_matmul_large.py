@@ -187,7 +187,7 @@ async def run_matmul_test(dut, name: str, N: int, a_q: list, b_q: list,
     num_elements = N * N
     # Pad thread_count to next multiple of THREADS_PER_BLOCK (4)
     # Hardware bug: partial blocks (thread_count % 4 != 0) don't execute correctly
-    THREADS_PER_BLOCK = 4
+    THREADS_PER_BLOCK = 2
     thread_count = ((num_elements + THREADS_PER_BLOCK - 1) // THREADS_PER_BLOCK) * THREADS_PER_BLOCK
     
     program = build_matmul_program_nxn(N, base_a, base_b, base_c)

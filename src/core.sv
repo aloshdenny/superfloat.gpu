@@ -14,10 +14,10 @@ module core #(
     parameter DATA_MEM_DATA_BITS = 16,       // SF16 fixed-point (16-bit)
     parameter PROGRAM_MEM_ADDR_BITS = 9,     // 512 instructions
     parameter PROGRAM_MEM_DATA_BITS = 16,
-    parameter THREADS_PER_BLOCK = 4,          // 4 threads per block
+    parameter THREADS_PER_BLOCK = 2,          // 2 threads per block
     parameter SYSTOLIC_SIZE = 2,              // 2x2 systolic array size
-    parameter NUM_SYSTOLIC_ARRAYS = 2,        // Two arrays per core
-    parameter CACHE_SIZE = 4                 // Instruction cache entries
+    parameter NUM_SYSTOLIC_ARRAYS = 1,        // One array per core
+    parameter CACHE_SIZE = 2                 // Instruction cache entries (reserved)
 ) (
     input wire clk,
     input wire reset,

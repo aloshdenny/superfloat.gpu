@@ -51,7 +51,7 @@ from helpers.setup import setup_test, run_kernel
 # Kernel builder — supports large addresses and per-dispatch thread offset
 # ============================================================================
 
-THREADS_PER_BLOCK = 4
+THREADS_PER_BLOCK = 2
 MAX_DISPATCH_THREADS = 252    # 63 blocks × 4 threads  (≤ 255 8-bit max)
 
 

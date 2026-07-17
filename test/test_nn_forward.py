@@ -48,7 +48,7 @@ from helpers.memory import (
 )
 from helpers.setup import setup_test, run_kernel
 
-THREADS_PER_BLOCK = 4
+THREADS_PER_BLOCK = 2
 
 
 # ============================================================================

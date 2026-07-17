@@ -3,19 +3,19 @@
 
 // Testbench wrapper for Atreides GPU
 // Includes program and data memory models for cocotb testing
-// Updated for enhanced architecture: 2 cores, 4 threads/block, one 2x2 systolic array per core
+// Lightweight dual-core: 2 cores, 2 threads/block, one 2x2 systolic array per core
 
 module tb_gpu #(
     parameter DATA_MEM_ADDR_BITS = 19,         // 1 MiB total data memory: 2^19 x 16-bit
     parameter DATA_MEM_DATA_BITS = 16,
-    parameter DATA_MEM_NUM_CHANNELS = 8,       // 2 cores × 4 threads
+    parameter DATA_MEM_NUM_CHANNELS = 4,       // 2 cores × 2 threads
     parameter PROGRAM_MEM_ADDR_BITS = 12,      // Increased: 4096 instructions
     parameter PROGRAM_MEM_DATA_BITS = 16,
     parameter PROGRAM_MEM_NUM_CHANNELS = 2,    // 1 per core
     parameter NUM_CORES = 2,                   // 2 cores
-    parameter THREADS_PER_BLOCK = 4,
+    parameter THREADS_PER_BLOCK = 2,
     parameter SYSTOLIC_SIZE = 2,               // 2x2 systolic array
-    parameter NUM_SYSTOLIC_ARRAYS = 2          // Two arrays per core
+    parameter NUM_SYSTOLIC_ARRAYS = 1          // One array per core
 ) (
     input wire clk,
     input wire reset,

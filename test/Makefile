@@ -33,7 +33,6 @@ PROJECT_SOURCES = \
 	pc.sv \
 	systolic_array.sv \
 	systolic_pe.sv \
-	cache.sv \
 	branch_diverge.sv
 
 # Sources are SystemVerilog

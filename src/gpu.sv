@@ -8,20 +8,20 @@
 // > Has memory controllers to interface between external memory and its multiple cores
 // > Configurable number of cores and thread capacity per core
 // > Owns the instruction set decode for all cores
-// > 2 cores, 4 threads/block, one 2x2 systolic array per core
+// > 2 cores, 2 threads/block, one 2x2 systolic array per core (8x4 lightweight)
 // > Hierarchical design for improved physical synthesis
 module gpu #(
     parameter DATA_MEM_ADDR_BITS = 19,       // 1 MiB total data memory: 2^19 x 16-bit
     parameter DATA_MEM_DATA_BITS = 16,       // 16-bit SF16 fixed-point
-    parameter DATA_MEM_NUM_CHANNELS = 8,     // 8 channels for 2 cores × 4 threads
+    parameter DATA_MEM_NUM_CHANNELS = 4,     // 4 channels for 2 cores × 2 threads
     parameter PROGRAM_MEM_ADDR_BITS = 9,     // 512 instructions
     parameter PROGRAM_MEM_DATA_BITS = 16,    // 16 bit instruction
     parameter PROGRAM_MEM_NUM_CHANNELS = 2,  // 2 channels for 2 cores
     parameter NUM_CORES = 2,                 // 2 compute cores
-    parameter THREADS_PER_BLOCK = 4,        // 4 threads per block
+    parameter THREADS_PER_BLOCK = 2,         // 2 threads per block
     parameter SYSTOLIC_SIZE = 2,             // 2x2 systolic array per core
-    parameter NUM_SYSTOLIC_ARRAYS = 2,       // Two systolic arrays per core
-    parameter CACHE_SIZE = 2                // Instruction cache entries per core (2 sufficient for short kernels)
+    parameter NUM_SYSTOLIC_ARRAYS = 1,       // One array per core
+    parameter CACHE_SIZE = 2                // Instruction cache entries per core (unused / reserved)
 ) (
     input wire clk,
     input wire reset,

@@ -39,7 +39,7 @@ module tt_um_aloshdenny_gpu (
     // =========================================================================
     localparam DATA_MEM_ADDR_BITS = 19;
     localparam DATA_MEM_DATA_BITS = 16;
-    localparam DATA_MEM_NUM_CHANNELS = 8;
+    localparam DATA_MEM_NUM_CHANNELS = 4;   // 2 cores × 2 threads
     localparam PROGRAM_MEM_ADDR_BITS = 9;
     localparam PROGRAM_MEM_DATA_BITS = 16;
     localparam PROGRAM_MEM_NUM_CHANNELS = 2;
@@ -110,7 +110,7 @@ module tt_um_aloshdenny_gpu (
     reg [DATA_MEM_DATA_BITS-1:0] active_write_data;
     reg                          active_is_write;
     reg                          active_mem_sel; // 0 = Program, 1 = Data
-    reg [3:0]                    active_channel_id; // 0-1: Program, 2-9: Data
+    reg [3:0]                    active_channel_id; // 0-1: Program, 2-5: Data
 
     // SRAM / bus controls
     reg [7:0] bus_out;
@@ -152,14 +152,14 @@ module tt_um_aloshdenny_gpu (
             read_data_latch <= 0;
             program_mem_read_ready <= 2'b00;
             program_mem_read_data_flat <= 0;
-            data_mem_read_ready <= 8'h00;
+            data_mem_read_ready <= 4'h0;
             data_mem_read_data_flat <= 0;
-            data_mem_write_ready <= 8'h00;
+            data_mem_write_ready <= 4'h0;
         end else begin
             // Pulse reset signals
             program_mem_read_ready <= 2'b00;
-            data_mem_read_ready <= 8'h00;
-            data_mem_write_ready <= 8'h00;
+            data_mem_read_ready <= 4'h0;
+            data_mem_write_ready <= 4'h0;
 
             case (state)
                 STATE_IDLE: begin
@@ -168,7 +168,7 @@ module tt_um_aloshdenny_gpu (
                     mem_re <= 1'b0;
                     ale <= 1'b0;
 
-                    // Fixed priority encoder for serialization
+                    // Fixed priority encoder (2 program + 4 data channels)
                     if (program_mem_read_valid[0]) begin
                         active_addr <= { {(DATA_MEM_ADDR_BITS-PROGRAM_MEM_ADDR_BITS){1'b0}}, program_mem_read_address_flat[PROGRAM_MEM_ADDR_BITS-1:0] };
                         active_is_write <= 1'b0;
@@ -232,58 +232,6 @@ module tt_um_aloshdenny_gpu (
                         active_is_write <= 1'b1;
                         active_mem_sel <= 1'b1;
                         active_channel_id <= 4'd5;
-                        state <= STATE_ADDR0;
-                    end else if (data_mem_read_valid[4]) begin
-                        active_addr <= data_mem_read_address_flat[5*DATA_MEM_ADDR_BITS-1:4*DATA_MEM_ADDR_BITS];
-                        active_is_write <= 1'b0;
-                        active_mem_sel <= 1'b1;
-                        active_channel_id <= 4'd6;
-                        state <= STATE_ADDR0;
-                    end else if (data_mem_write_valid[4]) begin
-                        active_addr <= data_mem_write_address_flat[5*DATA_MEM_ADDR_BITS-1:4*DATA_MEM_ADDR_BITS];
-                        active_write_data <= data_mem_write_data_flat[5*DATA_MEM_DATA_BITS-1:4*DATA_MEM_DATA_BITS];
-                        active_is_write <= 1'b1;
-                        active_mem_sel <= 1'b1;
-                        active_channel_id <= 4'd6;
-                        state <= STATE_ADDR0;
-                    end else if (data_mem_read_valid[5]) begin
-                        active_addr <= data_mem_read_address_flat[6*DATA_MEM_ADDR_BITS-1:5*DATA_MEM_ADDR_BITS];
-                        active_is_write <= 1'b0;
-                        active_mem_sel <= 1'b1;
-                        active_channel_id <= 4'd7;
-                        state <= STATE_ADDR0;
-                    end else if (data_mem_write_valid[5]) begin
-                        active_addr <= data_mem_write_address_flat[6*DATA_MEM_ADDR_BITS-1:5*DATA_MEM_ADDR_BITS];
-                        active_write_data <= data_mem_write_data_flat[6*DATA_MEM_DATA_BITS-1:5*DATA_MEM_DATA_BITS];
-                        active_is_write <= 1'b1;
-                        active_mem_sel <= 1'b1;
-                        active_channel_id <= 4'd7;
-                        state <= STATE_ADDR0;
-                    end else if (data_mem_read_valid[6]) begin
-                        active_addr <= data_mem_read_address_flat[7*DATA_MEM_ADDR_BITS-1:6*DATA_MEM_ADDR_BITS];
-                        active_is_write <= 1'b0;
-                        active_mem_sel <= 1'b1;
-                        active_channel_id <= 4'd8;
-                        state <= STATE_ADDR0;
-                    end else if (data_mem_write_valid[6]) begin
-                        active_addr <= data_mem_write_address_flat[7*DATA_MEM_ADDR_BITS-1:6*DATA_MEM_ADDR_BITS];
-                        active_write_data <= data_mem_write_data_flat[7*DATA_MEM_DATA_BITS-1:6*DATA_MEM_DATA_BITS];
-                        active_is_write <= 1'b1;
-                        active_mem_sel <= 1'b1;
-                        active_channel_id <= 4'd8;
-                        state <= STATE_ADDR0;
-                    end else if (data_mem_read_valid[7]) begin
-                        active_addr <= data_mem_read_address_flat[8*DATA_MEM_ADDR_BITS-1:7*DATA_MEM_ADDR_BITS];
-                        active_is_write <= 1'b0;
-                        active_mem_sel <= 1'b1;
-                        active_channel_id <= 4'd9;
-                        state <= STATE_ADDR0;
-                    end else if (data_mem_write_valid[7]) begin
-                        active_addr <= data_mem_write_address_flat[8*DATA_MEM_ADDR_BITS-1:7*DATA_MEM_ADDR_BITS];
-                        active_write_data <= data_mem_write_data_flat[8*DATA_MEM_DATA_BITS-1:7*DATA_MEM_DATA_BITS];
-                        active_is_write <= 1'b1;
-                        active_mem_sel <= 1'b1;
-                        active_channel_id <= 4'd9;
                         state <= STATE_ADDR0;
                     end
                 end
@@ -391,38 +339,6 @@ module tt_um_aloshdenny_gpu (
                             end else begin
                                 data_mem_read_ready[3] <= 1'b1;
                                 data_mem_read_data_flat[4*DATA_MEM_DATA_BITS-1:3*DATA_MEM_DATA_BITS] <= {uio_in, read_data_latch[7:0]};
-                            end
-                        end
-                        4'd6: begin
-                            if (active_is_write) begin
-                                data_mem_write_ready[4] <= 1'b1;
-                            end else begin
-                                data_mem_read_ready[4] <= 1'b1;
-                                data_mem_read_data_flat[5*DATA_MEM_DATA_BITS-1:4*DATA_MEM_DATA_BITS] <= {uio_in, read_data_latch[7:0]};
-                            end
-                        end
-                        4'd7: begin
-                            if (active_is_write) begin
-                                data_mem_write_ready[5] <= 1'b1;
-                            end else begin
-                                data_mem_read_ready[5] <= 1'b1;
-                                data_mem_read_data_flat[6*DATA_MEM_DATA_BITS-1:5*DATA_MEM_DATA_BITS] <= {uio_in, read_data_latch[7:0]};
-                            end
-                        end
-                        4'd8: begin
-                            if (active_is_write) begin
-                                data_mem_write_ready[6] <= 1'b1;
-                            end else begin
-                                data_mem_read_ready[6] <= 1'b1;
-                                data_mem_read_data_flat[7*DATA_MEM_DATA_BITS-1:6*DATA_MEM_DATA_BITS] <= {uio_in, read_data_latch[7:0]};
-                            end
-                        end
-                        4'd9: begin
-                            if (active_is_write) begin
-                                data_mem_write_ready[7] <= 1'b1;
-                            end else begin
-                                data_mem_read_ready[7] <= 1'b1;
-                                data_mem_read_data_flat[8*DATA_MEM_DATA_BITS-1:7*DATA_MEM_DATA_BITS] <= {uio_in, read_data_latch[7:0]};
                             end
                         end
                         default: ;

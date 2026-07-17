@@ -39,7 +39,7 @@ from helpers.setup import setup_test, run_kernel
 # Kernel builders
 # ============================================================================
 
-THREADS_PER_BLOCK = 4
+THREADS_PER_BLOCK = 2
 
 
 def build_vec_add_kernel(base_a: int, base_b: int, base_out: int) -> list:
