@@ -75,6 +75,22 @@ module tb_gpu #(
         end
     endgenerate
 
+    // Behavioral RAM32 model for on-die scratchpad
+    wire        scratch_ram_en;
+    wire [3:0]  scratch_ram_we;
+    wire [4:0]  scratch_ram_addr;
+    wire [31:0] scratch_ram_di;
+    wire [31:0] scratch_ram_do;
+
+    RAM32 ram1 (
+        .CLK (clk),
+        .EN0 (scratch_ram_en),
+        .WE0 (scratch_ram_we),
+        .A0  (scratch_ram_addr),
+        .Di0 (scratch_ram_di),
+        .Do0 (scratch_ram_do)
+    );
+
     // GPU Instance
     gpu #(
         .DATA_MEM_ADDR_BITS(DATA_MEM_ADDR_BITS),
@@ -107,7 +123,13 @@ module tb_gpu #(
         .data_mem_write_valid(data_mem_write_valid),
         .data_mem_write_address_flat(data_mem_write_address_flat),
         .data_mem_write_data_flat(data_mem_write_data_flat),
-        .data_mem_write_ready(data_mem_write_ready)
+        .data_mem_write_ready(data_mem_write_ready),
+
+        .scratch_ram_en(scratch_ram_en),
+        .scratch_ram_we(scratch_ram_we),
+        .scratch_ram_addr(scratch_ram_addr),
+        .scratch_ram_di(scratch_ram_di),
+        .scratch_ram_do(scratch_ram_do)
     );
 
     // =========================================================================

@@ -7,9 +7,10 @@ project:
   description: |
     A minimal GPU implementation in SystemVerilog optimized for neural network inference
     using Q1.15 fixed-point arithmetic. Features 2 parallel compute cores with 2 threads
-    per block and one 2×2 systolic array each (8 FMAs total), plus a hardware memory
-    arbiter for 4 data + 2 program memory channels multiplexed over the bidirectional
-    I/O bus. Targets 50 MHz operation on Sky130 technology.
+    per block and one 2×2 systolic array each (8 FMAs total), a 128B on-die RAM32
+    scratchpad cache (addr 0xFFC0–0xFFFF), plus a hardware memory arbiter for 4 data +
+    2 program memory channels multiplexed over the bidirectional I/O bus. Targets
+    50 MHz operation on Sky130 technology.
   language:   "SystemVerilog"
   clock_hz:   50000000
 
@@ -17,6 +18,8 @@ project:
   source_files:
     - tt_um_aloshdenny_gpu.sv
     - gpu.sv
+    - scratchpad.sv
+    - RAM32.v
     - dcr.sv
     - controller.sv
     - dispatch.sv

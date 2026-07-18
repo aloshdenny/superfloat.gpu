@@ -18,6 +18,8 @@ SRC_DIR = $(PWD)/../src
 PROJECT_SOURCES = \
 	tt_um_aloshdenny_gpu.sv \
 	gpu.sv \
+	scratchpad.sv \
+	RAM32.v \
 	dcr.sv \
 	controller.sv \
 	dispatch.sv \
@@ -58,6 +60,8 @@ VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_f
 
 # this gets copied in by the GDS action workflow
 VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
+# Behavioral model for the RAM32 blackbox instantiated in the GL netlist
+VERILOG_SOURCES += $(SRC_DIR)/RAM32.v
 
 endif
 

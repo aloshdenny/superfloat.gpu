@@ -15,7 +15,12 @@ You can also include images in this folder and reference them in the markdown. E
 
 - **2 Compute Cores**, each with 2 threads per block and one 2×2 systolic array (4 FMAs per core, 8 total)
 - **Q1.15 Fixed-Point Arithmetic** — bounded `[-1, 1]` range optimised for normalised neural network weights and activations
+- **128B on-die RAM32 scratchpad** — address-mapped high-speed cache at data addresses `0xFFC0`–`0xFFFF` (64 SF16 words); ordinary LDR/STR, no ISA change
 - **4 data + 2 program** external memory channels, time-multiplexed over the bidirectional I/O bus
+
+### On-die scratchpad
+
+Loads/stores in the top 64 halfword addresses hit a Tiny Tapeout RAM32 DFFRAM macro (~1–2 cycle access) and never leave the die. All other data addresses use the external SRAM path below. Use the scratchpad for hot tiles, accumulators, or small working sets.
 
 ### External Memory Interface
 

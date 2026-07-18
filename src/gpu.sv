@@ -6,6 +6,7 @@
 // > Assumes that the program is loaded into program memory, data into data memory, and threads into
 //   the device control register before the start signal is triggered
 // > Has memory controllers to interface between external memory and its multiple cores
+// > Address-mapped 128B RAM32 scratchpad at data 0xFFC0..0xFFFF (high-speed on-die cache)
 // > Configurable number of cores and thread capacity per core
 // > Owns the instruction set decode for all cores
 // > 2 cores, 2 threads/block, one 2x2 systolic array per core (8x4 lightweight)
@@ -48,7 +49,14 @@ module gpu #(
     output wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_valid,
     output wire [DATA_MEM_ADDR_BITS*DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_address_flat,
     output wire [DATA_MEM_DATA_BITS*DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_data_flat,
-    input wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_ready
+    input wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_ready,
+
+    // On-die RAM32 scratchpad (128B) — driven by address-mapped bridge
+    output wire        scratch_ram_en,
+    output wire [3:0]  scratch_ram_we,
+    output wire [4:0]  scratch_ram_addr,
+    output wire [31:0] scratch_ram_di,
+    input  wire [31:0] scratch_ram_do
 );
     // ============================================
     // Pipelined reset distribution
@@ -155,13 +163,22 @@ module gpu #(
         .thread_count(thread_count)
     );
 
-    // Memory Controller - Main interface to external memory
-    controller #(
+    // Scratchpad bridge: LSU hits at 0xFFC0..0xFFFF stay on-die (RAM32);
+    // misses pass through to the external data-memory controller.
+    wire [NUM_LSUS-1:0] ext_read_valid;
+    wire [DATA_MEM_ADDR_BITS*NUM_LSUS-1:0] ext_read_address_flat;
+    wire [NUM_LSUS-1:0] ext_read_ready;
+    wire [DATA_MEM_DATA_BITS*NUM_LSUS-1:0] ext_read_data_flat;
+    wire [NUM_LSUS-1:0] ext_write_valid;
+    wire [DATA_MEM_ADDR_BITS*NUM_LSUS-1:0] ext_write_address_flat;
+    wire [DATA_MEM_DATA_BITS*NUM_LSUS-1:0] ext_write_data_flat;
+    wire [NUM_LSUS-1:0] ext_write_ready;
+
+    scratchpad #(
         .ADDR_BITS(DATA_MEM_ADDR_BITS),
         .DATA_BITS(DATA_MEM_DATA_BITS),
-        .NUM_CONSUMERS(NUM_LSUS),
-        .NUM_CHANNELS(DATA_MEM_NUM_CHANNELS)
-    ) data_mem_controller (
+        .NUM_PORTS(NUM_LSUS)
+    ) data_scratchpad (
         .clk(clk),
         .reset(reset_pipe2),
 
@@ -173,6 +190,41 @@ module gpu #(
         .consumer_write_address_flat(lsu_write_address_flat),
         .consumer_write_data_flat(lsu_write_data_flat),
         .consumer_write_ready(lsu_write_ready),
+
+        .mem_read_valid(ext_read_valid),
+        .mem_read_address_flat(ext_read_address_flat),
+        .mem_read_ready(ext_read_ready),
+        .mem_read_data_flat(ext_read_data_flat),
+        .mem_write_valid(ext_write_valid),
+        .mem_write_address_flat(ext_write_address_flat),
+        .mem_write_data_flat(ext_write_data_flat),
+        .mem_write_ready(ext_write_ready),
+
+        .ram_en(scratch_ram_en),
+        .ram_we(scratch_ram_we),
+        .ram_addr(scratch_ram_addr),
+        .ram_di(scratch_ram_di),
+        .ram_do(scratch_ram_do)
+    );
+
+    // Memory Controller - Main interface to external memory
+    controller #(
+        .ADDR_BITS(DATA_MEM_ADDR_BITS),
+        .DATA_BITS(DATA_MEM_DATA_BITS),
+        .NUM_CONSUMERS(NUM_LSUS),
+        .NUM_CHANNELS(DATA_MEM_NUM_CHANNELS)
+    ) data_mem_controller (
+        .clk(clk),
+        .reset(reset_pipe2),
+
+        .consumer_read_valid(ext_read_valid),
+        .consumer_read_address_flat(ext_read_address_flat),
+        .consumer_read_ready(ext_read_ready),
+        .consumer_read_data_flat(ext_read_data_flat),
+        .consumer_write_valid(ext_write_valid),
+        .consumer_write_address_flat(ext_write_address_flat),
+        .consumer_write_data_flat(ext_write_data_flat),
+        .consumer_write_ready(ext_write_ready),
 
         .mem_read_valid(data_mem_read_valid),
         .mem_read_address_flat(data_mem_read_address_flat),
