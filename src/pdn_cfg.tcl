@@ -1,17 +1,15 @@
-# LibreLane-compatible PDN config for Tiny Tapeout + RAM32.
-# Kept as reference; src/config.json currently uses the LibreLane default
-# PDN (no PDN_CFG) with PDN_VPITCH=153.6 / PDN_VOFFSET=26.32 for RAM32 align.
-#
-# If re-enabled via "PDN_CFG": "dir::pdn_cfg.tcl", use PDN_* env names
-# (LibreLane 3); the old FP_PDN_* names are not always exported to TCL.
+# PDN for Tiny Tapeout 8x4 + RAM32 at (10, 10).
+# RAM32 VPWR/VGND are met4 stripes at macro-relative X:
+#   VPWR: 18.28, 171.88, 325.48
+#   VGND: 95.08, 248.68
+# Absolute with ram1 @ x=10 → 28.28 / 105.08 / … (pitch 153.6, spacing 76.8).
+# Do NOT create an OpenROAD macro grid (PDN_CONNECT_MACROS_TO_GRID=false);
+# overlapping met4 straps short to the pin ports.
 
 source $::env(SCRIPTS_DIR)/openroad/common/set_global_connections.tcl
 set_global_connections
 
 set vert_layer $::env(PDN_VERTICAL_LAYER)
-set vwidth $::env(PDN_VWIDTH)
-set vpitch $::env(PDN_VPITCH)
-set voffset $::env(PDN_VOFFSET)
 
 define_pdn_grid \
     -name stdcell_grid \
@@ -22,9 +20,10 @@ define_pdn_grid \
 add_pdn_stripe \
     -grid stdcell_grid \
     -layer $vert_layer \
-    -width $vwidth \
-    -pitch $vpitch \
-    -offset $voffset \
+    -width $::env(PDN_VWIDTH) \
+    -pitch $::env(PDN_VPITCH) \
+    -spacing $::env(PDN_VSPACING) \
+    -offset $::env(PDN_VOFFSET) \
     -starts_with POWER
 
 if { $::env(PDN_ENABLE_RAILS) == 1 } {
