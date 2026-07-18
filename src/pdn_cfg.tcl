@@ -2,7 +2,7 @@
 # RAM32 VPWR/VGND are met4 stripes at macro-relative X:
 #   VPWR: 18.28, 171.88, 325.48
 #   VGND: 95.08, 248.68
-# Absolute with ram1 @ x=10 → 28.28 / 105.08 / … (pitch 153.6, spacing 76.8).
+# Absolute with ram1 @ x=10 → 28.28 / 105.08 / … (pitch 153.6, edge spacing 75.2).
 # Do NOT create an OpenROAD macro grid (PDN_CONNECT_MACROS_TO_GRID=false);
 # overlapping met4 straps short to the pin ports.
 
