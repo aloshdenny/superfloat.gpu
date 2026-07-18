@@ -42,6 +42,7 @@ module scratchpad #(
     input  wire [31:0]                       ram_do
 );
     localparam OFFSET_BITS = 6; // 64 halfwords
+    localparam SEL_BITS = $clog2(NUM_PORTS);
     localparam ST_IDLE        = 2'd0;
     localparam ST_READ_ISSUE  = 2'd1;
     localparam ST_READ_DATA   = 2'd2;
@@ -74,48 +75,59 @@ module scratchpad #(
     assign mem_write_address_flat = consumer_write_address_flat;
     assign mem_write_data_flat    = consumer_write_data_flat;
 
-    reg [1:0]                       state;
-    reg [$clog2(NUM_PORTS)-1:0]     sel;
-    reg [OFFSET_BITS-1:0]           sel_offset;
-    reg [DATA_BITS-1:0]             sel_wdata;
+    // Priority encode writes then reads (port 0 highest). No shared integer loop vars.
+    wire                 any_write_hit = |write_hit;
+    wire                 any_read_hit  = |read_hit;
+    wire                 found         = any_write_hit | any_read_hit;
+    wire                 pick_write    = any_write_hit;
 
-    reg [NUM_PORTS-1:0]             hit_read_ready;
-    reg [NUM_PORTS-1:0]             hit_write_ready;
-    reg [DATA_BITS-1:0]             hit_rdata [NUM_PORTS-1:0];
+    wire [SEL_BITS-1:0]  pick_w;
+    wire [SEL_BITS-1:0]  pick_r;
+    assign pick_w =
+        write_hit[0] ? {SEL_BITS{1'b0}} :
+        write_hit[1] ? SEL_BITS'(1) :
+        write_hit[2] ? SEL_BITS'(2) :
+                       SEL_BITS'(3);
+    assign pick_r =
+        read_hit[0] ? {SEL_BITS{1'b0}} :
+        read_hit[1] ? SEL_BITS'(1) :
+        read_hit[2] ? SEL_BITS'(2) :
+                      SEL_BITS'(3);
+    wire [SEL_BITS-1:0] pick = pick_write ? pick_w : pick_r;
 
-    integer i;
-    reg found;
-    reg [$clog2(NUM_PORTS)-1:0] pick;
-    reg                         pick_write;
-    reg [OFFSET_BITS-1:0]       pick_offset;
-    reg [DATA_BITS-1:0]         pick_wdata;
+    wire [OFFSET_BITS-1:0] w_off0 = c_waddr[0][OFFSET_BITS-1:0];
+    wire [OFFSET_BITS-1:0] w_off1 = c_waddr[1][OFFSET_BITS-1:0];
+    wire [OFFSET_BITS-1:0] w_off2 = c_waddr[2][OFFSET_BITS-1:0];
+    wire [OFFSET_BITS-1:0] w_off3 = c_waddr[3][OFFSET_BITS-1:0];
+    wire [OFFSET_BITS-1:0] r_off0 = c_raddr[0][OFFSET_BITS-1:0];
+    wire [OFFSET_BITS-1:0] r_off1 = c_raddr[1][OFFSET_BITS-1:0];
+    wire [OFFSET_BITS-1:0] r_off2 = c_raddr[2][OFFSET_BITS-1:0];
+    wire [OFFSET_BITS-1:0] r_off3 = c_raddr[3][OFFSET_BITS-1:0];
 
-    // Priority grant among outstanding hits (writes before reads)
-    always @(*) begin
-        found = 1'b0;
-        pick = {$clog2(NUM_PORTS){1'b0}};
-        pick_write = 1'b0;
-        pick_offset = {OFFSET_BITS{1'b0}};
-        pick_wdata = {DATA_BITS{1'b0}};
-        for (i = 0; i < NUM_PORTS; i = i + 1) begin
-            if (!found && write_hit[i]) begin
-                found = 1'b1;
-                pick = i[$clog2(NUM_PORTS)-1:0];
-                pick_write = 1'b1;
-                pick_offset = c_waddr[i][OFFSET_BITS-1:0];
-                pick_wdata = c_wdata[i];
-            end
-        end
-        for (i = 0; i < NUM_PORTS; i = i + 1) begin
-            if (!found && read_hit[i]) begin
-                found = 1'b1;
-                pick = i[$clog2(NUM_PORTS)-1:0];
-                pick_write = 1'b0;
-                pick_offset = c_raddr[i][OFFSET_BITS-1:0];
-                pick_wdata = {DATA_BITS{1'b0}};
-            end
-        end
-    end
+    wire [OFFSET_BITS-1:0] pick_w_offset =
+        (pick_w == 2'd0) ? w_off0 :
+        (pick_w == 2'd1) ? w_off1 :
+        (pick_w == 2'd2) ? w_off2 : w_off3;
+    wire [OFFSET_BITS-1:0] pick_r_offset =
+        (pick_r == 2'd0) ? r_off0 :
+        (pick_r == 2'd1) ? r_off1 :
+        (pick_r == 2'd2) ? r_off2 : r_off3;
+    wire [OFFSET_BITS-1:0] pick_offset = pick_write ? pick_w_offset : pick_r_offset;
+
+    wire [DATA_BITS-1:0] pick_wdata =
+        !pick_write ? {DATA_BITS{1'b0}} :
+        (pick_w == 2'd0) ? c_wdata[0] :
+        (pick_w == 2'd1) ? c_wdata[1] :
+        (pick_w == 2'd2) ? c_wdata[2] : c_wdata[3];
+
+    reg [1:0]                   state;
+    reg [SEL_BITS-1:0]          sel;
+    reg [OFFSET_BITS-1:0]       sel_offset;
+    reg [DATA_BITS-1:0]         sel_wdata;
+
+    reg [NUM_PORTS-1:0]         hit_read_ready;
+    reg [NUM_PORTS-1:0]         hit_write_ready;
+    reg [DATA_BITS-1:0]         hit_rdata0, hit_rdata1, hit_rdata2, hit_rdata3;
 
     wire issuing = (state == ST_READ_ISSUE) || (state == ST_WRITE);
 
@@ -126,16 +138,21 @@ module scratchpad #(
                         : 4'b0000;
     assign ram_di   = sel_offset[0] ? {sel_wdata, 16'h0000} : {16'h0000, sel_wdata};
 
+    wire [DATA_BITS-1:0] ram_half =
+        sel_offset[0] ? ram_do[31:16] : ram_do[15:0];
+
     always @(posedge clk) begin
         if (reset) begin
             state <= ST_IDLE;
-            sel <= {$clog2(NUM_PORTS){1'b0}};
+            sel <= {SEL_BITS{1'b0}};
             sel_offset <= {OFFSET_BITS{1'b0}};
             sel_wdata <= {DATA_BITS{1'b0}};
             hit_read_ready <= {NUM_PORTS{1'b0}};
             hit_write_ready <= {NUM_PORTS{1'b0}};
-            for (i = 0; i < NUM_PORTS; i = i + 1)
-                hit_rdata[i] <= {DATA_BITS{1'b0}};
+            hit_rdata0 <= {DATA_BITS{1'b0}};
+            hit_rdata1 <= {DATA_BITS{1'b0}};
+            hit_rdata2 <= {DATA_BITS{1'b0}};
+            hit_rdata3 <= {DATA_BITS{1'b0}};
         end else begin
             hit_read_ready <= {NUM_PORTS{1'b0}};
             hit_write_ready <= {NUM_PORTS{1'b0}};
@@ -150,16 +167,19 @@ module scratchpad #(
                     end
                 end
                 ST_READ_ISSUE: begin
-                    // EN/A0 stable this cycle; RAM updates Do0 on next edge
                     state <= ST_READ_DATA;
                 end
                 ST_READ_DATA: begin
-                    hit_rdata[sel] <= sel_offset[0] ? ram_do[31:16] : ram_do[15:0];
+                    case (sel)
+                        2'd0: hit_rdata0 <= ram_half;
+                        2'd1: hit_rdata1 <= ram_half;
+                        2'd2: hit_rdata2 <= ram_half;
+                        default: hit_rdata3 <= ram_half;
+                    endcase
                     hit_read_ready[sel] <= 1'b1;
                     state <= ST_IDLE;
                 end
                 ST_WRITE: begin
-                    // EN/WE stable this cycle; write commits on this edge
                     hit_write_ready[sel] <= 1'b1;
                     state <= ST_IDLE;
                 end
@@ -167,6 +187,12 @@ module scratchpad #(
             endcase
         end
     end
+
+    wire [DATA_BITS-1:0] hit_rdata [NUM_PORTS-1:0];
+    assign hit_rdata[0] = hit_rdata0;
+    assign hit_rdata[1] = hit_rdata1;
+    assign hit_rdata[2] = hit_rdata2;
+    assign hit_rdata[3] = hit_rdata3;
 
     generate
         for (gi = 0; gi < NUM_PORTS; gi = gi + 1) begin : ready_mux
