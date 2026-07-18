@@ -1,8 +1,8 @@
 # PDN for Tiny Tapeout 8x4 + RAM32 at (10, 10).
-# RAM32 VPWR/VGND are met4 stripes at macro-relative X:
-#   VPWR: 18.28, 171.88, 325.48
-#   VGND: 95.08, 248.68
-# Absolute with ram1 @ x=10 → 28.28 / 105.08 / … (pitch 153.6, edge spacing 75.2).
+# RAM32 met4 power pin centers (macro-relative): VPWR 19.08 / 172.68 / 326.28, VGND 95.88 / 249.48.
+# PDN offset is relative to the CORE edge (LEFT_MARGIN_MULT*0.46 = 2.76 µm), not the die:
+#   FP_PDN_VOFFSET = ram_x + 16.32 = 26.32  (matches pin center after left margin).
+# Edge spacing 75.2 + width 1.6 → P–G center pitch 76.8; same-net pitch 153.6.
 # Do NOT create an OpenROAD macro grid (PDN_CONNECT_MACROS_TO_GRID=false);
 # overlapping met4 straps short to the pin ports.
 
