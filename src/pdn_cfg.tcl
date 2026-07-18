@@ -1,45 +1,40 @@
-# Copyright 2020-2022 Efabless Corporation
+# LibreLane-compatible PDN config for Tiny Tapeout + RAM32.
+# Kept as reference; src/config.json currently uses the LibreLane default
+# PDN (no PDN_CFG) with PDN_VPITCH=153.6 / PDN_VOFFSET=26.32 for RAM32 align.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# If re-enabled via "PDN_CFG": "dir::pdn_cfg.tcl", use PDN_* env names
+# (LibreLane 3); the old FP_PDN_* names are not always exported to TCL.
 
 source $::env(SCRIPTS_DIR)/openroad/common/set_global_connections.tcl
 set_global_connections
+
+set vert_layer $::env(PDN_VERTICAL_LAYER)
+set vwidth $::env(PDN_VWIDTH)
+set vpitch $::env(PDN_VPITCH)
+set voffset $::env(PDN_VOFFSET)
 
 define_pdn_grid \
     -name stdcell_grid \
     -starts_with POWER \
     -voltage_domain CORE \
-    -pins $::env(FP_PDN_VERTICAL_LAYER)
+    -pins $vert_layer
 
 add_pdn_stripe \
     -grid stdcell_grid \
-    -layer $::env(FP_PDN_VERTICAL_LAYER) \
-    -width $::env(FP_PDN_VWIDTH) \
-    -pitch $::env(FP_PDN_VPITCH) \
-    -offset $::env(FP_PDN_VOFFSET) \
+    -layer $vert_layer \
+    -width $vwidth \
+    -pitch $vpitch \
+    -offset $voffset \
     -starts_with POWER
 
-
-# Adds the standard cell rails if enabled.
-if { $::env(FP_PDN_ENABLE_RAILS) == 1 } {
+if { $::env(PDN_ENABLE_RAILS) == 1 } {
     add_pdn_stripe \
         -grid stdcell_grid \
-        -layer $::env(FP_PDN_RAIL_LAYER) \
-        -width $::env(FP_PDN_RAIL_WIDTH) \
-        -followpins \
-        -starts_with POWER
+        -layer $::env(PDN_RAIL_LAYER) \
+        -width $::env(PDN_RAIL_WIDTH) \
+        -followpins
 
     add_pdn_connect \
         -grid stdcell_grid \
-        -layers "$::env(FP_PDN_RAIL_LAYER) $::env(FP_PDN_VERTICAL_LAYER)"
+        -layers "$::env(PDN_RAIL_LAYER) $vert_layer"
 }
