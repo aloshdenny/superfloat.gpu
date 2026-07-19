@@ -30,7 +30,7 @@ compile_tb:
 	sv2v src/*.sv test/tb_gpu.sv -w build/all.v
 	echo '`timescale 1ns/1ns' | cat - build/all.v > build/temp.v
 	mv build/temp.v build/all.v
-	# RAM32.v is plain Verilog (sta-blackbox model); append after sv2v
+	# RAM32.v is plain Verilog (soft-flop); append after sv2v
 	cat src/RAM32.v >> build/all.v
 	iverilog -o build/sim.vvp -s tb_gpu -g2012 build/all.v
 

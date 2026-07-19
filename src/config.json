@@ -1,5 +1,5 @@
 {
-  "//": "Atreides GPU \u2014 TinyTapeout base configuration",
+  "//": "Atreides GPU — TinyTapeout base configuration",
   "//1": "Merged by tt_tool.py with user_config.json (provides DESIGN_NAME, VERILOG_FILES, DIE_AREA, FP_DEF_TEMPLATE).",
   "CLOCK_PORT": "clk",
   "CLOCK_PERIOD": 20.0,
@@ -119,55 +119,8 @@
   "FP_SIZING": "absolute",
   "FP_IO_HLENGTH": 2,
   "FP_IO_VLENGTH": 2,
-  "PDN_CFG": "dir::pdn_cfg.tcl",
-  "PDN_VPITCH": 153.6,
-  "PDN_VSPACING": 75.2,
-  "PDN_VWIDTH": 1.6,
-  "PDN_VOFFSET": 26.32,
-  "PDN_MULTILAYER": false,
-  "PDN_CONNECT_MACROS_TO_GRID": false,
-  "PDN_HORIZONTAL_HALO": 0,
-  "PDN_VERTICAL_HALO": 0,
-  "ERROR_ON_PDN_VIOLATIONS": false,
-  "RUN_IRDROP_REPORT": false,
-  "VERILOG_POWER_DEFINE": "USE_POWER_PINS",
-  "PDN_MACRO_CONNECTIONS": [
-    "ram1 VPWR VGND VPWR VGND"
-  ],
-  "EXTRA_VERILOG_MODELS": [
-    "dir::RAM32.v"
-  ],
-  "MAGIC_LEF_WRITE_USE_GDS": true,
-  "MACROS": {
-    "RAM32": {
-      "instances": {
-        "ram1": {
-          "location": [10, 10],
-          "orientation": "N"
-        }
-      },
-      "gds": ["dir::macros/RAM32.gds"],
-      "lef": ["dir::macros/RAM32.lef"],
-      "nl": ["dir::macros/RAM32.nl.v"],
-      "pnl": ["dir::macros/RAM32.pnl.v"],
-      "spef": {
-        "min_*": ["dir::macros/RAM32.min_.spef"],
-        "nom_*": ["dir::macros/RAM32.nom_.spef"],
-        "max_*": ["dir::macros/RAM32.max_.spef"]
-      },
-      "lib": {
-        "min_tt_025C_1v80": "dir::macros/RAM32.lib/min_tt_025C_1v80/RAM32__min_tt_025C_1v80.lib",
-        "min_ff_n40C_1v95": "dir::macros/RAM32.lib/min_ff_n40C_1v95/RAM32__min_ff_n40C_1v95.lib",
-        "max_ff_n40C_1v95": "dir::macros/RAM32.lib/max_ff_n40C_1v95/RAM32__max_ff_n40C_1v95.lib",
-        "nom_tt_025C_1v80": "dir::macros/RAM32.lib/nom_tt_025C_1v80/RAM32__nom_tt_025C_1v80.lib",
-        "min_ss_100C_1v60": "dir::macros/RAM32.lib/min_ss_100C_1v60/RAM32__min_ss_100C_1v60.lib",
-        "max_ss_100C_1v60": "dir::macros/RAM32.lib/max_ss_100C_1v60/RAM32__max_ss_100C_1v60.lib",
-        "max_tt_025C_1v80": "dir::macros/RAM32.lib/max_tt_025C_1v80/RAM32__max_tt_025C_1v80.lib",
-        "nom_ss_100C_1v60": "dir::macros/RAM32.lib/nom_ss_100C_1v60/RAM32__nom_ss_100C_1v60.lib",
-        "nom_ff_n40C_1v95": "dir::macros/RAM32.lib/nom_ff_n40C_1v95/RAM32__nom_ff_n40C_1v95.lib"
-      }
-    }
-  },
+  "FP_PDN_VPITCH": 38.87,
+  "FP_PDN_MULTILAYER": 0,
   "TOP_MARGIN_MULT": 1,
   "BOTTOM_MARGIN_MULT": 1,
   "LEFT_MARGIN_MULT": 6,

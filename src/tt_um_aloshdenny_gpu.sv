@@ -73,12 +73,8 @@ module tt_um_aloshdenny_gpu (
     wire [31:0] scratch_ram_di;
     wire [31:0] scratch_ram_do;
 
-    // Instance name must stay `ram1` — matched by src/config.json MACROS
+    // Soft-flop 128B scratchpad (synthesized; same RAM32 1RW pinout)
     RAM32 ram1 (
-`ifdef USE_POWER_PINS
-        .VPWR(VPWR),
-        .VGND(VGND),
-`endif
         .CLK (clk),
         .EN0 (scratch_ram_en),
         .WE0 (scratch_ram_we),
