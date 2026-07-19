@@ -7,7 +7,7 @@ project:
   description: |
     A minimal GPU implementation in SystemVerilog optimized for neural network inference
     using Q1.15 fixed-point arithmetic. Features 2 parallel compute cores with 2 threads
-    per block and one 2×2 systolic array each (8 FMAs total),     a 128B on-die soft-flop
+    per block and one 2×2 systolic array each (8 FMAs total), a 128B on-die soft-flop
     scratchpad cache (addr 0xFFC0–0xFFFF), plus a hardware memory arbiter for 4 data +
     2 program memory channels multiplexed over the bidirectional I/O bus. Targets
     50 MHz operation on Sky130 technology.

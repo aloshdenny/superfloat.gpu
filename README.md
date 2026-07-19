@@ -1,363 +1,242 @@
 # Atreides
 
+**Q1.15 fixed-point neural network accelerator GPU** for Tiny Tapeout (Sky130), with an on-die scratchpad and an external SRAM interface over the bidirectional bus.
 
-
-**Superfloat's Atreides: A Q1.15 Fixed-Point Neural Network Accelerator**
-
-*Version 3.0 — Artix-7 FPGA-Sized Architecture with Librelane 2*
-
-
+Silicon configuration in this repository: **2 cores × 2 threads × one 2×2 systolic array** (8 MAC units), **128 B** address-mapped on-die scratchpad, **8×4** tiles, **50 MHz** target clock.
 
 ---
 
-A minimal GPU implementation in SystemVerilog optimized for neural network inference with Q1.15 fixed-point arithmetic, systolic arrays, and LLM-specific optimizations.
+## Specs
 
-Built with fully documented SystemVerilog, complete documentation on architecture & ISA, working matrix addition/multiplication kernels with FMA support, and full support for kernel simulation & execution traces.
-
-## Key Features (v3.0)
-
-
-| Feature               | Specification                                                            |
-| --------------------- | ------------------------------------------------------------------------ |
-| **Compute Cores**     | 2 parallel cores                                                         |
-| **Threads/Block**     | 4 threads per block                                                      |
-| **Systolic Arrays**   | 2 arrays per core, 2×2 FMAs each                                         |
-| **Total FMAs**         | 16 processing elements (2 cores × 2 arrays × 4)                          |
-| **Data Memory**       | 2^19 rows × 16-bit (1 MiB total data space)                              |
-| **Program Memory**    | 512 instructions                                                         |
-| **Memory Channels**   | 8 data + 2 program channels                                              |
-| **Instruction Cache** | 2 entries per core                                                       |
-| **Arithmetic**        | Q1.15 fixed-point                                                        |
-| **Clock (GPU top)**   | 50 MHz (20 ns period)                                                    |
-| **Technology**        | SkyWater 130nm (sky130A)                                                 |
-| **Target FPGA**       | Xilinx Artix-7 (XC7A100T)                                                |
-| **Physical Design**   | Hierarchical Librelane 2 (nix-based)                                     |
-
+| Item | Value |
+| --- | --- |
+| Compute cores | 2 |
+| Threads per block | 2 |
+| Systolic arrays | 1 × 2×2 per core |
+| MAC units (total) | 8 |
+| Scalar FMA units | 1 per thread (4 total), 2-cycle |
+| On-die scratchpad | 128 B (64 × 16-bit), `0xFFC0`–`0xFFFF` |
+| Data address space | 19-bit (1 MiB × 16-bit words, external) |
+| Program memory | 512 × 16-bit instructions (external) |
+| Memory channels | 4 data + 2 program (serialized on the pin bus) |
+| Arithmetic | Q1.15 (SF16) |
+| Clock | 50 MHz (20 ns) |
+| Process / shuttle | Sky130, Tiny Tapeout `8x4` |
+| Top module | `tt_um_aloshdenny_gpu` |
 
 ### Table of Contents
 
 - [Overview](#overview)
 - [Architecture](#architecture)
-  - [GPU](#gpu)
-  - [Memory](#memory)
-  - [Core](#core)
-  - [Systolic Arrays](#systolic-arrays)
+- [Memory and scratchpad](#memory-and-scratchpad)
+- [Throughput](#throughput)
+- [Pinout](#pinout)
 - [Q1.15 Fixed-Point Format](#q115-fixed-point-format)
 - [ISA](#isa)
 - [Execution](#execution)
-  - [Core](#core-1)
-  - [Thread](#thread)
-  - [Pipeline](#pipeline)
 - [Neural Network Features](#neural-network-features)
-  - [FMA Unit](#fma-unit)
-  - [Systolic Array](#systolic-array-1)
-  - [KV-Cache](#kv-cache)
-  - [Weight & Activation Memory](#weight--activation-memory)
-- [Advanced Features](#advanced-features)
-  - [Memory Coalescing](#memory-coalescing)
-  - [Branch Divergence](#branch-divergence)
-  - [Instruction Pipeline](#instruction-pipeline)
 - [Kernels](#kernels)
-  - [Matrix Addition](#matrix-addition)
-  - [Matrix Multiplication](#matrix-multiplication)
 - [Simulation](#simulation)
-- [Test Files](#test-files)
-- [ASIC Generation (Librelane 2)](#asic-generation-librelane)
-  - [Macro: fma](#macro-fma)
-  - [Macro: array](#macro-array)
-  - [Macro: core](#macro-core)
-  - [Macro: gpu](#macro-gpu)
+- [ASIC / Tiny Tapeout](#asic--tiny-tapeout)
 - [Modules](#modules)
 
 ---
 
 # Overview
 
-**Atreides** is a neural network accelerator designed from the ground up for efficient fixed-point inference. Unlike traditional GPUs that focus on floating-point graphics, Atreides is optimized for the specific computational patterns found in modern deep learning:
+Atreides runs one kernel at a time: load program and data into external memory, write `thread_count`, pulse start, wait for done. Integer ops handle addressing and control; Q1.15 FMA / systolic MACs handle the numeric work.
 
-- **Q1.15 Fixed-Point Arithmetic** — Bounded [-1, 1] range perfect for normalized weights and activations
-- **Fused Multiply-Add (FMA)** — 2-cycle pipelined MAC operations with 32-bit internal accumulation
-- **Systolic Arrays** — 2 arrays of 4×4 FMAs per core for efficient parallelism (64 FMAs total)
-- **KV-Cache** — Native support for transformer attention mechanisms
-- **Memory Coalescing** — Efficient memory access patterns for tensor operations
-
-## Design Philosophy
-
-Atreides follows the principle of **separation of concerns**:
-
-- **Integer arithmetic** (ADD, SUB, MUL, DIV) for indexing, addressing, and control flow
-- **Q1.15 fixed-point** (FMA) exclusively for neural network computations
-
-This separation allows optimal hardware for each use case while maintaining a simple, understandable architecture.
-
-## Architecture Summary (v3.0)
+The Tiny Tapeout build keeps the GPU small enough for an 8×4 tile. Hot working sets can sit in the **128 B on-die scratchpad** (ordinary `LDR`/`STR` to high addresses). Everything else goes through the external memory arbiter on `uio[7:0]`.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            ATREIDES GPU v3.0                            │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────────────────────┐  ┌──────────────────────────┐             │
-│  │         Core 0           │  │         Core 1           │             │
-│  │  ┌────────────────────┐  │  │  ┌────────────────────┐  │             │
-│  │  │  32× SA 4x4 FMAs   │  │  │  │  32× SA 4x4 FMAs   │  │             │
-│  │  └────────────────────┘  │  │  └────────────────────┘  │             │
-│  │     4 Threads/Block      │  │     4 Threads/Block      │             │
-│  └──────────────────────────┘  └──────────────────────────┘             │
-│                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │              Memory Controllers (8 Data + 2 Program)            │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-│                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │           Data Memory (2^19 × 16-bit) + Program Memory          │    │
-│  └─────────────────────────────────────────────────────────────────┘    │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                     ATREIDES (Tiny Tapeout 8×4)                      │
+├──────────────────────────────────────────────────────────────────────┤
+│  Core 0                         Core 1                               │
+│  ├─ 2 threads (ALU / FMA / LSU / RF / PC each)                       │
+│  └─ 1 × 2×2 systolic array (4 PEs)                                   │
+│                                                                      │
+│  Scratchpad bridge ──► 128 B soft-flop RAM (addr 0xFFC0–0xFFFF)     │
+│  Controllers: 4 data + 2 program channels                            │
+│  External arbiter (tt_um_*) ──► 8-bit muxed SRAM bus                 │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 # Architecture
 
-
-
 ## GPU
 
-Atreides executes a single kernel at a time with the following launch sequence:
+Launch sequence:
 
-1. Load global program memory with the kernel code
-2. Load data memory with the necessary data (weights, activations in Q1.15)
-3. Specify the number of threads to launch in the device control register
-4. Launch the kernel by setting the start signal to high
+1. Load kernel into program memory (external).
+2. Load weights / activations into data memory (Q1.15).
+3. Optionally stage a tile into the scratchpad (`0xFFC0`–`0xFFFF`).
+4. Write `thread_count` on `ui_in[6:0]`, then pulse `ui_in[7]` (start).
+5. Poll `uo_out[0]` for completion.
 
-The GPU top-level (`gpu.sv`) consists of:
+| Unit | Role |
+| --- | --- |
+| Device control register | Holds `thread_count` |
+| Dispatcher | Assigns blocks to the two cores |
+| Compute cores | 2 × (2 threads + one 2×2 systolic array) |
+| Scratchpad bridge | Hits on `0xFFC0`–`0xFFFF`; misses go external |
+| Data / program controllers | 4 data + 2 program channels into the pin arbiter |
 
+### Parameters (`gpu.sv` / TT wrapper)
 
-| Unit                      | Description                                       |
-| ------------------------- | ------------------------------------------------- |
-| Device Control Register   | Stores kernel execution metadata (`thread_count`) |
-| Dispatcher                | Distributes thread blocks to 2 compute cores      |
-| Compute Cores             | 2 parallel processing units with systolic arrays  |
-| Data Memory Controller    | 8-channel controller (2 cores × 4 threads)        |
-| Program Memory Controller | 2-channel read-only controller (1 per core)       |
-
-
-### Top-Level Parameters (`gpu.sv`)
-
-
-| Parameter                  | Default | Description              |
-| -------------------------- | ------- | ------------------------ |
-| `DATA_MEM_ADDR_BITS`       | 19      | 1 MiB data memory space  |
-| `DATA_MEM_DATA_BITS`       | 16      | Q1.15 word width         |
-| `DATA_MEM_NUM_CHANNELS`    | 8       | 2 cores × 4 threads      |
-| `PROGRAM_MEM_ADDR_BITS`    | 12      | 4096 instructions        |
-| `PROGRAM_MEM_DATA_BITS`    | 16      | 16-bit instruction width |
-| `PROGRAM_MEM_NUM_CHANNELS` | 2       | 1 per core               |
-| `NUM_CORES`                | 2       | Compute cores            |
-| `THREADS_FMAR_BLOCK`        | 4       | Threads per block        |
-| `SYSTOLIC_SIZE`            | 4       | 4×4 FMA grid              |
-| `NUM_ARRAYS`      | 32      | Arrays per core          |
-
-
-### Device Control Register
-
-Stores the `thread_count` — the total number of threads to launch for the active kernel.
-
-### Dispatcher
-
-Manages distribution of threads to compute cores, organizing threads into **blocks** that execute in parallel on a single core.
-
-## Memory
-
-### Global Memory Specifications (v3.0)
-
-
-| Memory Type    | Address Bits | Data Bits | Size      | Description                          |
-| -------------- | ------------ | --------- | --------- | ------------------------------------ |
-| Data Memory    | 19 bits      | 16 bits   | 1 MiB     | Stores weights, activations, results |
-| Program Memory | 12 bits      | 16 bits   | 4096 rows | Kernel instructions                  |
-
-
-### Memory Controllers
-
-Handle throttling of memory requests based on external bandwidth and relay responses back to compute cores.
-
-
-| Controller     | Channels | Purpose                |
-| -------------- | -------- | ---------------------- |
-| Data Memory    | 8        | 2 cores × 4 threads    |
-| Program Memory | 2        | 1 per core (read-only) |
-
-
-### Instruction Cache
-
-```
-┌─────────────────────────────────────────┐
-│           INSTRUCTION CACHE (64)        │
-├─────────────────────────────────────────┤
-│  TAG  │  VALID  │  INSTRUCTION DATA     │
-├───────┼─────────┼───────────────────────┤
-│ 6-bit │  1-bit  │      16-bit           │
-└───────┴─────────┴───────────────────────┘
-```
-
-64-entry direct-mapped cache that stores recently fetched instructions, reducing program memory access latency.
+| Parameter | Value | Notes |
+| --- | --- | --- |
+| `NUM_CORES` | 2 | |
+| `THREADS_PER_BLOCK` | 2 | |
+| `SYSTOLIC_SIZE` | 2 | 2×2 PE grid |
+| `NUM_SYSTOLIC_ARRAYS` | 1 | Per core |
+| `DATA_MEM_ADDR_BITS` | 19 | External data space |
+| `DATA_MEM_DATA_BITS` | 16 | |
+| `DATA_MEM_NUM_CHANNELS` | 4 | 2 cores × 2 threads |
+| `PROGRAM_MEM_ADDR_BITS` | 9 | 512 instructions |
+| `PROGRAM_MEM_NUM_CHANNELS` | 2 | One fetcher per core |
 
 ## Core
 
-Each core (`core.sv`) processes one **block** at a time with dedicated resources per thread:
+Each core runs one block at a time. Threads in the block share the fetch/decode/schedule pipeline and execute in SIMT lockstep.
 
+| Resource | Per thread | Notes |
+| --- | --- | --- |
+| ALU | yes | Integer ADD/SUB/MUL/DIV/CMP |
+| FMA | yes | Q1.15, 2 EXECUTE cycles |
+| Activation | yes | Bias + ReLU variants |
+| LSU | yes | Loads/stores (scratchpad or external) |
+| PC / register file | yes | 16 registers (13 R/W + 3 RO) |
+| Systolic array | shared | One 2×2 weight-stationary array per core |
 
-| Resource      | Per Thread | Description                                      |
-| ------------- | ---------- | ------------------------------------------------ |
-| ALU           | Yes        | Integer arithmetic (ADD, SUB, MUL, DIV, CMP)     |
-| FMA           | Yes        | Q1.15 fused multiply-add (2-cycle pipelined)     |
-| Activation    | Yes        | Bias addition + ReLU/LeakyReLU/ClippedReLU       |
-| LSU           | Yes        | Load-store unit for memory access                |
-| PC            | Yes        | Program counter (12-bit, NZP-conditioned branch) |
-| Register File | Yes        | 16 registers (13 R/W + 3 read-only)              |
+Systolic PEs are fully pipelined (**1 MAC/cycle** after fill; first result after 3 cycles). Scalar `FMA` instructions use the per-thread FMA unit.
 
-
-### Core Parameters
-
-
-| Parameter             | Default | Description               |
-| --------------------- | ------- | ------------------------- |
-| `THREADS_FMAR_BLOCK`   | 4       | Threads per block         |
-| `SYSTOLIC_SIZE`       | 4       | 4×4 FMA grid               |
-| `NUM_ARRAYS` | 32      | Arrays per core           |
-| `CACHE_SIZE`          | 64      | Instruction cache entries |
-
-
-### Core Submodules
-
-Each core instantiates:
-
-
-| Submodule        | Count          | Description                                                    |
-| ---------------- | -------------- | -------------------------------------------------------------- |
-| `cache`          | 1              | 64-entry instruction cache                                     |
-| `fetcher`        | 1              | Async instruction fetch from cache/memory                      |
-| `decoder`        | 1              | 16-bit instruction decoder                                     |
-| `scheduler`      | 1              | 7-state pipeline FSM (instantiates `branch_diverge`)           |
-| `alu`            | 4 (per thread) | Integer ALU                                                    |
-| `fma`            | 4 (per thread) | Q1.15 FMA unit                                                 |
-| `activation`     | 4 (per thread) | Bias & activation function                                     |
-| `lsu`            | 4 (per thread) | Load-store unit                                                |
-| `registers`      | 4 (per thread) | 16-register file                                               |
-| `pc`             | 4 (per thread) | Program counter                                                |
-| `array` | 2              | 4×4 weight-stationary systolic arrays                          |
-| `mem_coalesce`   | 1              | Memory coalescing unit                                         |
-| `weight_mem`     | 1              | Weight/activation banks (4 banks, 1024 depth, double-buffered) |
-| `kv_cache`       | 1              | KV-cache (4 heads, 16 dim, 256 seq len)                        |
-
-
-## Systolic Arrays
-
-Atreides v3.0 features 2 systolic arrays per core (4 total), each a 4×4 grid of processing elements:
+### Hierarchy (silicon build)
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        SYSTOLIC ARRAYS (per core)                       │
-│                         (2 Arrays × 4×4 FMAs)                            │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌──────────────────────┐  ┌──────────────────────┐                     │
-│  │      Array 0         │  │      Array 1         │                     │
-│  │      4×4 FMAs         │  │      4×4 FMAs         │                     │
-│  │     (16 FMAs)         │  │     (16 FMAs)         │                     │
-│  └──────────────────────┘  └──────────────────────┘                     │
-│                                                                         │
-│  32 FMAs per core × 2 cores = 64 FMAs total                              │
-│                                                                         │
-│  Control:                                                               │
-│  • array_select[0]    - Select individual array (0–1)                   │
-│  • clear_acc          - Clear accumulators                              │
-│  • load_weights       - Load weight matrix (weight-stationary)          │
-│  • compute_enable     - Enable MAC operations                           │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+tt_um_aloshdenny_gpu
+├── RAM32 (soft-flop 32×32, 128 B)
+├── memory arbiter (uio / uo control)
+└── gpu
+    ├── dcr, dispatch
+    ├── data + program controllers
+    ├── scratchpad bridge
+    └── core ×2
+        ├── fetcher, decoder, scheduler, branch_diverge
+        ├── per-thread ×2: alu, fma, activation, lsu, registers, pc
+        └── systolic_array (2×2) → systolic_pe ×4
 ```
 
-Each 4×4 systolic array (`array.sv`, parameterized `ARRAY_SIZE=4`, `PIFMA_INTERVAL=2`):
+---
 
-```
-        ┌─────┐   ┌─────┐   ┌─────┐   ┌─────┐
-  a[0]──│ FMA  │───│ FMA  │───│ FMA  │───│ FMA  │──▶
-        │ 0,0 │   │ 0,1 │   │ 0,2 │   │ 0,3 │
-        └──┬──┘   └──┬──┘   └──┬──┘   └──┬──┘
-           │         │         │         │
-        ┌──▼──┐   ┌──▼──┐   ┌──▼──┐   ┌──▼──┐
-  a[1]──│ FMA  │───│ FMA  │───│ FMA  │───│ FMA  │──▶
-        │ 1,0 │   │ 1,1 │   │ 1,2 │   │ 1,3 │
-        └──┬──┘   └──┬──┘   └──┬──┘   └──┬──┘
-           │         │         │         │
-        ┌──▼──┐   ┌──▼──┐   ┌──▼──┐   ┌──▼──┐
-  a[2]──│ FMA  │───│ FMA  │───│ FMA  │───│ FMA  │──▶
-        │ 2,0 │   │ 2,1 │   │ 2,2 │   │ 2,3 │
-        └──┬──┘   └──┬──┘   └──┬──┘   └──┬──┘
-           │         │         │         │
-        ┌──▼──┐   ┌──▼──┐   ┌──▼──┐   ┌──▼──┐
-  a[3]──│ FMA  │───│ FMA  │───│ FMA  │───│ FMA  │──▶
-        │ 3,0 │   │ 3,1 │   │ 3,2 │   │ 3,3 │
-        └──┬──┘   └──┬──┘   └──┬──┘   └──┬──┘
-           ▼         ▼         ▼         ▼
-         b[0]      b[1]      b[2]      b[3]
-```
+# Memory and scratchpad
 
-### Systolic Array Parameters
+## Address map (data)
 
+| Region | Addresses | Backing | Access |
+| --- | --- | --- | --- |
+| External data | `0x00000`–`0x0FFBF` (and rest of 19-bit space) | Off-chip SRAM via pin bus | Multi-cycle, arbitrated |
+| On-die scratchpad | `0xFFC0`–`0xFFFF` (64 halfwords) | Soft-flop 32×32 RAM | ~1–2 cycles on hit |
 
-| Parameter       | Default | Description                                      |
-| --------------- | ------- | ------------------------------------------------ |
-| `DATA_BITS`     | 16      | Q1.15 word width                                 |
-| `ARRAY_SIZE`    | 4       | NxN FMA grid dimension                            |
-| `PIFMA_INTERVAL` | 2       | Pipeline registers every N FMAs (for routability) |
+No ISA change: the LSU issues normal loads/stores; `scratchpad.sv` steers hits to the on-die RAM and forwards misses to the data controller.
 
+Scratchpad details:
 
-### Systolic FMA Parameters
+- 128 bytes = 64 × 16-bit words (fits in the 16-bit LSU address used from `rs`)
+- Physical RAM is 32-bit wide, 32 deep; the bridge maps halfword addresses and byte enables
+- Single 1RW port shared by all four data channels (priority encode; one hit in flight)
 
+## External bus protocol
 
-| Parameter   | Default | Description                |
-| ----------- | ------- | -------------------------- |
-| `DATA_BITS` | 16      | Q1.15 I/O width            |
-| `ACC_BITS`  | 32      | Internal accumulator width |
+Program and data channels share one 8-bit bidirectional bus. A transfer is roughly:
 
+1. **Address** — 3 cycles (`ADDR0`/`ADDR1`/`ADDR2`) with `ale` high  
+2. **Data** — 2 cycles (`DATA0`/`DATA1`); write drives `uio`, read samples with `uio_oe` low  
+3. **Ack** — complete the channel handshake  
 
-Each FMA (`fma.sv`) uses a **3-stage pipelined sign-magnitude MAC**:
+`mem_sel` selects program (0) vs data (1). `mem_we` / `mem_re` qualify the access. Only one channel is serviced at a time (fixed priority: program 0–1, then data 0–3).
 
-- **Stage 0** — Latch inputs, compute sign (XOR), extract absolute values
-- **Stage 1** — 15×15 unsigned multiply (30-bit product)
-- **Stage 2** — Sign-extend product, accumulate into 32-bit register, saturate to Q1.15 output
+---
 
-### Module Hierarchy
+# Throughput
 
-```
-└── GPU (gpu.sv)
-    ├── DCR (dcr.sv)
-    ├── Data Memory Controller (controller.sv, 8 channels)
-    ├── Program Memory Controller (controller.sv, 2 channels, read-only)
-    ├── Dispatcher (dispatch.sv)
-    └── Core ×2 (core.sv)
-        ├── Instruction Cache (cache.sv, 64 entries)
-        ├── Fetcher (fetcher.sv)
-        ├── Decoder (decoder.sv)
-        ├── Scheduler (scheduler.sv)
-        │   └── Branch Divergence (branch_diverge.sv)
-        ├── Per-Thread ×4:
-        │   ├── ALU (alu.sv)
-        │   ├── FMA (fma.sv)
-        │   ├── Activation (activation.sv)
-        │   ├── LSU (lsu.sv)
-        │   ├── Registers (registers.sv)
-        │   └── PC (pc.sv)
-        ├── Systolic Array ×2 (array.sv, 4×4)
-        │   └── Systolic FMA ×16 (fma.sv)
-        ├── Memory Coalescing (mem_coalesce.sv)
-        ├── Weight Memory (weight_mem.sv)
-        └── KV-Cache (kv_cache.sv)
-```
+Numbers below assume the **50 MHz** Tiny Tapeout target. Peak figures are hardware ceilings with the relevant path saturated; real kernels are usually lower (hazards, fill/drain, arbitration, host SRAM latency).
+
+## Compute
+
+| Path | Peak | Notes |
+| --- | --- | --- |
+| Systolic MACs | **400 × 10⁶ MAC/s** | 8 PEs × 1 MAC/cycle × 50 MHz |
+| Scalar FMA | **100 × 10⁶ FMA/s** | 4 thread FMAs × 0.5 issue/cycle (2-cycle unit), both cores busy |
+
+A dense matmul that keeps both systolic arrays fed approaches the MAC peak. Scalar `FMA` loops are closer to the FMA row. Mixed control/integer code sits well below either.
+
+## On-die scratchpad
+
+| Mode | Peak bandwidth | How |
+| --- | --- | --- |
+| Halfword write hit | **100 MB/s** | 16-bit × 50 MHz (1-cycle write state) |
+| Halfword read hit | **50 MB/s** | 16-bit × 25 MHz (2-cycle read) |
+| Raw 32-bit RAM port | **200 MB/s** | 32-bit × 50 MHz if the port is continuously enabled |
+
+Only one LSU hit uses the RAM at a time. Concurrent hits from other threads queue in the bridge.
+
+## External memory (pin bus)
+
+| Mode | Peak bandwidth | How |
+| --- | --- | --- |
+| Serialized 16-bit transfer | **~16.7 MB/s** | 50 MHz / 6 cycles × 2 bytes |
+
+This is the hard limit for host SRAM traffic (program fetch and data miss/fill). Typical effective rate is lower when program and data contend or when the external device needs wait states.
+
+## Practical mix
+
+| Workload style | Usually limited by |
+| --- | --- |
+| Tight MAC over scratchpad tiles | Compute (systolic / FMA) |
+| Streaming weights from external SRAM | External bus (~16.7 MB/s) |
+| Many threads hitting scratchpad together | Scratchpad 1RW port |
+
+---
+
+# Pinout
+
+Tiny Tapeout standard pins. Mapping matches `info.yaml` / `tt_um_aloshdenny_gpu.sv`.
+
+### Inputs — `ui_in[7:0]`
+
+| Pin | Signal | Description |
+| --- | --- | --- |
+| `ui_in[6:0]` | `thread_count` | Device control register (written while start is low) |
+| `ui_in[7]` | `start` | Pulse high to launch the kernel |
+
+### Outputs — `uo_out[7:0]`
+
+| Pin | Signal | Description |
+| --- | --- | --- |
+| `uo_out[0]` | `done` | High when the kernel finishes |
+| `uo_out[1]` | `mem_we` | External SRAM write enable |
+| `uo_out[2]` | `mem_re` | External SRAM read enable |
+| `uo_out[3]` | `ale` | Address latch enable |
+| `uo_out[4]` | `mem_sel` | 0 = program memory, 1 = data memory |
+| `uo_out[7:5]` | — | Tied low (reserved) |
+
+### Bidirectional — `uio[7:0]`
+
+| Pin | Signal | Description |
+| --- | --- | --- |
+| `uio[7:0]` | addr/data bus | Time-multiplexed address and data bytes |
+| `uio_oe[7:0]` | output enable | Driven by the design during address/write phases |
+
+### Clock / reset / enable
+
+| Pin | Description |
+| --- | --- |
+| `clk` | System clock (≤ 50 MHz for the TT timing closure target) |
+| `rst_n` | Active-low reset (internally synchronized) |
+| `ena` | Always driven high by the TT harness when the design may run |
 
 ---
 
@@ -402,10 +281,7 @@ def q115_to_float(q):
 
 ### Why Q1.15?
 
-1. **Normalized Range** — Neural network weights and activations are typically normalized to [-1, 1]
-2. **Efficient Multiplication** — 15×15 bit multiplication fits in 30 bits
-3. **No Overflow in Accumulation** — Using 32-bit accumulators prevents overflow
-4. **Hardware Efficient** — Simpler than floating-point, lower power consumption
+Normalized weights/activations usually fit in [-1, 1]. A 15×15 multiply fits in 30 bits; the FMA/PE paths keep wider accumulators before saturating back to 16-bit. Fixed-point keeps the datapath smaller than a float unit at this process node.
 
 ---
 
@@ -596,6 +472,9 @@ Each FMA performs: `acc += a_in × b_in` (in Q1.15 with 32-bit internal accumula
 
 ## KV-Cache
 
+> Optional RTL (`kv_cache.sv`) — not enabled in the default Tiny Tapeout `source_files` list.
+
+
 Native support for transformer attention with sliding window (`kv_cache.sv`):
 
 ```
@@ -638,6 +517,9 @@ Parameters:
 
 ## Weight & Activation Memory
 
+> Optional RTL (`weight_mem.sv`) — not in the default Tiny Tapeout `source_files` list.
+
+
 Dedicated memory banks with double-buffering for neural network inference (`weight_mem.sv`):
 
 ```
@@ -672,6 +554,9 @@ Dedicated memory banks with double-buffering for neural network inference (`weig
 
 ## Memory Coalescing
 
+> Optional RTL (`mem_coalesce.sv`) — not in the default Tiny Tapeout `source_files` list.
+
+
 Combines multiple sequential memory requests into single transactions (`mem_coalesce.sv`):
 
 ```
@@ -687,7 +572,7 @@ Before Coalescing:           After Coalescing:
 
 The coalescing unit:
 
-1. Analyzes pending memory requests from all 4 threads
+1. Analyzes pending memory requests from threads in the block
 2. Identifies sequential addresses
 3. Combines into single wide transaction
 4. Distributes results back to threads
@@ -1014,7 +899,7 @@ async def test_example(dut):
     program = [asm_add(R0, R0, R1), asm_ret()]
     data = [0x1000, 0x2000]  # Q1.15 values
     
-    logger = await setup_test(dut, "example", program, data, thread_count=4)
+    logger = await setup_test(dut, "example", program, data, thread_count=2)
     await run_kernel(dut, logger, max_cycles=100, trace_interval=5)
     
     # Read results and verify
@@ -1025,363 +910,60 @@ async def test_example(dut):
 
 ---
 
-# ASIC Generation (Librelane 2)
+# ASIC / Tiny Tapeout
 
-Atreides v3.0 uses a **hierarchical physical design** approach with **Librelane 2** for the RTL-to-GDSII flow. Each level of the module hierarchy is synthesized, placed, and routed independently, then integrated as a hardened macro in the level above.
+Submission flow uses Tiny Tapeout’s GDS action and `src/config.json` (merged with `tt_tool` user config). Tile size is **8×4** (`info.yaml`). The on-die scratchpad is a **synthesizable** 32×32 soft-flop RAM (`RAM32.v`), not the hard DFFRAM macro (the CI LibreLane flow cannot run the post-PDN power hook that hard RAM32 needs).
 
-Librelane 2 is **nix-based**, reproducible, and runs **directly inside the project repository** — no Docker, no `flow.tcl`, no design copying.
+Local / experimental LibreLane configs under `librelane/` may describe larger hierarchical builds; **the silicon parameters that matter for this shuttle are those in `src/` and `info.yaml`.**
 
----
-
-## Prerequisites
+GDS viewing (after a successful harden):
 
 ```bash
-# Install Nix
-curl -L https://nixos.org/nix/install | sh
-
-# Clone Librelane 2
-git clone https://github.com/librelane ~/librelane
-cd ~/librelane
-
-# Enter Librelane 2 environment
-nix-shell
-```
-
-Librelane 2 tools (OpenROAD, Yosys, Magic, KLayout, etc.) are made available **only inside the nix shell**.
-
----
-
-## Directory Layout
-
-Each physical block has its own directory with a `config.json`:
-
-```
-librelane/
-├── fma/
-│   └── config.json
-├── array/
-│   └── config.json
-├── core/
-│   └── config.json
-└── gpu/
-    └── config.json
-```
-
-Each directory is executed independently using `librelane config.json`.
-
----
-
-## Hierarchical Build
-
-The hierarchy matches the RTL module composition. Each level is built bottom-up:
-
-```
-└── GPU (2 cores)                         ← librelane/gpu/
-    └── Core (4 threads + 2 SA + subsystems) ← librelane/core/
-        └── Systolic Array (4×4 FMAs)         ← librelane/array/
-            └── Systolic FMA (3-stage MAC)    ← librelane/fma/
-```
-
-### Build Order
-
-```bash
-# 1. Build the FMA macro
-cd librelane/fma
-librelane config.json
-
-# 2. Build the 4×4 systolic array
-cd ../array
-librelane config.json
-
-# 3. Build the compute core (4 threads + 2 arrays + subsystems)
-cd ../core
-librelane config.json
-
-# 4. Build the full GPU (2 cores + controllers + dispatcher)
-cd ../gpu
-librelane config.json
-```
-
----
-
-## Macro Specifications
-
-### Per-Level Summary
-
-
-| Macro            | Clock Period | Frequency | Core Util | Key Settings                              |
-| ---------------- | ------------ | --------- | --------- | ----------------------------------------- |
-| `fma`    | 5 ns         | 200 MHz   | Auto      | Antenna repair                            |
-| `array` | 6 ns         | 166 MHz   | Auto      | Antenna repair, 4×4 FMA grid               |
-| `core`           | 8 ns         | 125 MHz   | Auto      | 17 source files, antenna repair           |
-| `gpu`            | 8 ns         | 125 MHz   | 40%       | Antenna repair, timing/routability driven |
-
-
----
-
-### Macro: `fma`
-
-The smallest physical unit — a single Q1.15 processing element with 3-stage pipelined sign-magnitude MAC and 32-bit accumulator.
-
-**Config** (`librelane/fma/config.json`):
-
-```json
-{
-  "DESIGN_NAME": "fma",
-  "VERILOG_FILES": ["dir::../../src/fma.sv"],
-  "CLOCK_PORT": "clk",
-  "CLOCK_FMARIOD": 15,
-  "RUN_ANTENNA_REPAIR": true
-}
-```
-
-**RTL Parameters:**
-
-
-| Parameter   | Value | Description          |
-| ----------- | ----- | -------------------- |
-| `DATA_BITS` | 16    | Q1.15 I/O width      |
-| `ACC_BITS`  | 32    | Internal accumulator |
-
-
-**Ports:** `clk`, `reset`, `enable`, `clear_acc`, `load_weight`, `compute_enable`, `a_in[15:0]`, `b_in[15:0]`, `a_out[15:0]`, `b_out[15:0]`, `acc_out[15:0]`
-
-**Architecture:** 3-stage pipeline — sign XOR + abs → 15×15 unsigned multiply → sign-extend + accumulate + saturate.
-
----
-
-### Macro: `array`
-
-A 4×4 weight-stationary systolic array composed of 16 FMAs with pipeline registers every 2 FMAs for improved routability.
-
-**Config** (`librelane/array/config.json`):
-
-```json
-{
-  "DESIGN_NAME": "array",
-  "VERILOG_FILES": [
-    "dir::../../src/array.sv",
-    "dir::../../src/fma.sv"
-  ],
-  "CLOCK_PORT": "clk",
-  "CLOCK_FMARIOD": 30,
-  "RUN_ANTENNA_REPAIR": true
-}
-```
-
-**RTL Parameters:**
-
-
-| Parameter       | Value | Description                    |
-| --------------- | ----- | ------------------------------ |
-| `DATA_BITS`     | 16    | Q1.15 word width               |
-| `ARRAY_SIZE`    | 4     | 4×4 FMA grid                    |
-| `PIFMA_INTERVAL` | 2     | Pipeline registers every 2 FMAs |
-
-
-**Ports:** `clk`, `reset`, `enable`, `clear_acc`, `load_weights`, `compute_enable`, `a_inputs_flat[63:0]` (4 × 16-bit), `b_inputs_flat[63:0]` (4 × 16-bit), `results_flat[255:0]` (16 × 16-bit), `ready`
-
-**Architecture:** NxN FMA grid with weight-stationary dataflow. Activations flow left-to-right, partial sums flow top-to-bottom. Pipeline registers inserted every `PIFMA_INTERVAL` columns for timing closure.
-
----
-
-### Macro: `core`
-
-A complete compute core containing the scheduler pipeline, 4 threads (each with ALU/FMA/Activation/LSU/Registers/PC), 2 systolic arrays, instruction cache, memory coalescing, weight memory, and KV-cache.
-
-**Config** (`librelane/core/config.json`):
-
-```json
-{
-  "DESIGN_NAME": "core",
-  "VERILOG_FILES": [
-    "dir::../../src/core.sv",
-    "dir::../../src/decoder.sv",
-    "dir::../../src/fetcher.sv",
-    "dir::../../src/scheduler.sv",
-    "dir::../../src/alu.sv",
-    "dir::../../src/fma.sv",
-    "dir::../../src/activation.sv",
-    "dir::../../src/lsu.sv",
-    "dir::../../src/registers.sv",
-    "dir::../../src/pc.sv",
-    "dir::../../src/array.sv",
-    "dir::../../src/fma.sv",
-    "dir::../../src/cache.sv",
-    "dir::../../src/branch_diverge.sv",
-    "dir::../../src/mem_coalesce.sv",
-    "dir::../../src/weight_mem.sv",
-    "dir::../../src/kv_cache.sv"
-  ],
-  "CLOCK_PORT": "clk",
-  "CLOCK_FMARIOD": 60,
-  "RUN_ANTENNA_REPAIR": true
-}
-```
-
-**RTL Parameters:**
-
-
-| Parameter             | Value | Description               |
-| --------------------- | ----- | ------------------------- |
-| `THREADS_FMAR_BLOCK`   | 4     | Parallel threads          |
-| `SYSTOLIC_SIZE`       | 4     | 4×4 FMA arrays             |
-| `NUM_ARRAYS` | 32    | Arrays per core           |
-| `CACHE_SIZE`          | 64    | Instruction cache entries |
-
-
-**Ports:** `clk`, `reset`, `start`, `done`, `block_id[7:0]`, `thread_count`, program memory interface (single channel), flattened data memory interface (4 thread channels)
-
-**Contains:** 17 source modules — full scheduler pipeline, per-thread compute units, 2 systolic arrays (32 FMAs), memory coalescing, weight banks, and KV-cache.
-
----
-
-### Macro: `gpu`
-
-The top-level design integrating 2 cores, memory controllers, dispatcher, and DCR.
-
-**Config** (`librelane/gpu/config.json`):
-
-See `librelane/gpu/config.json` for the full configuration. Key settings:
-
-```json
-{
-  "DESIGN_NAME": "gpu",
-  "CLOCK_PORT": "clk",
-  "CLOCK_FMARIOD": 60,
-  "RUN_ANTENNA_REPAIR": true,
-  "DRT_ANTENNA_REPAIR_ITERS": 10,
-  "DRT_ANTENNA_REPAIR_MARGIN": 20,
-  "GRT_ANTENNA_REPAIR_ITERS": 10,
-  "GRT_ANTENNA_REPAIR_MARGIN": 20,
-  "FP_CORE_UTIL": 40,
-  "PL_TIMING_DRIVEN": true,
-  "PL_ROUTABILITY_DRIVEN": true
-}
-```
-
-**RTL Parameters:**
-
-
-| Parameter                  | Value | Description             |
-| -------------------------- | ----- | ----------------------- |
-| `NUM_CORES`                | 2     | Parallel compute cores  |
-| `THREADS_FMAR_BLOCK`        | 4     | Threads per block       |
-| `DATA_MEM_NUM_CHANNELS`    | 8     | Data memory channels    |
-| `PROGRAM_MEM_NUM_CHANNELS` | 2     | Program memory channels |
-| `SYSTOLIC_SIZE`            | 4     | 4×4 FMA grid             |
-| `NUM_ARRAYS`      | 32    | Arrays per core         |
-
-
-**Key physical design settings:**
-
-- **40% core utilization** — tighter packing for shorter wires and fewer antenna violations
-- **Timing-driven placement** — `PL_TIMING_DRIVEN` and `PL_ROUTABILITY_DRIVEN` enabled
-- **Aggressive antenna repair** — 10 iterations with 20% safety margin for both GRT and DRT
-- **Target: Artix-7 FPGA** — sized to fit XC7A100T with comfortable margin
-
-**Contains:** All 21 source modules — 2 cores (64 total FMAs), 2 memory controllers, dispatcher, and DCR.
-
----
-
-## Output Files
-
-Each macro produces:
-
-```
-runs/<run_id>/results/final/
-├── gds/          # GDSII layout
-├── lef/          # Library Exchange Format (for macro integration)
-├── def/          # Design Exchange Format
-├── sdc/          # Timing constraints
-└── reports/      # Synthesis, placement, CTS, routing reports
-```
-
-Final GPU GDS:
-
-```
-librelane/gpu/runs/<run_id>/results/final/gds/gpu.gds
-```
-
-Pre-built GDS files are available in `gds/atreides_v3/`:
-
-```
-gds/atreides_v3/
-├── fma.gds
-├── array.gds
-├── core.gds
-└── gpu.gds
-```
-
----
-
-## Viewing the Layout
-
-GDS Render
-
-```bash
-# Using KLayout
-klayout librelane/gpu/runs/<run_id>/results/final/gds/gpu.gds
-
-# Or view pre-built GDS
+klayout runs/.../final/gds/*.gds
+# or
 make view_layout
-
-# Using Magic
-magic -T $PDK_ROOT/sky130A/libs.tech/magic/sky130A.tech \
-  librelane/gpu/runs/<run_id>/results/final/gds/gpu.gds
 ```
 
----
+### Design metrics (TT target)
 
-## Design Metrics
-
-
-| Metric           | Value                   |
-| ---------------- | ----------------------- |
-| Technology       | SkyWater 130nm          |
-| Clock (GPU top)  | 125 MHz (8 ns period)   |
-| Clock (FMA)       | 200 MHz (5 ns period)   |
-| Core Utilization | 40% (GPU top-level)     |
-| Total FMAs        | 1024                    |
-| Target FPGA      | Xilinx Artix-7          |
-| DRC              | Clean                   |
-| LVS              | Clean                   |
-| Antenna          | Clean                   |
-
+| Metric | Value |
+| --- | --- |
+| Technology | Sky130 |
+| Clock | 50 MHz |
+| Tiles | 8×4 |
+| MAC units | 8 |
+| On-die scratchpad | 128 B |
+| External data bus peak | ~16.7 MB/s @ 50 MHz |
 
 ---
 
 # Modules
 
+| Module | File | Description |
+| --- | --- | --- |
+| Chip top | `tt_um_aloshdenny_gpu.sv` | TT pins, memory arbiter, RAM32 instance |
+| GPU | `gpu.sv` | Cores, controllers, dispatcher, DCR, scratchpad bridge |
+| Scratchpad | `scratchpad.sv` | Address decode / hit mux for `0xFFC0`–`0xFFFF` |
+| RAM32 | `RAM32.v` | Soft-flop 32×32 1RW (128 B) |
+| Core | `core.sv` | Scheduler, threads, systolic array |
+| ALU | `alu.sv` | Integer arithmetic |
+| FMA | `fma.sv` | Q1.15 fused multiply-add (2-cycle) |
+| Activation | `activation.sv` | Bias + ReLU family |
+| Decoder | `decoder.sv` | 16-bit instruction decode |
+| Registers | `registers.sv` | 16-entry register file |
+| LSU | `lsu.sv` | Load/store unit |
+| PC | `pc.sv` | Program counter / branches |
+| Scheduler | `scheduler.sv` | Core pipeline FSM |
+| Fetcher | `fetcher.sv` | Instruction fetch |
+| Dispatcher | `dispatch.sv` | Block dispatch |
+| DCR | `dcr.sv` | Device control register |
+| Controller | `controller.sv` | Memory channel controller |
+| Systolic array | `systolic_array.sv` | 2×2 weight-stationary array |
+| Systolic PE | `systolic_pe.sv` | Pipelined MAC PE (1 MAC/cycle) |
+| Branch diverge | `branch_diverge.sv` | SIMT divergence stack |
 
-| Module         | File                | Description                                                   |
-| -------------- | ------------------- | ------------------------------------------------------------- |
-| GPU Top        | `gpu.sv`            | Top-level GPU: cores, controllers, dispatcher, DCR            |
-| Core           | `core.sv`           | Compute core: scheduler, threads, systolic arrays, subsystems |
-| ALU            | `alu.sv`            | Integer arithmetic (ADD, SUB, MUL, DIV, CMP)                  |
-| FMA            | `fma.sv`            | Q1.15 fused multiply-add (2-cycle pipelined)                  |
-| Activation     | `activation.sv`     | Bias + activation (ReLU, LeakyReLU, ClippedReLU)              |
-| Decoder        | `decoder.sv`        | 16-bit instruction decoder (12 opcodes)                       |
-| Registers      | `registers.sv`      | 16-register file (13 R/W + 3 read-only)                       |
-| LSU            | `lsu.sv`            | Load-store unit (async FSM)                                   |
-| PC             | `pc.sv`             | Program counter (NZP branch, imm9 target)                     |
-| Scheduler      | `scheduler.sv`      | 7-state core pipeline FSM                                     |
-| Fetcher        | `fetcher.sv`        | Async instruction fetcher                                     |
-| Dispatcher     | `dispatch.sv`       | Thread block dispatcher                                       |
-| DCR            | `dcr.sv`            | Device control register                                       |
-| Controller     | `controller.sv`     | Memory controller (priority round-robin)                      |
-| Cache          | `cache.sv`          | Direct-mapped instruction cache (64 entries)                  |
-| Systolic FMA    | `fma.sv`    | 3-stage pipelined Q1.15 MAC                                   |
-| Systolic Array | `array.sv` | NxN weight-stationary FMA array                                |
-| Pipeline       | `pipeline.sv`       | 5-stage instruction pipeline                                  |
-| Branch Diverge | `branch_diverge.sv` | SIMT branch divergence with stack                             |
-| Mem Coalesce   | `mem_coalesce.sv`   | Memory request coalescing                                     |
-| Weight Mem     | `weight_mem.sv`     | Weight/activation banks (4 banks, double-buffered)            |
-| KV Cache       | `kv_cache.sv`       | Transformer KV-cache (4 heads, sliding window)                |
-
+Optional / experimental RTL also present in-tree (`cache.sv`, `mem_coalesce.sv`, `weight_mem.sv`, `kv_cache.sv`) is not part of the default TT `source_files` list.
 
 ---
 
-
-
-**Atreides v3.0** — *Superfloat Project*
+**Atreides** — Superfloat / Tiny Tapeout
