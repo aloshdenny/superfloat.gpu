@@ -18,7 +18,7 @@
     "CLOCK_PORT": "clk",
     "DEFAULT_CORNER": "max_ss_100C_1v60",
     "SYNTH_CORNER": "nom_tt_025C_1v80",
-    "CLOCK_PERIOD": 24.0,
+    "CLOCK_PERIOD": 20.0,
     "PNR_SDC_FILE": "dir::core.sdc",
     "SIGNOFF_SDC_FILE": "dir::core.sdc",
     "CLOCK_UNCERTAINTY_CONSTRAINT": 0.25,

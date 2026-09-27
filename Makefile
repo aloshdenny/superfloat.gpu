@@ -317,6 +317,11 @@ test_model_resnet: compile_tb
 	@mkdir -p test/results build/waves
 	COCOTB_TEST_MODULES=test.test_model_resnet vvp -M $$(cocotb-config --lib-dir) -m $$(cocotb-config --lib-name vpi icarus) build/sim.vvp
 
+# Sparse-skip / unity-bypass matmul benches (writes test/logs/hw_aware_opts_results.json)
+test_hw_aware_opts: compile_tb
+	@mkdir -p test/results test/logs build/waves
+	COCOTB_TEST_MODULES=test.test_hw_aware_opts vvp -M $$(cocotb-config --lib-dir) -m $$(cocotb-config --lib-name vpi icarus) build/sim.vvp
+
 test_model_transformer: compile_tb
 	@mkdir -p test/results build/waves
 	COCOTB_TEST_MODULES=test.test_model_transformer vvp -M $$(cocotb-config --lib-dir) -m $$(cocotb-config --lib-name vpi icarus) build/sim.vvp
