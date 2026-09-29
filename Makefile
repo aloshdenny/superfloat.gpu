@@ -34,6 +34,18 @@ compile_tb:
 	cat src/RAM32.v >> build/all.v
 	iverilog -o build/sim.vvp -s tb_gpu -g2012 build/all.v
 
+# OpenFrame chip level: superfloat_openframe driven through its pin bus
+compile_openframe:
+	@mkdir -p build
+	sv2v src/*.sv test/tb_openframe.sv -w build/openframe.v
+	echo '`timescale 1ns/1ns' | cat - build/openframe.v > build/temp.v
+	mv build/temp.v build/openframe.v
+	cat src/RAM32.v >> build/openframe.v
+	iverilog -o build/openframe.vvp -s tb_openframe -g2012 build/openframe.v
+
+test_openframe_chip: compile_openframe
+	COCOTB_TEST_MODULES=test.test_openframe_chip vvp -M $$(cocotb-config --lib-dir) -m $$(cocotb-config --lib-name vpi icarus) build/openframe.vvp
+
 # =============================================================================
 # Unit Test Targets for Individual Modules
 # =============================================================================
