@@ -1,8 +1,8 @@
 # Place-and-route constraints for the OpenFrame chip. Same as chip.sdc (the
 # signoff constraints) except tighter repair targets: max transition 1.0 ns
-# (signoff 1.5) and max fanout 8 (signoff 10). Chip nets run up to ~1 mm
+# (signoff 1.5) and max fanout 6 (signoff 10). Chip nets run up to ~1 mm
 # along the centre strip and to the pads, where the routed parasitics exceed
-# the pre-route estimates, and post-route antenna diodes add up to two loads.
+# the pre-route estimates, and post-route antenna diodes add up to four loads.
 
 create_clock -name clk -period 20.0000 [get_ports {gpio_in[38]}]
 set_clock_transition 0.3000 [get_clocks {clk}]
@@ -23,6 +23,10 @@ set_false_path -hold -to $bus_outputs
 # Reset pads: asynchronous assert, synchronized release inside the design.
 set_false_path -from [get_ports {resetb_l porb_l}]
 
-set_max_fanout 8 [current_design]
+set_max_fanout 6 [current_design]
 set_max_transition 1.0 [current_design]
 set_max_capacitance 0.5 [current_design]
+
+# The tiles' outputs come from small port buffers inside the macro and drive
+# up to ~1 mm to the bus logic; hold them to 0.5 ns so repair buffers them.
+set_max_transition 0.5 [get_pins -of_objects [get_cells -hierarchical -filter "ref_name == core_tile" *] -filter "direction == output"]
