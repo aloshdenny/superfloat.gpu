@@ -2,6 +2,8 @@
 # Copy the signed-off core_tile views from a run into core_tile/views/, where
 # librelane/openframe/config.json picks them up. The FP16 and BF16 tiles go to
 # views_fp16/ and views_bf16/ (openframe/config_fp16.json, config_bf16.json).
+# Then run timing_model.sh, so the LIB views carry the hold arcs the chip
+# needs.
 # usage: ./export_views.sh [runs/RUN_...] [views_dir]
 #        (defaults: newest run, views)
 set -euo pipefail

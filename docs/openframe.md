@@ -176,9 +176,15 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
 1. **Core tile:** in `librelane/core_tile/`, run `./run_harden.sh config_fp16.json harden_fp16.log`.
    - If signoff reports residual max-slew or max-cap violations, `./eco_fix.py runs/<run> --config config_fp16.json` writes an ECO config. It buffers the violating drivers from the routed state and re-runs signoff, and prints the command to run it.
    - `./export_views.sh runs/<signed-off run> views_fp16` copies the views the chip uses.
+   - `./timing_model.sh runs/<signed-off run> views_fp16 config_fp16.json` then rewrites the `.lib` views with `model.sdc`.
+     - Tile signoff uses `tile.sdc`, where hold at the ports is a false path. The tile's clock insertion delay (1.6 ns at ff to 4.5 ns at ss) exceeds its 3 ns I/O delay, so port hold is only meaningful against the chip's clock tree.
+     - Without these hold checks the `.lib` views would carry no hold arcs, and the chip could not check hold into the tile.
+     - `model.sdc` keeps port hold timed, so every tile input gets a hold arc. Only post-route STA re-runs, on the signed-off state.
 2. **Chip:** in `librelane/openframe/`, run `./run_harden.sh config_fp16.json harden_fp16.log`.
    - The top design is `openframe_project_wrapper`. The four tiles are placed as macros, and the define `CORE_TILE_MACRO` makes `gpu.sv` instantiate them without parameter overrides.
-   - Chip timing uses the tiles' signed-off `.lib` views.
+   - **Chip timing** uses the tiles' `.lib` timing models (see step 1), which have hold arcs on every tile input.
+     - Without them the chip missed hold violations into the tiles: up to 0.21 ns at max_ff on the memory ready inputs.
+     - Loading each tile's full netlist and SPEF instead needs about 4 GB per corner. It also under-counts the boundary nets, because each SPEF stops at the tile pin.
    - **Pin template:** the chip starts from `openframe/pins_extended.def`, not from ChipFoundry's fixed DEF directly.
      - The fixed pins reach only 0.3 µm into the die, so the detailed router cannot place access points on them (DRT-1231).
      - `extend_pins.py` derives the copy with every signal pin extended 3 µm inward. Nothing outside the die boundary changes, and that band is what precheck compares with the empty wrapper.
