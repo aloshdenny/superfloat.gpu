@@ -5,6 +5,10 @@
 // > The GPU has one dispatch unit at the top level
 // > Manages processing of threads and marks kernel execution as done
 // > Sends off batches of threads in blocks to be executed by available compute cores
+// > The block count and the last block's thread count are registered from
+//   thread_count (written once per launch), and dispatch starts one cycle
+//   after start, so the per-core dispatch chain needs no division or
+//   multiplication in the same cycle.
 module dispatch #(
     parameter NUM_CORES = 2,
     parameter THREADS_PER_BLOCK = 4
@@ -33,9 +37,18 @@ module dispatch #(
     // Flatten outputs
     localparam TC_BITS = $clog2(THREADS_PER_BLOCK) + 1;
     
-    // Calculate the total number of blocks based on total threads & threads per block
-    wire [7:0] total_blocks;
-    assign total_blocks = 8'((32'(thread_count) + 32'(THREADS_PER_BLOCK) - 1) / 32'(THREADS_PER_BLOCK));
+    // Total blocks, and the thread count of the last (possibly partial) block,
+    // registered every cycle from thread_count. thread_count is stable for the
+    // whole kernel; the first cycle after start only arms dispatch, by which
+    // time these registers hold the values for the current thread_count.
+    reg [7:0]         total_blocks;
+    reg [7:0]         last_block;
+    reg [TC_BITS-1:0] last_block_threads;
+    always @(posedge clk) begin
+        total_blocks       <= 8'((32'(thread_count) + 32'(THREADS_PER_BLOCK) - 1) / 32'(THREADS_PER_BLOCK));
+        last_block         <= 8'((32'(thread_count) + 32'(THREADS_PER_BLOCK) - 1) / 32'(THREADS_PER_BLOCK)) - 8'd1;
+        last_block_threads <= TC_BITS'(32'(thread_count) - ((32'(thread_count) - 1) / 32'(THREADS_PER_BLOCK)) * 32'(THREADS_PER_BLOCK));
+    end
 
     // Keep track of how many blocks have been processed
     reg [7:0] blocks_dispatched; // How many blocks have been sent to cores?
@@ -78,7 +91,7 @@ module dispatch #(
             end
 
             // If the last block has finished processing, mark this kernel as done executing
-            if (blocks_done == total_blocks) begin 
+            if (start_execution && blocks_done == total_blocks) begin 
                 done <= 1;
             end
 
@@ -90,15 +103,15 @@ module dispatch #(
                 next_dispatched = blocks_dispatched;
                 
                 for (i = 0; i < NUM_CORES; i = i + 1) begin
-                    if (core_reset[i]) begin 
+                    if (start_execution && core_reset[i]) begin 
                         core_reset[i] <= 0;
 
                         // If this core was just reset, check if there are more blocks to be dispatched
                         if (next_dispatched < total_blocks) begin 
                             core_start[i] <= 1;
                             core_block_id[i] <= next_dispatched;
-                            core_thread_count[i] <= (next_dispatched == total_blocks - 1) 
-                                ? TC_BITS'(32'(thread_count) - (32'(next_dispatched) * 32'(THREADS_PER_BLOCK)))
+                            core_thread_count[i] <= (next_dispatched == last_block)
+                                ? last_block_threads
                                 : TC_BITS'(THREADS_PER_BLOCK);
 
                             next_dispatched = next_dispatched + 1;
