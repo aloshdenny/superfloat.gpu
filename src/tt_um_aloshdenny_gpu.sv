@@ -66,23 +66,6 @@ module tt_um_aloshdenny_gpu (
     wire [DATA_MEM_DATA_BITS*DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_data_flat;
     reg  [DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_ready;
 
-    // On-die 128B RAM32 scratchpad (high-speed data cache / scratch)
-    wire        scratch_ram_en;
-    wire [3:0]  scratch_ram_we;
-    wire [4:0]  scratch_ram_addr;
-    wire [31:0] scratch_ram_di;
-    wire [31:0] scratch_ram_do;
-
-    // Soft-flop 128B scratchpad (synthesized; same RAM32 1RW pinout)
-    RAM32 ram1 (
-        .CLK (clk),
-        .EN0 (scratch_ram_en),
-        .WE0 (scratch_ram_we),
-        .A0  (scratch_ram_addr),
-        .Di0 (scratch_ram_di),
-        .Do0 (scratch_ram_do)
-    );
-
     // GPU Instantiation
     gpu #(
         .DATA_MEM_ADDR_BITS(DATA_MEM_ADDR_BITS),
@@ -90,7 +73,11 @@ module tt_um_aloshdenny_gpu (
         .DATA_MEM_NUM_CHANNELS(DATA_MEM_NUM_CHANNELS),
         .PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS),
         .PROGRAM_MEM_DATA_BITS(PROGRAM_MEM_DATA_BITS),
-        .PROGRAM_MEM_NUM_CHANNELS(PROGRAM_MEM_NUM_CHANNELS)
+        .PROGRAM_MEM_NUM_CHANNELS(PROGRAM_MEM_NUM_CHANNELS),
+        .PROGRAM_CACHE_ENTRIES(0),
+        .NUM_CORES(2),
+        .THREADS_PER_BLOCK(2),
+        .SYSTOLIC_SIZE(2)
     ) gpu_core (
         .clk(clk),
         .reset(gpu_reset),
@@ -111,13 +98,7 @@ module tt_um_aloshdenny_gpu (
         .data_mem_write_valid(data_mem_write_valid),
         .data_mem_write_address_flat(data_mem_write_address_flat),
         .data_mem_write_data_flat(data_mem_write_data_flat),
-        .data_mem_write_ready(data_mem_write_ready),
-
-        .scratch_ram_en(scratch_ram_en),
-        .scratch_ram_we(scratch_ram_we),
-        .scratch_ram_addr(scratch_ram_addr),
-        .scratch_ram_di(scratch_ram_di),
-        .scratch_ram_do(scratch_ram_do)
+        .data_mem_write_ready(data_mem_write_ready)
     );
 
     // =========================================================================
