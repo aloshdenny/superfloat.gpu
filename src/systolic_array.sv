@@ -1,22 +1,25 @@
 `default_nettype none
 `timescale 1ns/1ns
 
-// SYSTOLIC ARRAY (SF16 Fixed-Point), weight-stationary
+// SYSTOLIC ARRAY (SF16 fixed point, FP16 or BF16), weight-stationary
 // > One ARRAY_SIZE x ARRAY_SIZE array per core tile (8x8 on OpenFrame).
-// > Negative zero is canonicalised once at the array edges; interior PEs only
-//   see values already cleaned by their neighbours.
+// > NUMBER_FORMAT: 0 = SF16 (systolic_pe), 1 = FP16, 2 = BF16 (fp_systolic_pe).
+// > SF16 only: negative zero is canonicalised once at the array edges;
+//   interior PEs only see values already cleaned by their neighbours.
 // > Weights shift down one row per load_weights pulse (load rows N-1 .. 0).
 // > Activations and the MAC pipeline run freely; accumulators move only on
 //   compute (valid) or clear.
-// > results_flat carries raw two's-complement accumulators; the reader converts
-//   the one cell it selects to SF16 sign-magnitude.
+// > SF16: results_flat carries raw two's-complement accumulators; the reader
+//   converts the one cell it selects to SF16 sign-magnitude. FP16/BF16:
+//   results_flat carries the accumulators as they are.
 // > All control inputs are registered once, one copy per row.
 // > PIPE_INTERVAL >= ARRAY_SIZE disables mid-array pipeline registers (default).
 
 module systolic_array #(
     parameter DATA_BITS    = 16,
     parameter ARRAY_SIZE   = 4,
-    parameter PIPE_INTERVAL = ARRAY_SIZE
+    parameter PIPE_INTERVAL = ARRAY_SIZE,
+    parameter NUMBER_FORMAT = 0             // 0 SF16, 1 FP16, 2 BF16
 ) (
     input  wire clk,
     input  wire reset,
@@ -36,9 +39,10 @@ module systolic_array #(
     // -----------------------------------------------------------------------
     reg signed [DATA_BITS*ARRAY_SIZE-1:0] a_reg, b_reg;
 
-    // SF16 negative zero (0x8000) is canonicalised to +0 on entry.
+    // SF16 negative zero (0x8000) is canonicalised to +0 on entry. In FP16 and
+    // BF16 it is a distinct value and passes through.
     function automatic [DATA_BITS-1:0] canon(input [DATA_BITS-1:0] x);
-        canon = (x == {1'b1, {(DATA_BITS-1){1'b0}}}) ? {DATA_BITS{1'b0}} : x;
+        canon = (NUMBER_FORMAT == 0 && x == {1'b1, {(DATA_BITS-1){1'b0}}}) ? {DATA_BITS{1'b0}} : x;
     endfunction
 
     // Per-row registered control signals (one FF per row per signal)
@@ -108,18 +112,36 @@ module systolic_array #(
 
                 wire signed [DATA_BITS-1:0] a_pe_out, b_pe_out;
 
-                systolic_pe pe (
-                    .clk            (clk),
-                    .reset          (reset),
-                    .clear_acc      (ca_row[row]),
-                    .load_weight    (lw_row[row]),
-                    .compute_enable (ce_row[row]),
-                    .a_in           (a_wire[row][col]),
-                    .b_in           (b_wire[row][col]),
-                    .a_out          (a_pe_out),
-                    .b_out          (b_pe_out),
-                    .acc_raw        (results[row][col])
-                );
+                if (NUMBER_FORMAT == 0) begin : g_sf16
+                    systolic_pe pe (
+                        .clk            (clk),
+                        .reset          (reset),
+                        .clear_acc      (ca_row[row]),
+                        .load_weight    (lw_row[row]),
+                        .compute_enable (ce_row[row]),
+                        .a_in           (a_wire[row][col]),
+                        .b_in           (b_wire[row][col]),
+                        .a_out          (a_pe_out),
+                        .b_out          (b_pe_out),
+                        .acc_raw        (results[row][col])
+                    );
+                end else begin : g_fp
+                    fp_systolic_pe #(
+                        .EXP_BITS       (NUMBER_FORMAT == 2 ? 8 : 5),
+                        .MANT_BITS      (NUMBER_FORMAT == 2 ? 7 : 10)
+                    ) pe (
+                        .clk            (clk),
+                        .reset          (reset),
+                        .clear_acc      (ca_row[row]),
+                        .load_weight    (lw_row[row]),
+                        .compute_enable (ce_row[row]),
+                        .a_in           (a_wire[row][col]),
+                        .b_in           (b_wire[row][col]),
+                        .a_out          (a_pe_out),
+                        .b_out          (b_pe_out),
+                        .acc            (results[row][col])
+                    );
+                end
 
                 // Horizontal A-flow: optional pipeline register at col boundary
                 if ((col + 1) < ARRAY_SIZE && ((col + 1) % PIPE_INTERVAL) == 0) begin : g_a_pipe
