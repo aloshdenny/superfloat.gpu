@@ -84,6 +84,13 @@ module openframe_project_wrapper (
 
     // ------------------------------------------------------------------
     // Pad configuration: one CF_gpio_config per pad, mode from the pin map
+    //
+    // The configuration constants come from tie cells, not from the pad's
+    // gpio_loopback_zero/one pins. A loopback pin would reach its pad's
+    // config outputs only through feedthrough buffers (vccd1 standard cells
+    // either way), and one loopback_zero pin feeds up to 11 of them, over
+    // the fanout limit. Tie cells are placed one per output next to the pad.
+    // The loopback pins are left unconnected.
     // ------------------------------------------------------------------
 
     genvar g;
@@ -96,8 +103,8 @@ module openframe_project_wrapper (
                 .io_out(pad_out[g]),
                 .io_in(pad_in[g]),
                 .io_oeb(1'b1),
-                .gpio_zero(gpio_loopback_zero[g]),
-                .gpio_one(gpio_loopback_one[g]),
+                .gpio_zero(1'b0),
+                .gpio_one(1'b1),
                 .gpio_in(gpio_in[g]),
                 .gpio_dm({gpio_dm2[g], gpio_dm1[g], gpio_dm0[g]}),
                 .gpio_inp_dis(gpio_inp_dis[g]),
