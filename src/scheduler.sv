@@ -177,8 +177,10 @@ module scheduler #(
                         // Wait for divergence handling to complete
                         core_state <= UPDATE;
                     end else begin 
-                        // Use divergence-aware next PC
-                        current_pc <= diverged ? diverge_next_pc : next_pc[THREADS_PER_BLOCK-1];
+                        // Use divergence-aware next PC. Without divergence all active
+                        // threads agree; thread 0 is active in every dispatched block,
+                        // including a partial last block where high threads are disabled.
+                        current_pc <= diverged ? diverge_next_pc : next_pc[0];
 
                         // Update is synchronous so we move on after one cycle
                         core_state <= FETCH;
