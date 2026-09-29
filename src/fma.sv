@@ -3,8 +3,9 @@
 
 // OPTIMIZED FUSED MULTIPLY-ADD UNIT (SF16 Fixed-Point, Sign-Magnitude)
 // 2-cycle pipelined MAC matched to the core scheduler:
-// - REQUEST: latch rs/rt/rq into R1/R2/R4
-// - EXECUTE cycle 0: compute (rs * rt) >> 15 with SF16 saturation, latch into R3
+// - rs/rt/rq are held by the core from DECODE; (rs * rt) >> 15 is registered
+//   every cycle, so it is ready by EXECUTE
+// - EXECUTE cycle 0: canonicalise the registered product, latch into R3
 // - EXECUTE cycle 1: compute rq + R3 with SF16 saturation, latch to output
 //
 // SF16: x = (-1)^s · m / 2^15,  m ∈ {0, 1, ..., 2^15 - 1}
@@ -54,11 +55,25 @@ module fma #(
     // 15×15 unsigned multiply → 30-bit SF31 mantissa
     wire [29:0] product_unsigned = mag_r1 * mag_r2;
 
-    // Shift right 15 to get SF16 mantissa
-    wire [14:0] product_mag = product_unsigned[29:15];
+    // The product is registered every cycle. rs/rt are the core's operand
+    // registers, set at DECODE and held through EXECUTE, so by the multiply
+    // stage (EXECUTE cycle 0) this register holds the product of the current
+    // operands. Registering it keeps the multiplier and the zero-detect below
+    // in separate cycles.
+    reg [14:0] product_mag;     // product >> 15 (SF16 mantissa)
+    reg        product_sign;
+    always @(posedge clk) begin
+        if (reset) begin
+            product_mag  <= 15'b0;
+            product_sign <= 1'b0;
+        end else begin
+            product_mag  <= product_unsigned[29:15];
+            product_sign <= sign_product;
+        end
+    end
 
     // Reconstruct SF16 product (sign-magnitude)
-    wire [DATA_BITS-1:0] product_sm = {sign_product, product_mag};
+    wire [DATA_BITS-1:0] product_sm = {product_sign, product_mag};
     // Canonicalize: if mantissa is 0 and sign is 1, force to +0
     wire [DATA_BITS-1:0] product_saturated = (product_mag == 15'b0) ? {DATA_BITS{1'b0}} : product_sm;
 
