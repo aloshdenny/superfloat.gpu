@@ -60,6 +60,29 @@ All numbers below come from hardened layouts, not estimates. Each PE was hardene
    - A faster PE only helps if the core pipeline is also reworked.
 3. **Across the chip**, the lean PE saves about 256 × 1,536 µm² ≈ 0.39 mm² of PE area and about 20 mW at full MAC rate.
 
+## FP16 and BF16 PEs
+
+The FP16 and BF16 chip variants use `fp_systolic_pe` (`src/fp_systolic_pe.sv`), a lean-contract PE with a fused multiply-add (one rounding, round to nearest even, flush to zero). Its 5-stage pipeline is multiply, align, add, round. The accumulator loop (align → add → round) spans three cycles, so a new compute can start at most every third cycle. The core issues SYS computes at least six cycles apart.
+
+The FP PEs were hardened with the same LibreLane settings as the SF16 lean PE, on a 200 × 220 µm die because they are larger. Power uses one stimulus for all three PEs (`librelane/pe_study/tb_power_fp.sv`): one weight load (≈ 0.337), then a compute every second cycle with a fresh random activation, and a clear every 64 computes. SF16 activations are |a| < 0.25; FP16/BF16 activations are |a| in [0.125, 2). The SF16 row re-measures the lean PE's 20 ns layout from the table above under this stimulus.
+
+| | SF16 (lean) | FP16 | BF16 |
+|---|---|---|---|
+| Std-cell area at 20 ns | 16,610.9 µm² | 22,469.0 µm² (+35%) | 18,883.1 µm² (+14%) |
+| Flip-flops | 66 | 183 | 168 |
+| Setup slack at 20 ns, max_ss_100C_1v60 | +7.311 ns | +6.862 ns | +5.902 ns |
+| Fmax at max_ss, from a 10 ns harden | 92.2 MHz | 90.8 MHz | 81.4 MHz |
+| Fmax at nom_tt, same runs | 175.5 MHz | 171.5 MHz | 156.9 MHz |
+| Worst hold slack at 20 ns | +0.047 ns | +0.092 ns | +0.043 ns |
+| Power, compute every 2nd cycle, 50 MHz, nom_tt | 0.782 mW | 1.710 mW (2.2×) | 1.500 mW (1.9×) |
+| Magic/KLayout DRC, LVS, antenna, slew, cap | 0 | 0 | 0 |
+
+- **Where the FP cost goes:** most of it is pipeline state, not arithmetic.
+  - The FP PEs have almost three times the flip-flops. Sequential plus clock power is 61% of the FP16 total and 65% of BF16.
+  - The 11 × 11 (FP16) and 8 × 8 (BF16) significand multipliers are smaller than SF16's 15 × 15. The alignment shifter, normaliser and wider adder more than make up the difference.
+- **Timing:** FP16 is timed like SF16. BF16 is slower despite its narrower datapath: its 8-bit exponent widens the alignment compare and the exponent arithmetic.
+- **An earlier FP PE was 4 stages** (align and add in one cycle). It missed 20 ns at max_ss by 0.26 ns (BF16), which is why the adder is split.
+
 ## Reproducing
 
 `librelane/pe_study/` contains the variant RTL (`variants/`), the equivalence bench, the power stimulus and STA script, and the metrics extractor.
@@ -73,3 +96,4 @@ All numbers below come from hardened layouts, not estimates. Each PE was hardene
 - **Power:**
   1. Simulate `tb_power.sv` against the hardened netlist with the Sky130 cell models (`-DFUNCTIONAL -DUNIT_DELAY=#1`; add `-DBASE` for the original PE's port list).
   2. Run `sta -exit power.tcl` with `NL`, `SPEF`, `SDC`, `VCD` and `LIB` set in the environment.
+- **FP16/BF16 power:** the same steps with `tb_power_fp.sv` (`-P tb_power_fp.FMT=1` or `2`, or `-DSF16 -P tb_power_fp.FMT=0` for the lean PE) and `power_fp.tcl` (which also needs `TOP`). The FP PEs are hardened from `src/fp_arith.sv` and `src/fp_systolic_pe.sv`, with `SYNTH_PARAMETERS` `EXP_BITS`/`MANT_BITS` = 5/10 (FP16) or 8/7 (BF16).
