@@ -1,7 +1,7 @@
 `default_nettype none
 `timescale 1ns/1ns
 
-// Vector testbench for src/fp_arith.sv: fp_mul -> fp_add -> fp_round must equal
+// Vector testbench for src/fp_arith.sv: fp_mul -> fp_align -> fp_addsub -> fp_round must equal
 // the reference round(a*b + c) of helpers/fp16fmt.py for every line of VEC
 // ("a b c expected", hex). Vectors: test/fp_arith_vectors.py. Run: make test_fp_arith
 module tb_fp_arith;
@@ -12,8 +12,10 @@ module tb_fp_arith;
 
     reg  [W-1:0] a, b, c, want;
     wire [2*M-1:0] prod;
-    wire signed [EW-1:0] p_top, s_top;
+    wire signed [EW-1:0] p_top, al_top, s_top;
     wire p_sign, p_zero, p_inf, p_nan;
+    wire [AW-1:0] hi, lo;
+    wire hi_sign, lo_sign, sub, al_zero, al_inf, inf_sign, al_nan;
     wire [AW:0] mag;
     wire s_sign, s_zero, s_inf, s_nan;
     wire [W-1:0] got;
@@ -21,9 +23,14 @@ module tb_fp_arith;
     fp_mul #(.EXP_BITS(EXP_BITS), .MANT_BITS(MANT_BITS)) u_mul (
         .a(a), .b(b), .prod(prod), .top_exp(p_top),
         .sign(p_sign), .zero(p_zero), .inf(p_inf), .nan(p_nan));
-    fp_add #(.EXP_BITS(EXP_BITS), .MANT_BITS(MANT_BITS)) u_add (
+    fp_align #(.EXP_BITS(EXP_BITS), .MANT_BITS(MANT_BITS)) u_align (
         .prod(prod), .p_top(p_top), .p_sign(p_sign), .p_zero(p_zero), .p_inf(p_inf), .p_nan(p_nan),
-        .c(c), .mag(mag), .top_exp(s_top), .sign(s_sign), .zero(s_zero), .inf(s_inf), .nan(s_nan));
+        .c(c), .hi(hi), .lo(lo), .top_exp(al_top), .hi_sign(hi_sign), .lo_sign(lo_sign),
+        .sub(sub), .zero(al_zero), .inf(al_inf), .inf_sign(inf_sign), .nan(al_nan));
+    fp_addsub #(.EXP_BITS(EXP_BITS), .MANT_BITS(MANT_BITS)) u_addsub (
+        .hi(hi), .lo(lo), .in_top(al_top), .hi_sign(hi_sign), .lo_sign(lo_sign),
+        .sub(sub), .in_zero(al_zero), .in_inf(al_inf), .inf_sign(inf_sign), .in_nan(al_nan),
+        .mag(mag), .top_exp(s_top), .sign(s_sign), .zero(s_zero), .inf(s_inf), .nan(s_nan));
     fp_round #(.EXP_BITS(EXP_BITS), .MANT_BITS(MANT_BITS)) u_round (
         .mag(mag), .top_exp(s_top), .sign(s_sign), .zero(s_zero), .inf(s_inf), .nan(s_nan),
         .result(got));

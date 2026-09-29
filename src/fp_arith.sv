@@ -3,12 +3,14 @@
 
 // IEEE-style 16-bit floating-point datapath (FP16: 5/10, BF16: 8/7)
 //
-// Three combinational stages that together compute round(a*b + c), the fused
+// Four combinational stages that together compute round(a*b + c), the fused
 // multiply-add used by the systolic PEs, the per-thread FMA units and the
 // activation units. Callers place a register after each stage.
 //
 //   fp_mul   : exact significand product and its exponent
-//   fp_add   : align the product and the addend (sticky right shift) and add
+//   fp_align : order the product and the addend by exponent, shift the
+//              smaller one right (sticky), classify NaN / infinity / zero
+//   fp_addsub: add or subtract the aligned significands
 //   fp_round : normalise, round to nearest even, flush to zero, overflow
 //
 // Semantics (bit-exact reference: test/helpers/fp16fmt.py):
@@ -20,9 +22,11 @@
 //   - IEEE 754 zero signs: an exact zero sum of non-zero terms is +0,
 //     0 + 0 is -0 only if both are -0
 //
-// The adder window holds the full 2M-bit product plus three bits below it.
-// When an operand is shifted far enough to lose bits, cancellation is limited
-// to one bit, so a single sticky bit keeps the rounding exact.
+// The adder window (AW bits) holds the full 2M-bit product plus three bits
+// below it. When an operand is shifted far enough to lose bits, cancellation
+// is limited to one bit, so a single sticky bit keeps the rounding exact.
+// Both operands are placed with their weight-2^top bit at AW-1: the product
+// as {prod, 000} (its top bit may be 0), the addend as {1, frac, 0...}.
 
 module fp_mul #(
     parameter EXP_BITS  = 5,
@@ -69,7 +73,7 @@ module fp_mul #(
 endmodule
 
 
-module fp_add #(
+module fp_align #(
     parameter EXP_BITS  = 5,
     parameter MANT_BITS = 10,
     parameter W  = 1 + EXP_BITS + MANT_BITS,
@@ -84,15 +88,20 @@ module fp_add #(
     input  wire                 p_inf,
     input  wire                 p_nan,
     input  wire [W-1:0]         c,
-    output reg  [AW:0]          mag,       // bit AW is the carry
-    output reg  signed [EW-1:0] top_exp,   // unbiased exponent of mag[AW-1]
-    output reg                  sign,
-    output wire                 zero,      // exact zero result (sign valid)
+    output reg  [AW-1:0]        hi,        // operand with the larger exponent
+    output reg  [AW-1:0]        lo,        // the other, aligned to hi (sticky in bit 0)
+    output reg  signed [EW-1:0] top_exp,   // unbiased exponent of bit AW-1
+    output reg                  hi_sign,
+    output reg                  lo_sign,
+    output wire                 sub,       // effective subtraction of two non-zero terms
+    output wire                 zero,      // both terms zero: result is (p_sign & c_sign) zero
     output wire                 inf,
+    output wire                 inf_sign,
     output wire                 nan
 );
     localparam integer BIAS    = (1 << (EXP_BITS - 1)) - 1;
     localparam integer EXP_ONE = (1 << EXP_BITS) - 1;
+    localparam integer SW      = $clog2(AW + 1);             // bits of a clamped shift
 
     wire [EXP_BITS-1:0]  ce = c[W-2 -: EXP_BITS];
     wire [MANT_BITS-1:0] cf = c[MANT_BITS-1:0];
@@ -101,71 +110,99 @@ module fp_add #(
     wire c_inf  = (ce == EXP_ONE) && (cf == 0);
     wire c_nan  = (ce == EXP_ONE) && (cf != 0);
 
-    assign nan = p_nan || c_nan || (p_inf && c_inf && (p_sign != c_sign));
-    assign inf = !nan && (p_inf || c_inf);
+    assign nan      = p_nan || c_nan || (p_inf && c_inf && (p_sign != c_sign));
+    assign inf      = !nan && (p_inf || c_inf);
+    assign inf_sign = p_inf ? p_sign : c_sign;
+    assign zero     = p_zero && c_zero;
+    assign sub      = (p_sign != c_sign) && !p_zero && !c_zero;
 
     wire [AW-1:0] p_w = {prod, 3'b000};
     wire [AW-1:0] c_w = {1'b1, cf, {M{1'b0}}, 3'b000};
     wire signed [EW-1:0] c_top = $signed({{(EW-EXP_BITS){1'b0}}, ce}) - $signed(EW'(BIAS));
-    wire signed [EW:0]   diff  = $signed({p_top[EW-1], p_top}) - $signed({c_top[EW-1], c_top});
 
-    function automatic [AW-1:0] shr_sticky(input [AW-1:0] v, input integer n);
-        reg [AW-1:0] kept;
-        begin
-            if (n <= 0) begin
-                shr_sticky = v;
-            end else if (n >= AW) begin
-                shr_sticky = {{(AW-1){1'b0}}, |v};
-            end else begin
-                kept = v >> n;
-                shr_sticky = kept | {{(AW-1){1'b0}}, ((kept << n) != v)};
-            end
-        end
-    endfunction
+    // Both differences in parallel; the sign of one picks the order.
+    wire signed [EW:0] d_pc = $signed({p_top[EW-1], p_top}) - $signed({c_top[EW-1], c_top});
+    wire signed [EW:0] d_cp = $signed({c_top[EW-1], c_top}) - $signed({p_top[EW-1], p_top});
+    wire p_high = !d_pc[EW];                                  // p_top >= c_top
+    wire [EW:0] span = p_high ? d_pc : d_cp;                  // >= 0
+    wire [SW-1:0] shift = (span >= AW) ? SW'(AW) : span[SW-1:0];
 
-    reg [AW-1:0] pa, ca;
-    reg          both_zero_sign;
+    wire [AW-1:0] sh_in = p_high ? c_w : p_w;
+    // Right shift with sticky: bits shifted out are ORed into bit 0.
+    wire [AW-1:0] sh_out = sh_in >> shift;
+    wire [AW-1:0] lost_mask  = ~({AW{1'b1}} << shift);
+    wire          sh_sticky  = |(sh_in & lost_mask);
+
     always @(*) begin
-        pa = p_w;
-        ca = c_w;
-        top_exp = p_top;
-        if (p_zero) begin
-            pa = {AW{1'b0}};
-            top_exp = c_top;
-        end else if (c_zero) begin
-            ca = {AW{1'b0}};
-        end else if (!diff[EW]) begin                       // product is at least as high
-            ca = shr_sticky(c_w, diff);
+        if (p_zero) begin                                     // result is c (or 0 + 0)
+            hi = c_w;  lo = {AW{1'b0}};  top_exp = c_top;
+            hi_sign = c_sign;  lo_sign = p_sign;          // 0 + 0 uses both signs
+        end else if (c_zero) begin                            // result is the product
+            hi = p_w;  lo = {AW{1'b0}};  top_exp = p_top;
+            hi_sign = p_sign;  lo_sign = c_sign;
+        end else if (p_high) begin
+            hi = p_w;  lo = sh_out | {{(AW-1){1'b0}}, sh_sticky};  top_exp = p_top;
+            hi_sign = p_sign;  lo_sign = c_sign;
         end else begin
-            pa = shr_sticky(p_w, -diff);
-            top_exp = c_top;
+            hi = c_w;  lo = sh_out | {{(AW-1){1'b0}}, sh_sticky};  top_exp = c_top;
+            hi_sign = c_sign;  lo_sign = p_sign;
         end
     end
+endmodule
 
-    // Effective add or subtract; the larger magnitude sets the sign.
-    wire subtract = (p_sign != c_sign) && !p_zero && !c_zero;
-    wire p_ge_c   = (pa >= ca);
+
+module fp_addsub #(
+    parameter EXP_BITS  = 5,
+    parameter MANT_BITS = 10,
+    parameter M  = MANT_BITS + 1,
+    parameter EW = EXP_BITS + 4,
+    parameter AW = 2 * M + 3
+) (
+    input  wire [AW-1:0]        hi,
+    input  wire [AW-1:0]        lo,
+    input  wire signed [EW-1:0] in_top,
+    input  wire                 hi_sign,
+    input  wire                 lo_sign,
+    input  wire                 sub,
+    input  wire                 in_zero,   // both terms zero
+    input  wire                 in_inf,
+    input  wire                 inf_sign,
+    input  wire                 in_nan,
+    output reg  [AW:0]          mag,       // bit AW is the carry
+    output wire signed [EW-1:0] top_exp,   // unbiased exponent of mag[AW-1]
+    output reg                  sign,
+    output wire                 zero,      // exact zero result (sign valid)
+    output wire                 inf,
+    output wire                 nan
+);
+    wire [AW:0] sum   = {1'b0, hi} + {1'b0, lo};
+    wire [AW:0] d_hl  = {1'b0, hi} - {1'b0, lo};
+    wire [AW:0] d_lh  = {1'b0, lo} - {1'b0, hi};
+    wire        equal = (hi == lo);
+
+    assign top_exp = in_top;
+    assign nan  = in_nan;
+    assign inf  = !in_nan && in_inf;
+    assign zero = !in_nan && !in_inf && (in_zero || (sub && equal));
+
     always @(*) begin
-        if (p_zero && c_zero) begin
-            mag  = {(AW+1){1'b0}};
-            sign = p_sign & c_sign;
-        end else if (!subtract) begin
-            mag  = {1'b0, pa} + {1'b0, ca};
-            sign = p_zero ? c_sign : p_sign;
-        end else if (p_ge_c) begin
-            mag  = {1'b0, pa} - {1'b0, ca};
-            sign = (pa == ca) ? 1'b0 : p_sign;              // exact cancellation is +0
+        if (!sub) begin
+            mag  = sum;
+            sign = hi_sign;
+        end else if (!d_hl[AW]) begin                         // hi >= lo
+            mag  = d_hl;
+            sign = hi_sign;
         end else begin
-            mag  = {1'b0, ca} - {1'b0, pa};
-            sign = c_sign;
+            mag  = d_lh;
+            sign = lo_sign;
         end
-        if (p_inf)                                          // an infinite term sets the sign
-            sign = p_sign;
-        else if (c_inf)
-            sign = c_sign;
+        if (in_inf)
+            sign = inf_sign;                                  // an infinite term sets the sign
+        else if (in_zero)
+            sign = hi_sign & lo_sign;                     // 0 + 0: -0 only if both are -0
+        else if (sub && equal)
+            sign = 1'b0;                                      // exact cancellation is +0
     end
-
-    assign zero = !nan && !inf && (mag == 0);
 endmodule
 
 
@@ -189,43 +226,54 @@ module fp_round #(
     localparam integer EXP_ONE = (1 << EXP_BITS) - 1;
     localparam integer EMIN    = 1 - BIAS;
     localparam integer EMAX    = EXP_ONE - 1 - BIAS;
-    localparam integer LW      = $clog2(AW + 2);
+    localparam integer PW      = 32;                          // padded normaliser width
+    localparam integer NW      = 5;                           // log2(PW)
 
-    // Position of the leading one (mag is non-zero whenever it is used).
-    reg [LW-1:0] lead;
-    integer i;
+    // Leading-zero count and normalising shift together, in log2(PW) steps:
+    // each step tests the top half of what is left and shifts it out if zero.
+    // mag is non-zero whenever the result is used.
+    reg [PW-1:0] v;
+    reg [NW-1:0] nlz;
     always @(*) begin
-        lead = {LW{1'b0}};
-        for (i = 0; i <= AW; i = i + 1)
-            if (mag[i]) lead = LW'(i);
+        v   = {mag, {(PW-AW-1){1'b0}}};
+        nlz = {NW{1'b0}};
+        if (v[31:16] == 0) begin v = v << 16; nlz[4] = 1'b1; end
+        if (v[31:24] == 0) begin v = v << 8;  nlz[3] = 1'b1; end
+        if (v[31:28] == 0) begin v = v << 4;  nlz[2] = 1'b1; end
+        if (v[31:30] == 0) begin v = v << 2;  nlz[1] = 1'b1; end
+        if (v[31]    == 0) begin v = v << 1;  nlz[0] = 1'b1; end
     end
 
-    wire [AW:0] norm = mag << (AW - lead);                  // leading one at bit AW
-    wire signed [EW:0] exp_lead = $signed({top_exp[EW-1], top_exp}) + $signed({1'b0, lead})
-                                - $signed((EW+1)'(AW - 1));
-    wire [M-1:0] sig    = norm[AW -: M];
-    wire         rbit   = norm[AW - M];
-    wire         sticky = |norm[AW - M - 1:0];
+    // The leading one of mag at bit AW-nlz weighs 2^(top_exp + 1 - nlz).
+    wire signed [EW:0] exp_lead = $signed({top_exp[EW-1], top_exp}) + $signed((EW+1)'(1))
+                                - $signed({{(EW+1-NW){1'b0}}, nlz});
+    wire signed [EW:0] exp_up   = exp_lead + $signed((EW+1)'(1));
+
+    wire [M-1:0] sig    = v[PW-1 -: M];
+    wire         rbit   = v[PW-1-M];
+    wire         sticky = |v[PW-2-M:0];
     wire         up     = rbit && (sticky || sig[0]);
     wire [M:0]   sig_r  = {1'b0, sig} + {{M{1'b0}}, up};
-    wire         carry  = sig_r[M];
-    wire signed [EW:0] exp_r = exp_lead + $signed({{EW{1'b0}}, carry});
-    wire [MANT_BITS-1:0] frac = carry ? sig_r[M-1:1] : sig_r[MANT_BITS-1:0];
-    wire [EW:0] ef = exp_r + $signed((EW+1)'(BIAS));
+    wire         carry  = sig_r[M];                           // sig was all ones: 1.000 x 2^+1
+    wire [MANT_BITS-1:0] frac = carry ? {MANT_BITS{1'b0}} : sig_r[MANT_BITS-1:0];
+
+    wire tiny     = exp_lead < $signed((EW+1)'(EMIN));
+    wire ovf_lead = exp_lead > $signed((EW+1)'(EMAX));
+    wire ovf_up   = exp_up   > $signed((EW+1)'(EMAX));
+    wire [EXP_BITS-1:0] ef_lead = EXP_BITS'(exp_lead + $signed((EW+1)'(BIAS)));
+    wire [EXP_BITS-1:0] ef_up   = EXP_BITS'(exp_up + $signed((EW+1)'(BIAS)));
 
     always @(*) begin
         if (nan) begin
             result = {1'b0, {EXP_BITS{1'b1}}, 1'b1, {(MANT_BITS-1){1'b0}}};
         end else if (inf) begin
             result = {sign, {EXP_BITS{1'b1}}, {MANT_BITS{1'b0}}};
-        end else if (zero || mag == 0) begin
+        end else if (zero || tiny) begin                      // tiny before rounding: flush
             result = {sign, {(W-1){1'b0}}};
-        end else if (exp_lead < $signed((EW+1)'(EMIN))) begin
-            result = {sign, {(W-1){1'b0}}};                // tiny before rounding: flush
-        end else if (exp_r > $signed((EW+1)'(EMAX))) begin
+        end else if (carry ? ovf_up : ovf_lead) begin
             result = {sign, {EXP_BITS{1'b1}}, {MANT_BITS{1'b0}}};
         end else begin
-            result = {sign, ef[EXP_BITS-1:0], frac};
+            result = {sign, carry ? ef_up : ef_lead, frac};
         end
     end
 endmodule
