@@ -32,3 +32,6 @@ test/tb.fst
 test/*.fst
 
 artifacts/
+
+# Hardened core_tile views copied for the chip-level harden (large, regenerable)
+librelane/core_tile/views/
