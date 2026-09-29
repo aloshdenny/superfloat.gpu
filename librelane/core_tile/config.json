@@ -57,7 +57,7 @@
     "PL_RESIZER_SETUP_SLACK_MARGIN": 0.3,
     "PL_RESIZER_SETUP_MAX_BUFFER_PCT": 40,
     "PL_RESIZER_SETUP_REPAIR_TNS_PCT": 100,
-    "PL_RESIZER_HOLD_SLACK_MARGIN": 0.05,
+    "PL_RESIZER_HOLD_SLACK_MARGIN": 0.1,
     "PL_RESIZER_HOLD_MAX_BUFFER_PCT": 80,
     "PL_RESIZER_HOLD_REPAIR_TNS_PCT": 100,
     "PL_RESIZER_FIX_HOLD_FIRST": false,
@@ -71,7 +71,7 @@
     "GRT_RESIZER_SETUP_SLACK_MARGIN": 0.3,
     "GRT_RESIZER_SETUP_MAX_BUFFER_PCT": 40,
     "GRT_RESIZER_SETUP_REPAIR_TNS_PCT": 100,
-    "GRT_RESIZER_HOLD_SLACK_MARGIN": 0.05,
+    "GRT_RESIZER_HOLD_SLACK_MARGIN": 0.1,
     "GRT_RESIZER_HOLD_MAX_BUFFER_PCT": 80,
     "GRT_RESIZER_HOLD_REPAIR_TNS_PCT": 100,
     "GRT_RESIZER_ALLOW_SETUP_VIOS": false,
@@ -109,7 +109,15 @@
         "sky130_fd_sc_hd__dlygate4sd3_1",
         "sky130_fd_sc_hd__dlymetal6s2s_1",
         "sky130_fd_sc_hd__dlymetal6s4s_1",
-        "sky130_fd_sc_hd__dlymetal6s6s_1"
+        "sky130_fd_sc_hd__dlymetal6s6s_1",
+        "sky130_fd_sc_hd__a2111oi_0",
+        "sky130_fd_sc_hd__a21boi_0",
+        "sky130_fd_sc_hd__and2_0",
+        "sky130_fd_sc_hd__einvn_0",
+        "sky130_fd_sc_hd__o21ai_0",
+        "sky130_fd_sc_hd__o311ai_0",
+        "sky130_fd_sc_hd__or2_0",
+        "sky130_fd_sc_hd__o31ai_1"
     ],
     "TIMING_VIOLATION_CORNERS": [
         "*"
