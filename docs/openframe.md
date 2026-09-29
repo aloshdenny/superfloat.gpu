@@ -1,0 +1,128 @@
+# Atreides on ChipFoundry OpenFrame
+
+This document covers the `cf-openframe` build of the Atreides SF16 GPU for the ChipFoundry OpenFrame harness on SKY130: the architecture, the floorplan, the pin map, the memory bus protocol a host must implement, and how to simulate and harden the design. The Tiny Tapeout build on `main` is separate and unaffected.
+
+## Architecture
+
+| Item | Value |
+|---|---|
+| Compute tiles | 4 |
+| Threads per tile (block size) | 8 |
+| Systolic array per tile | 8 × 8 SF16, weight-stationary |
+| MAC units | 256 |
+| Target clock | 50 MHz (20 ns) |
+| Program memory (host side) | 512 × 16-bit instructions |
+| Data memory (host side) | 64 K × 16-bit words |
+| On-die scratchpad | 128 B per tile at 0xFFC0–0xFFFF, private to the tile |
+
+Each **core tile** (`src/core_tile.sv`) is one hardened macro. It contains:
+- one core (fetcher, scheduler, and 8 threads, each with its own ALU, FMA, activation unit, LSU, register file and PC)
+- the 8 × 8 systolic array
+- the instruction decoder
+- the private scratchpad
+- an arbiter that merges the 8 LSUs into a single data-memory port
+
+The top level (`src/superfloat_openframe.sv`) holds only the block dispatcher, the device control register, a launch sequencer and the pin bus (`src/openframe_bus.sv`).
+
+### Programming notes
+
+- **Thread indices:** `%threadIdx` runs 0–7 and `%blockDim` is 8. A launch of *N* threads is split into ⌈N/8⌉ blocks, dispatched to free tiles in order. The last block may be partial; its disabled threads do not execute stores.
+- **Systolic array:** thread *i* supplies row *i* of the activation stream through R0 and column *i* of the weights through R1.
+  - `SYS load` shifts the weight rows in from the top, so load rows 7, 6, …, 0.
+  - Each `SYS compute` accumulates `R0 × weight` into every PE of the row. Column 0 uses the current operand; columns 1–7 use the previous one. Issue one extra `SYS compute` with R0 = 0 at the end.
+  - `SYS read Rd` returns the cell selected by `R0[5:0]` (row × 8 + column).
+  - `test/test_openframe_tile.py` contains a complete kernel and a bit-exact reference model.
+- **Scratchpad:** loads and stores to 0xFFC0–0xFFFF stay in the tile and never reach the pins. Each tile has its own copy, so the scratchpad is for data shared among the threads of one block.
+
+## Floorplan
+
+The user area is the OpenFrame wrapper, 3166.63 × 4766.63 µm (15.09 mm²). The core area is inset 40 µm on every side for the power ring, which leaves 14.47 mm².
+
+| Instance | Origin (µm) | Orientation |
+|---|---|---|
+| `tiles[0]` | (60, 70) | N |
+| `tiles[1]` | (1606.63, 70) | FN |
+| `tiles[2]` | (60, 2446.63) | FS |
+| `tiles[3]` | (1606.63, 2446.63) | S |
+
+- **Tile size:** 1500 × 2250 µm.
+- **Pins:** every tile's pins sit on the edge facing the horizontal centre strip (y 2320–2446.63 µm). The top-level logic is placed in that strip.
+- **Power:** vccd1 and vssd1 enter on the east edge through ChipFoundry's `vccd1_connection` and `vssd1_connection` macros.
+- **Power grid:** met4 vertical and met5 horizontal straps at a 180 µm pitch with a 20 µm core ring. Each tile's met4 grid connects to the chip's met5 straps.
+
+## Pin map
+
+| GPIO | Edge | Dir | Signal |
+|---|---|---|---|
+| 0–14 | east | out | `bus_out[14:0]` |
+| 15 | north | out | `bus_out[15]` |
+| 16 | north | out | `bus_sel`: 0 = program memory, 1 = data memory |
+| 17 | north | out | `bus_we` |
+| 18 | north | out | `bus_beat`: 0 = address beat, 1 = write-data beat |
+| 19 | north | out | `bus_req` |
+| 20 | north | in, pull-down | `bus_ack` |
+| 21 | north | in, pull-down | `start` |
+| 22 | north | out | `done` |
+| 23 | north | out | `core_active[0]` |
+| 24–37 | west | in | `bus_in[13:0]` |
+| 38 | south | in | `clk` (the Caravel board oscillator pin) |
+| 39–40 | south | in | `bus_in[15:14]` |
+| 41–43 | south | out | `core_active[3:1]` |
+
+The chip is held in reset while either the `resetb` pad or the power-on reset is asserted. `core_active[i]` is high while tile *i* is running a block.
+
+## Memory bus protocol
+
+The chip is the bus master. The host holds program memory and data memory and answers one transaction at a time.
+
+- **Handshake:** two-phase. The chip toggles `bus_req` for each beat. The host completes the beat by setting `bus_ack` equal to `bus_req`.
+- **Clocking:** `bus_ack` passes through a two-flop synchronizer, so the host does not need to share the chip's clock.
+- **Output timing:** all chip outputs are registered and settle one cycle before `bus_req` toggles.
+
+**Read** (one beat):
+1. The chip drives `bus_out` = address, `bus_sel`, `bus_we` = 0, `bus_beat` = 0, then toggles `bus_req`.
+2. The host drives the word on `bus_in`, then sets `bus_ack` = `bus_req`.
+
+**Write** (two beats):
+1. Address beat: `bus_out` = address, `bus_we` = 1, `bus_beat` = 0, toggle `bus_req`. The host latches the address and acknowledges.
+2. Data beat: `bus_out` = data, `bus_beat` = 1, toggle `bus_req`. The host writes the word and acknowledges.
+
+**Host rules:**
+- After reset `bus_req` is 0, and the host must hold `bus_ack` at 0.
+- `bus_in` must be stable before the host changes `bus_ack`, and must stay stable until `bus_req` toggles again.
+- Program memory is never written.
+- Program addresses are 9 bits, zero-extended on `bus_out`.
+
+## Launching a kernel
+
+1. Load program and data memory on the host side.
+2. Drive the thread count on `bus_in[7:0]` and raise `start`.
+3. The chip latches the thread count, resets the compute array, writes the count and begins fetching. `done` rises when every block has finished.
+4. Lower `start`. `done` falls, and the chip is ready for the next launch without a chip reset.
+
+`test/test_openframe_chip.py` contains a host model that implements this sequence, with a randomized response delay.
+
+## Simulation
+
+```bash
+make test_openframe_tile
+```
+
+Runs at the GPU level with ideal memory. It checks an 8 × 8 systolic matmul on all four tiles bit-exactly, and that each tile's scratchpad is private.
+
+```bash
+make test_openframe_chip
+```
+
+Drives the chip-level digital top through its pins. It runs two kernels back to back and a partial launch.
+
+The existing instruction-level suites (`make test_matadd`, `make test_matmul`, `make test_matmul_large` and others) run on the same 4-tile configuration through `test/tb_gpu.sv`.
+
+## Hardening
+
+Both steps use LibreLane from `/Users/aoxo/vscode/librelane` in its nix shell. See `librelane/librelane.md` for the environment.
+
+1. **Core tile:** `librelane/core_tile/`. Launch `run_harden.sh` in a detached `screen` session; it writes `harden.log`.
+2. **Chip:** `librelane/openframe/`. The top design is `openframe_project_wrapper`. The four tiles are placed as macros, and the define `CORE_TILE_MACRO` makes `gpu.sv` instantiate them without parameter overrides. Point the `core_tile` macro views in `config.json` at the signoff run of step 1 before running.
+
+The ChipFoundry template files the chip harden depends on are vendored, unmodified, in `openframe/` (see `openframe/UPSTREAM.md`).
