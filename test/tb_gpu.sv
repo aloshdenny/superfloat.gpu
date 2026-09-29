@@ -3,18 +3,20 @@
 
 // Testbench wrapper for Atreides GPU
 // Includes program and data memory models for cocotb testing
-// Lightweight dual-core: 2 cores, 2 threads/block, one 2x2 systolic array per core
+// OpenFrame build: 4 core tiles, 8 threads/block, one 8x8 systolic array per tile.
+// Each tile carries its own 128B scratchpad, so there is no RAM model here.
 
 module tb_gpu #(
     parameter DATA_MEM_ADDR_BITS = 19,         // 1 MiB total data memory: 2^19 x 16-bit
     parameter DATA_MEM_DATA_BITS = 16,
-    parameter DATA_MEM_NUM_CHANNELS = 4,       // 2 cores × 2 threads
+    parameter DATA_MEM_NUM_CHANNELS = 4,       // one per tile
     parameter PROGRAM_MEM_ADDR_BITS = 12,      // Increased: 4096 instructions
     parameter PROGRAM_MEM_DATA_BITS = 16,
-    parameter PROGRAM_MEM_NUM_CHANNELS = 2,    // 1 per core
-    parameter NUM_CORES = 2,                   // 2 cores
-    parameter THREADS_PER_BLOCK = 2,
-    parameter SYSTOLIC_SIZE = 2,               // 2x2 systolic array
+    parameter PROGRAM_CACHE_ENTRIES = 32,      // shared instruction cache; 0 = none
+    parameter PROGRAM_MEM_NUM_CHANNELS = (PROGRAM_CACHE_ENTRIES > 0) ? 1 : 4,
+    parameter NUM_CORES = 4,                   // 4 core tiles
+    parameter THREADS_PER_BLOCK = 8,
+    parameter SYSTOLIC_SIZE = 8,               // 8x8 systolic array
     parameter NUM_SYSTOLIC_ARRAYS = 1          // One array per core
 ) (
     input wire clk,
@@ -75,22 +77,6 @@ module tb_gpu #(
         end
     endgenerate
 
-    // Behavioral RAM32 model for on-die scratchpad
-    wire        scratch_ram_en;
-    wire [3:0]  scratch_ram_we;
-    wire [4:0]  scratch_ram_addr;
-    wire [31:0] scratch_ram_di;
-    wire [31:0] scratch_ram_do;
-
-    RAM32 ram1 (
-        .CLK (clk),
-        .EN0 (scratch_ram_en),
-        .WE0 (scratch_ram_we),
-        .A0  (scratch_ram_addr),
-        .Di0 (scratch_ram_di),
-        .Do0 (scratch_ram_do)
-    );
-
     // GPU Instance
     gpu #(
         .DATA_MEM_ADDR_BITS(DATA_MEM_ADDR_BITS),
@@ -99,6 +85,7 @@ module tb_gpu #(
         .PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS),
         .PROGRAM_MEM_DATA_BITS(PROGRAM_MEM_DATA_BITS),
         .PROGRAM_MEM_NUM_CHANNELS(PROGRAM_MEM_NUM_CHANNELS),
+        .PROGRAM_CACHE_ENTRIES(PROGRAM_CACHE_ENTRIES),
         .NUM_CORES(NUM_CORES),
         .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
         .SYSTOLIC_SIZE(SYSTOLIC_SIZE),
@@ -123,13 +110,7 @@ module tb_gpu #(
         .data_mem_write_valid(data_mem_write_valid),
         .data_mem_write_address_flat(data_mem_write_address_flat),
         .data_mem_write_data_flat(data_mem_write_data_flat),
-        .data_mem_write_ready(data_mem_write_ready),
-
-        .scratch_ram_en(scratch_ram_en),
-        .scratch_ram_we(scratch_ram_we),
-        .scratch_ram_addr(scratch_ram_addr),
-        .scratch_ram_di(scratch_ram_di),
-        .scratch_ram_do(scratch_ram_do)
+        .data_mem_write_ready(data_mem_write_ready)
     );
 
     // =========================================================================
