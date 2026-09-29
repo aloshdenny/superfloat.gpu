@@ -111,6 +111,8 @@ The chip is the bus master. The host holds program memory and data memory and an
 2. Data beat: `bus_out` = data, `bus_beat` = 1, toggle `bus_req`. The host writes the word and acknowledges.
 
 **Host rules:**
+- Synchronise `bus_req` into the host's clock domain (two flops) before acting on a toggle, and read `bus_out`, `bus_sel`, `bus_we` and `bus_beat` only after that. The chip's timing constraints guarantee those outputs within two chip cycles of their register edge, which is one cycle before `bus_req` toggles; the synchroniser covers the rest.
+- `done` and `core_active` are status signals with no timing relation to the host clock; synchronise them too.
 - After reset `bus_req` is 0, and the host must hold `bus_ack` at 0.
 - `bus_in` must be stable before the host changes `bus_ack`, and must stay stable until `bus_req` toggles again.
 - Program memory is never written.
