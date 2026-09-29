@@ -187,7 +187,7 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
      - Clock sinks are clustered by 8, clock wires are buffered every 400 µm, and clock buffers drive at most 0.3 pF.
      - The pad-only `analog_*` and `gpio_loopback_*` nets are don't-touch.
      - Legalization may move a cell up to 1000 × 1500 µm, so slew buffers that repair drops over a tile reach a legal row.
-     - Well taps are 4 µm apart. At the default 13 µm, the 9.7 µm row segments beside the tiles got no taps.
+     - Each row segment ends in a well-tap cell (`ENDCAP_CELL` is `tapvpwrvgnd_1`). The 13 µm tap grid alone left the 9.7 µm segments beside the tiles untapped, and a 4 µm grid split the strip rows too finely to place larger cells.
    - **Pad configuration** constants come from tie cells, not from the pads' `gpio_loopback_*` pins (see `src/openframe_project_wrapper.v`).
    - **Supply pins:**
      - vccd1 and vssd1 reach the core ring through ChipFoundry's `vccd1_connection`/`vssd1_connection` macros. Their LEF is only an obstruction, so OpenROAD's IR-drop analysis cannot see the connection and is off.
