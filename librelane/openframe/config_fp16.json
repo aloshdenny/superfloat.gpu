@@ -158,7 +158,7 @@
         3126.63,
         4726.63
     ],
-    "FP_DEF_TEMPLATE": "dir::../../openframe/openlane/openframe_project_wrapper/fixed_dont_change/openframe_project_wrapper.def",
+    "FP_DEF_TEMPLATE": "dir::pins_extended.def",
     "FP_TEMPLATE_MATCH_MODE": "permissive",
     "FP_TEMPLATE_COPY_POWER_PINS": true,
     "MAGIC_ZEROIZE_ORIGIN": false,
