@@ -136,13 +136,21 @@ def pack_inputs(values: list, bits: int = 16) -> int:
     return result
 
 
+def raw_to_sf16(raw: int) -> int:
+    """Array results are raw two's-complement accumulators; convert to SF16."""
+    raw &= 0xFFFF
+    if raw & 0x8000:
+        return 0x8000 | ((-(raw - 0x10000)) & 0x7FFF)
+    return raw
+
+
 def unpack_results(flat: int, N: int, bits: int = 16) -> list:
     mask = (1 << bits) - 1
     result = [[0] * N for _ in range(N)]
     for i in range(N):
         for j in range(N):
             idx = i * ARRAY_SIZE + j
-            result[i][j] = (flat >> (idx * bits)) & mask
+            result[i][j] = raw_to_sf16((flat >> (idx * bits)) & mask)
     return result
 
 
@@ -178,40 +186,20 @@ async def clear_accumulators(dut):
 
 
 async def load_weights_scheduled(dut, B: list, N: int):
-    """Stream B rows with timing-compensated scheduling so all rows
-    arrive at their target FMA on the same load_weights pulse."""
-    max_row = ARRAY_SIZE - 1
-    max_delay = max_row + max_row // PIFMA_INTERVAL
-
-    schedule = [-1] * (max_delay + 1)
-    for row in range(ARRAY_SIZE):
-        d = row + row // PIFMA_INTERVAL
-        send_cycle = max_delay - d
-        schedule[send_cycle] = row
-
-    for c in range(max_delay):
-        row = schedule[c]
-        if row >= 0 and row < N:
-            b_vals = [B[row][col] if col < N else 0 for col in range(ARRAY_SIZE)]
-        else:
-            b_vals = [0] * ARRAY_SIZE
+    """
+    Load B into the stationary weight registers. Each load_weights pulse
+    shifts the weight column down one row, so rows go in bottom first
+    (ARRAY_SIZE-1 .. 0); rows at or beyond N load zeros.
+    """
+    dut.load_weights.value = 0
+    for row in reversed(range(ARRAY_SIZE)):
+        b_vals = [B[row][col] if (row < N and col < N) else 0 for col in range(ARRAY_SIZE)]
         dut.b_inputs_flat.value = pack_inputs(b_vals)
+        dut.load_weights.value = 1
         await RisingEdge(dut.clk)
-
-    # Final cycle with load_weights asserted
-    final_row = schedule[max_delay]
-    if final_row >= 0 and final_row < N:
-        b_vals = [B[final_row][col] if col < N else 0 for col in range(ARRAY_SIZE)]
-    else:
-        b_vals = [B[0][col] if col < N else 0 for col in range(ARRAY_SIZE)]
-
-    dut.b_inputs_flat.value = pack_inputs(b_vals)
-    dut.load_weights.value = 1
-    await RisingEdge(dut.clk)
     dut.load_weights.value = 0
     dut.b_inputs_flat.value = 0
     await RisingEdge(dut.clk)
-
 
 async def stream_activations(dut, A: list, N: int, num_cycles: int):
     dut.compute_enable.value = 1

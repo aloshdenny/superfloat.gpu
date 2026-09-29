@@ -77,6 +77,14 @@ def pack_inputs(values: list, bits: int = 16) -> int:
     return result
 
 
+def raw_to_sf16(raw: int) -> int:
+    """Array results are raw two's-complement accumulators; convert to SF16."""
+    raw &= 0xFFFF
+    if raw & 0x8000:
+        return 0x8000 | ((-(raw - 0x10000)) & 0x7FFF)
+    return raw
+
+
 def unpack_results(flat: int, n: int, bits: int = 16, array_size: int = None) -> list:
     """
     Unpack flat integer to NxN matrix.
@@ -99,7 +107,7 @@ def unpack_results(flat: int, n: int, bits: int = 16, array_size: int = None) ->
         for j in range(n):
             # Use array_size for stride, not n
             idx = i * array_size + j
-            result[i][j] = (flat >> (idx * bits)) & mask
+            result[i][j] = raw_to_sf16((flat >> (idx * bits)) & mask)
     return result
 
 
@@ -142,67 +150,19 @@ async def clear_accumulators(dut):
 
 async def load_weights_all_rows(dut, B: list, N: int):
     """
-    Load weights into the array by streaming B matrix rows.
-    
-    b_inputs[col] goes to b_wire[0][col] (row 0 of array).
-    Data propagates down through FMA[row].b_out -> b_wire[row+1]
-    with additional pipeline registers at certain row boundaries.
-    
-    Delay to FMA[row]: row + (row // PIFMA_INTERVAL)
-    - row delays from FMA b_out registers
-    - (row // PIFMA_INTERVAL) delays from pipeline registers
-    
-    We need all weights to arrive at their target FMAs on the same cycle.
+    Load B into the stationary weight registers. Each load_weights pulse
+    shifts the weight column down one row, so rows go in bottom first
+    (ARRAY_SIZE-1 .. 0); rows at or beyond N load zeros.
     """
-    PIFMA_INTERVAL = ARRAY_SIZE
-    phys_size = ARRAY_SIZE
-    
     dut.load_weights.value = 0
-    
-    # Compute delay for bottom-most row (maximum delay)
-    max_row = phys_size - 1
-    max_delay = max_row + max_row // PIFMA_INTERVAL
-    
-    # Create a schedule: schedule[c] = row to send at cycle c, or -1 for idle
-    schedule = [-1] * (max_delay + 1)
-    for row in range(phys_size):
-        delay_for_row = row + row // PIFMA_INTERVAL
-        send_cycle = max_delay - delay_for_row
-        schedule[send_cycle] = row
-    
-    # Debug: print schedule
-    # print(f"Weight load schedule (max_delay={max_delay}): {schedule}")
-    
-    # Stream according to schedule
-    for c in range(max_delay):
-        row = schedule[c]
-        if row >= 0 and row < N:
-            # Send B[row] values
-            b_vals = [B[row][col] if col < N else 0 for col in range(phys_size)]
-        else:
-            b_vals = [0] * phys_size
-        
+    for row in reversed(range(ARRAY_SIZE)):
+        b_vals = [B[row][col] if (row < N and col < N) else 0 for col in range(ARRAY_SIZE)]
         dut.b_inputs_flat.value = pack_inputs(b_vals)
+        dut.load_weights.value = 1
         await RisingEdge(dut.clk)
-    
-    # Final cycle: row 0 should be in schedule at max_delay
-    # but we handle it explicitly with load_weights
-    final_row = schedule[max_delay] if max_delay < len(schedule) else -1
-    if final_row >= 0 and final_row < N:
-        b_vals = [B[final_row][col] if col < N else 0 for col in range(phys_size)]
-    else:
-        # Row 0 has delay 0, so it's at cycle max_delay
-        b_vals = [B[0][col] if col < N else 0 for col in range(phys_size)]
-    
-    dut.b_inputs_flat.value = pack_inputs(b_vals)
-    dut.load_weights.value = 1
-    await RisingEdge(dut.clk)
-    
-    # Deassert
     dut.load_weights.value = 0
     dut.b_inputs_flat.value = 0
     await RisingEdge(dut.clk)
-
 
 async def stream_activations(dut, A: list, N: int, num_cycles: int):
     """

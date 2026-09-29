@@ -11,7 +11,7 @@ module tb_systolic_array #(
 ) (
     input wire clk,
     input wire reset,
-    input wire enable,
+    input wire enable,               // unused: the array runs freely
     
     // Control signals
     input wire clear_acc,
@@ -36,7 +36,6 @@ module tb_systolic_array #(
     ) array_inst (
         .clk(clk),
         .reset(reset),
-        .enable(enable),
         .clear_acc(clear_acc),
         .load_weights(load_weights),
         .compute_enable(compute_enable),
