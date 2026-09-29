@@ -1,10 +1,14 @@
 #!/bin/bash
-# Harden the OpenFrame core tile. Launch inside screen (tmux is not installed):
-#   screen -dmS core_tile_harden ./run_harden.sh [config.json] [log name]
-# Writes the log next to this script and appends HARDEN_EXIT <code> at the end.
+# Harden the OpenFrame core tile. Run it inside tmux or screen, e.g.
+#   tmux new -d -s tile './run_harden.sh config.json harden.log -c OPENROAD_THREADS=11'
+# Arguments: [config] [log] [extra librelane options...]. LibreLane is taken
+# from $LIBRELANE, else from the librelane checkout next to this repository.
+# The log is written next to this script and ends with HARDEN_EXIT <code>.
+DIR=$(cd "$(dirname "$0")" && pwd)
+LIBRELANE=${LIBRELANE:-$(cd "$DIR/../../../librelane" && pwd)}
 CFG=${1:-config.json}
 LOG=${2:-harden.log}
-DIR=/Users/aoxo/vscode/superfloat.gpu/librelane/core_tile
-cd /Users/aoxo/vscode/librelane
-nix-shell --run "cd $DIR && python3 -m librelane --pdk-root \"\$HOME/.ciel\" ./$CFG" 2>&1 | tee $DIR/$LOG
-echo "HARDEN_EXIT ${PIPESTATUS[0]}" >> $DIR/$LOG
+shift $(( $# < 2 ? $# : 2 ))
+cd "$LIBRELANE" || exit 1
+nix-shell --run "cd '$DIR' && python3 -m librelane --pdk-root \"\$HOME/.ciel\" $* ./$CFG" 2>&1 | tee "$DIR/$LOG"
+echo "HARDEN_EXIT ${PIPESTATUS[0]}" >> "$DIR/$LOG"
