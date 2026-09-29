@@ -25,6 +25,9 @@ compile:
 	echo '`timescale 1ns/1ns' | cat - build/gpu.v > build/temp.v
 	mv build/temp.v build/gpu.v
 
+# Tile arithmetic for the chip-level builds: 0 SF16, 1 FP16, 2 BF16.
+export NUMBER_FORMAT ?= 0
+
 compile_tb:
 	@mkdir -p build
 	sv2v src/*.sv test/tb_gpu.sv -w build/all.v
@@ -32,7 +35,7 @@ compile_tb:
 	mv build/temp.v build/all.v
 	# RAM32.v is plain Verilog (soft-flop); append after sv2v
 	cat src/RAM32.v >> build/all.v
-	iverilog -o build/sim.vvp -s tb_gpu -g2012 build/all.v
+	iverilog -o build/sim.vvp -s tb_gpu -g2012 -P tb_gpu.NUMBER_FORMAT=$(NUMBER_FORMAT) build/all.v
 
 # OpenFrame chip level: superfloat_openframe driven through its pin bus
 compile_openframe:
@@ -41,7 +44,7 @@ compile_openframe:
 	echo '`timescale 1ns/1ns' | cat - build/openframe.v > build/temp.v
 	mv build/temp.v build/openframe.v
 	cat src/RAM32.v >> build/openframe.v
-	iverilog -o build/openframe.vvp -s tb_openframe -g2012 build/openframe.v
+	iverilog -o build/openframe.vvp -s tb_openframe -g2012 -P tb_openframe.NUMBER_FORMAT=$(NUMBER_FORMAT) build/openframe.v
 
 test_openframe_chip: compile_openframe
 	COCOTB_TEST_MODULES=test.test_openframe_chip vvp -M $$(cocotb-config --lib-dir) -m $$(cocotb-config --lib-name vpi icarus) build/openframe.vvp

@@ -17,7 +17,8 @@ module tb_gpu #(
     parameter NUM_CORES = 4,                   // 4 core tiles
     parameter THREADS_PER_BLOCK = 8,
     parameter SYSTOLIC_SIZE = 8,               // 8x8 systolic array
-    parameter NUM_SYSTOLIC_ARRAYS = 1          // One array per core
+    parameter NUM_SYSTOLIC_ARRAYS = 1,         // One array per core
+    parameter NUMBER_FORMAT = 0                // 0 SF16, 1 FP16, 2 BF16
 ) (
     input wire clk,
     input wire reset,
@@ -89,7 +90,8 @@ module tb_gpu #(
         .NUM_CORES(NUM_CORES),
         .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
         .SYSTOLIC_SIZE(SYSTOLIC_SIZE),
-        .NUM_SYSTOLIC_ARRAYS(NUM_SYSTOLIC_ARRAYS)
+        .NUM_SYSTOLIC_ARRAYS(NUM_SYSTOLIC_ARRAYS),
+        .NUMBER_FORMAT(NUMBER_FORMAT)
     ) gpu_inst (
         .clk(clk),
         .reset(reset),

@@ -23,7 +23,8 @@ module gpu #(
     parameter THREADS_PER_BLOCK = 8,         // threads per block, one per array edge
     parameter SYSTOLIC_SIZE = 8,             // 8x8 systolic array per core
     parameter NUM_SYSTOLIC_ARRAYS = 1,       // One array per core
-    parameter CACHE_SIZE = 2                 // Instruction cache entries per core (unused / reserved)
+    parameter CACHE_SIZE = 2,                // Instruction cache entries per core (unused / reserved)
+    parameter NUMBER_FORMAT = 0              // tile arithmetic: 0 SF16, 1 FP16, 2 BF16
 ) (
     input wire clk,
     input wire reset,
@@ -225,7 +226,8 @@ module gpu #(
                 .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
                 .SYSTOLIC_SIZE(SYSTOLIC_SIZE),
                 .NUM_SYSTOLIC_ARRAYS(NUM_SYSTOLIC_ARRAYS),
-                .CACHE_SIZE(CACHE_SIZE)
+                .CACHE_SIZE(CACHE_SIZE),
+                .NUMBER_FORMAT(NUMBER_FORMAT)
             )
 `endif
             tile (

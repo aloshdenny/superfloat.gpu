@@ -1,12 +1,15 @@
 `default_nettype none
 `timescale 1ns/1ns
 
-// COMPUTE CORE (SF16 Fixed-Point with Neural Network Support)
+// COMPUTE CORE (SF16 fixed point, FP16 or BF16, with Neural Network Support)
 // > Handles processing 1 block at a time
 // > Each core contains 1 fetcher, and per-thread: registers, ALU, FMA, Activation, LSU, PC
 // > The GPU top level owns instruction decoding and passes decoded controls in.
 // > Includes one SYSTOLIC_SIZE x SYSTOLIC_SIZE systolic array (8x8 on OpenFrame)
 // > Supports neural network operations: FMA for matmul, ACT for activation functions
+// > NUMBER_FORMAT selects the arithmetic of FMA, ACT and the systolic array:
+//   0 = SF16 (Q1.15 sign-magnitude), 1 = FP16, 2 = BF16. Integer ALU, LSU and
+//   addressing are the same in every format.
 // > Hierarchical design for improved physical synthesis
 
 module core #(
@@ -17,7 +20,8 @@ module core #(
     parameter THREADS_PER_BLOCK = 8,          // 8 threads, one per 8x8 edge
     parameter SYSTOLIC_SIZE = 8,              // 8x8 systolic array size
     parameter NUM_SYSTOLIC_ARRAYS = 1,        // One array per core
-    parameter CACHE_SIZE = 2                 // Instruction cache entries (reserved)
+    parameter CACHE_SIZE = 2,                // Instruction cache entries (reserved)
+    parameter NUMBER_FORMAT = 0              // 0 SF16, 1 FP16, 2 BF16
 ) (
     input wire clk,
     input wire reset,
@@ -306,35 +310,68 @@ module core #(
                 .alu_out(alu_out[i])
             );
 
-            // Optimized FMA Unit (SF16 multiply-accumulate)
-            fma #(
-                .DATA_BITS(DATA_MEM_DATA_BITS)
-            ) fma_instance (
-                .clk(clk),
-                .reset(reset),
-                .enable(i < thread_count),
-                .core_state(core_state),
-                .decoded_fma_enable(pipe_fma_enable),
-                .rs(pipe_rs[i]),
-                .rt(pipe_rt[i]),
-                .rq(pipe_rd_data[i]),
-                .fma_out(fma_out[i])
-            );
+            if (NUMBER_FORMAT == 0) begin : g_sf16
+                // Optimized FMA Unit (SF16 multiply-accumulate)
+                fma #(
+                    .DATA_BITS(DATA_MEM_DATA_BITS)
+                ) fma_instance (
+                    .clk(clk),
+                    .reset(reset),
+                    .enable(i < thread_count),
+                    .core_state(core_state),
+                    .decoded_fma_enable(pipe_fma_enable),
+                    .rs(pipe_rs[i]),
+                    .rt(pipe_rt[i]),
+                    .rq(pipe_rd_data[i]),
+                    .fma_out(fma_out[i])
+                );
 
-            // Activation Unit
-            activation #(
-                .DATA_BITS(DATA_MEM_DATA_BITS)
-            ) activation_instance (
-                .clk(clk),
-                .reset(reset),
-                .enable(i < thread_count),
-                .core_state(core_state),
-                .activation_enable(pipe_act_enable),
-                .activation_func(pipe_act_func),
-                .unbiased_activation(pipe_rs[i]),
-                .bias(pipe_rt[i]),
-                .activation_out(act_out[i])
-            );
+                // Activation Unit
+                activation #(
+                    .DATA_BITS(DATA_MEM_DATA_BITS)
+                ) activation_instance (
+                    .clk(clk),
+                    .reset(reset),
+                    .enable(i < thread_count),
+                    .core_state(core_state),
+                    .activation_enable(pipe_act_enable),
+                    .activation_func(pipe_act_func),
+                    .unbiased_activation(pipe_rs[i]),
+                    .bias(pipe_rt[i]),
+                    .activation_out(act_out[i])
+                );
+            end else begin : g_fp
+                // FP16 / BF16 FMA and activation, same EXECUTE timing
+                fp_fma #(
+                    .EXP_BITS(NUMBER_FORMAT == 2 ? 8 : 5),
+                    .MANT_BITS(NUMBER_FORMAT == 2 ? 7 : 10)
+                ) fma_instance (
+                    .clk(clk),
+                    .reset(reset),
+                    .enable(i < thread_count),
+                    .core_state(core_state),
+                    .decoded_fma_enable(pipe_fma_enable),
+                    .rs(pipe_rs[i]),
+                    .rt(pipe_rt[i]),
+                    .rq(pipe_rd_data[i]),
+                    .fma_out(fma_out[i])
+                );
+
+                fp_activation #(
+                    .EXP_BITS(NUMBER_FORMAT == 2 ? 8 : 5),
+                    .MANT_BITS(NUMBER_FORMAT == 2 ? 7 : 10)
+                ) activation_instance (
+                    .clk(clk),
+                    .reset(reset),
+                    .enable(i < thread_count),
+                    .core_state(core_state),
+                    .activation_enable(pipe_act_enable),
+                    .activation_func(pipe_act_func),
+                    .unbiased_activation(pipe_rs[i]),
+                    .bias(pipe_rt[i]),
+                    .activation_out(act_out[i])
+                );
+            end
 
             // Load/Store Unit
             lsu #(
@@ -483,7 +520,7 @@ module core #(
     // Read logic: rs[CELL_BITS-1:0] selects any of the SYSTOLIC_SIZE^2 result cells.
     // The gather spans the whole array, so it is split in two:
     //   1. every cycle, the cell named by pipe_rs is captured in systolic_sel_q;
-    //   2. at UPDATE the register file takes it, converted to SF16 sign-magnitude.
+    //   2. at UPDATE the register file takes it (SF16: converted to sign-magnitude).
     // pipe_rs is set at DECODE and the write happens at UPDATE, at least three
     // cycles later, so the captured cell is always the requested one. The
     // accumulator saturates at -32767, so its negation fits in 15 bits.
@@ -505,9 +542,12 @@ module core #(
     integer systolic_conv_idx;
     always @(*) begin
         for (systolic_conv_idx = 0; systolic_conv_idx < THREADS_PER_BLOCK; systolic_conv_idx = systolic_conv_idx + 1) begin
-            systolic_out[systolic_conv_idx] = systolic_sel_q[systolic_conv_idx][DATA_MEM_DATA_BITS-1]
-                ? {1'b1, (DATA_MEM_DATA_BITS-1)'(-systolic_sel_q[systolic_conv_idx])}
-                : systolic_sel_q[systolic_conv_idx];
+            if (NUMBER_FORMAT == 0)
+                systolic_out[systolic_conv_idx] = systolic_sel_q[systolic_conv_idx][DATA_MEM_DATA_BITS-1]
+                    ? {1'b1, (DATA_MEM_DATA_BITS-1)'(-systolic_sel_q[systolic_conv_idx])}
+                    : systolic_sel_q[systolic_conv_idx];
+            else
+                systolic_out[systolic_conv_idx] = systolic_sel_q[systolic_conv_idx];
         end
     end
 
@@ -517,7 +557,8 @@ module core #(
             systolic_array #(
                 .DATA_BITS(DATA_MEM_DATA_BITS),
                 .ARRAY_SIZE(SYSTOLIC_SIZE),
-                .PIPE_INTERVAL(SYSTOLIC_SIZE)
+                .PIPE_INTERVAL(SYSTOLIC_SIZE),
+                .NUMBER_FORMAT(NUMBER_FORMAT)
             ) systolic_array_inst (
                 .clk(clk),
                 .reset(reset),

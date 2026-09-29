@@ -3,6 +3,8 @@
 
 // CORE TILE — the hardened compute macro for the OpenFrame chip
 // > One compute core (THREADS_PER_BLOCK threads + one SYSTOLIC_SIZE^2 array)
+// > NUMBER_FORMAT fixes the arithmetic (0 SF16, 1 FP16, 2 BF16); each format
+//   is hardened as its own macro
 // > Its own instruction decoder
 // > Its own 128B address-mapped scratchpad (0xFFC0..0xFFFF), private to the core
 // > One arbitrated data-memory port: the per-thread LSUs share it, so the
@@ -18,7 +20,8 @@ module core_tile #(
     parameter THREADS_PER_BLOCK = 8,
     parameter SYSTOLIC_SIZE = 8,
     parameter NUM_SYSTOLIC_ARRAYS = 1,
-    parameter CACHE_SIZE = 2
+    parameter CACHE_SIZE = 2,
+    parameter NUMBER_FORMAT = 0             // 0 SF16, 1 FP16, 2 BF16
 ) (
     input  wire clk,
     input  wire reset,
@@ -121,7 +124,8 @@ module core_tile #(
         .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
         .SYSTOLIC_SIZE(SYSTOLIC_SIZE),
         .NUM_SYSTOLIC_ARRAYS(NUM_SYSTOLIC_ARRAYS),
-        .CACHE_SIZE(CACHE_SIZE)
+        .CACHE_SIZE(CACHE_SIZE),
+        .NUMBER_FORMAT(NUMBER_FORMAT)
     ) core_instance (
         .clk(clk),
         .reset(core_reset),

@@ -20,7 +20,8 @@ module superfloat_openframe #(
     parameter PROGRAM_MEM_ADDR_BITS = 9,
     parameter DATA_MEM_ADDR_BITS = 19,     // LSU addresses are 16-bit, zero-extended
     parameter BUS_BITS = 16,
-    parameter PROGRAM_CACHE_ENTRIES = 32   // shared instruction cache; 0 = one channel per tile
+    parameter PROGRAM_CACHE_ENTRIES = 32,  // shared instruction cache; 0 = one channel per tile
+    parameter NUMBER_FORMAT = 0            // tile arithmetic: 0 SF16, 1 FP16, 2 BF16
 ) (
     input  wire clk,
     input  wire rst_n,                     // asynchronous, active low
@@ -145,7 +146,8 @@ module superfloat_openframe #(
         .PROGRAM_CACHE_ENTRIES(PROGRAM_CACHE_ENTRIES),
         .NUM_CORES(NUM_CORES),
         .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
-        .SYSTOLIC_SIZE(SYSTOLIC_SIZE)
+        .SYSTOLIC_SIZE(SYSTOLIC_SIZE),
+        .NUMBER_FORMAT(NUMBER_FORMAT)
     ) gpu_inst (
         .clk(clk),
         .reset(gpu_reset),

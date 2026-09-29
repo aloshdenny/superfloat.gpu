@@ -4,7 +4,8 @@
 // Chip-level testbench for superfloat_openframe. The host side (program and
 // data memory, pin handshake) is modelled in cocotb: test/test_openframe_chip.py.
 module tb_openframe #(
-    parameter PROGRAM_CACHE_ENTRIES = 32
+    parameter PROGRAM_CACHE_ENTRIES = 32,
+    parameter NUMBER_FORMAT = 0            // 0 SF16, 1 FP16, 2 BF16
 ) (
     input  wire        clk,
     input  wire        rst_n,
@@ -20,7 +21,8 @@ module tb_openframe #(
     input  wire        bus_ack
 );
     superfloat_openframe #(
-        .PROGRAM_CACHE_ENTRIES(PROGRAM_CACHE_ENTRIES)
+        .PROGRAM_CACHE_ENTRIES(PROGRAM_CACHE_ENTRIES),
+        .NUMBER_FORMAT(NUMBER_FORMAT)
     ) dut (
         .clk(clk),
         .rst_n(rst_n),
