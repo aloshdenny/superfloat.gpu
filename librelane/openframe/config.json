@@ -197,5 +197,7 @@
     "GRT_ALLOW_CONGESTION": true,
     "VERILOG_DEFINES": [
         "CORE_TILE_MACRO"
-    ]
+    ],
+    "STA_MACRO_PRIORITIZE_NL": false,
+    "STA_THREADS": 3
 }
