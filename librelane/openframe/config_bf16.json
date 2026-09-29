@@ -187,20 +187,6 @@
     "PDN_VERTICAL_HALO": 10,
     "FP_MACRO_HORIZONTAL_HALO": 10,
     "FP_MACRO_VERTICAL_HALO": 10,
-    "PL_SOFT_OBSTRUCTIONS": [
-        [
-            1560.0,
-            70.0,
-            1606.63,
-            2320.0
-        ],
-        [
-            1560.0,
-            2446.63,
-            1606.63,
-            4696.63
-        ]
-    ],
     "RT_MAX_LAYER": "met5",
     "SYNTH_HIERARCHY_MODE": "flatten",
     "SYNTH_STRATEGY": "AREA 2",
