@@ -3,6 +3,7 @@
   "VERILOG_FILES": ["dir::../../src/systolic_pe.sv"],
   "CLOCK_PORT": "clk",
   "CLOCK_PERIOD": 20.0,
+  "OPENROAD_THREADS": 10,
 
   "CLOCK_UNCERTAINTY_CONSTRAINT": 0.20,
   "CLOCK_TRANSITION_CONSTRAINT": 0.25,
