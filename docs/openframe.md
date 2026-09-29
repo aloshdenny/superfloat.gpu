@@ -206,5 +206,10 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
      - Magic extracts from GDS with the tiles abstract, so LVS checks the real connection.
      - Top-level port names are not uniquified in extraction, because the padframe joins the separate shapes of each unused supply pin (vddio, vccd2, ...).
    - **Magic DRC** runs on the GDS. Abstract-view DRC would flag the tile LEF's n-well and the supply macros' obstruction.
+   - **Post-route ECO:** `../core_tile/eco_fix.py runs/<run> --config ../openframe/config_fp16.json` handles chip runs as well.
+     - A clock driver whose cap violation comes from macro pins gets one buffer per pin, at the pin.
+     - A net over the fanout limit only because of antenna diodes gets a buffer halfway to the real sink the diodes gather around. A long met1 branch to one small gate collected 11 to 12 diodes.
+     - Because the router places the diodes, that fix restarts from the state before detailed routing, and the router re-inserts diodes on the two shorter nets.
+     - To fix what an ECO left, pass the original run and then the ECO run (`eco_fix.py runs/chip_20 runs/chip_20_eco ...`). The new ECO restarts from the original run with the earlier buffers as well as the new ones.
 
 The ChipFoundry template files the chip harden depends on are vendored, unmodified, in `openframe/` (see `openframe/UPSTREAM.md`).
