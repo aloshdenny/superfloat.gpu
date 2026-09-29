@@ -18,6 +18,12 @@ test_systolic8_all_tiles
     accumulate the previous one after it has drained across the row, so one
     trailing compute with R0 = 0 lines every column up.
 
+test_dispatch_many_blocks
+    Launches 100 threads = 13 blocks (the last has 4 threads) on the four
+    tiles, so tiles finish and take new blocks, several in the same cycle.
+    Every thread stores blockIdx*8 + tid + 1 at OUT + blockIdx*8 + tid; the
+    four disabled threads of the last block must store nothing.
+
 test_scratchpad_private_per_tile
     All four tiles write the same scratchpad addresses (0xFFC0 + tid) at the
     same time with different values, read their own and a neighbour's slot
@@ -226,6 +232,34 @@ async def test_systolic8_all_tiles(dut):
     dut._log.info(f"systolic8: {cycles} cycles, {len(program)} instructions")
     assert not failures, "mismatches (block, [(cell, got, want)]): " + "; ".join(
         f"{b}: " + ", ".join(f"({c}, {g:04X}, {w:04X})" for c, g, w in bad) for b, bad in failures)
+
+
+DISPATCH_THREADS = 100
+DISPATCH_OUT = 2048
+
+
+def build_dispatch_program() -> list:
+    """mem[DISPATCH_OUT + blockIdx*8 + tid] = blockIdx*8 + tid + 1"""
+    return [asm_const(R2, N), asm_mul(R3, BLOCK_IDX, R2), asm_add(R3, R3, THREAD_IDX),
+            asm_const(R4, 64), asm_const(R5, DISPATCH_OUT // 64), asm_mul(R4, R4, R5),
+            asm_add(R5, R4, R3), asm_const(R6, 1), asm_add(R6, R3, R6),
+            asm_str(R5, R6), asm_ret()]
+
+
+@cocotb.test()
+async def test_dispatch_many_blocks(dut):
+    program = build_dispatch_program()
+    logger = await setup_test(dut, "dispatch_many_blocks", program, [0] * 16,
+                              thread_count=DISPATCH_THREADS, verbose=False)
+    cycles = await run_kernel(dut, logger, max_cycles=40000, trace_interval=0)
+    assert int(dut.done.value) == 1, f"kernel did not finish in {cycles} cycles"
+    blocks = (DISPATCH_THREADS + N - 1) // N
+    got = read_memory_range(dut, DISPATCH_OUT, blocks * N)
+    logger.close()
+    want = [g + 1 if g < DISPATCH_THREADS else 0 for g in range(blocks * N)]
+    bad = [(g, got[g], want[g]) for g in range(blocks * N) if got[g] != want[g]]
+    dut._log.info(f"dispatch: {DISPATCH_THREADS} threads, {blocks} blocks, {cycles} cycles")
+    assert not bad, f"{len(bad)} wrong slots, first (slot, got, want): {bad[:6]}"
 
 
 @cocotb.test()
