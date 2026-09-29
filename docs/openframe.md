@@ -181,8 +181,18 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
      - The fixed pins reach only 0.3 µm into the die, so the detailed router cannot place access points on them (DRT-1231).
      - `extend_pins.py` derives the copy with every signal pin extended 3 µm inward. Nothing outside the die boundary changes, and that band is what precheck compares with the empty wrapper.
    - **Chip-level repair settings:**
-     - No wire-length buffering. Repeaters every 200 µm on the strip-to-pad nets would fill the 46 µm channel between the tile columns.
-     - The pad-only `analog_*` nets are don't-touch.
+     - Repair works against `pnr.sdc` (1.0 ns max transition, fanout 8); signoff uses `chip.sdc` (1.5 ns, fanout 10). The margin covers the difference between pre-route estimates and routed parasitics on the ~1 mm strip nets, and the antenna diodes added after routing.
+     - Repeaters are inserted only on nets over 1000 µm, which are the strip-to-pad nets. A 200 µm limit filled the 46 µm channel between the tile columns.
+     - Timing repair aims for 1 ns of setup slack. The longest top-level path is the shared instruction cache's tag compare and select, about 19 ns at max_ss.
+     - Clock sinks are clustered by 8, clock wires are buffered every 400 µm, and clock buffers drive at most 0.3 pF.
+     - The pad-only `analog_*` and `gpio_loopback_*` nets are don't-touch.
      - Legalization may move a cell up to 1000 × 1500 µm, so slew buffers that repair drops over a tile reach a legal row.
+     - Well taps are 4 µm apart. At the default 13 µm, the 9.7 µm row segments beside the tiles got no taps.
+   - **Pad configuration** constants come from tie cells, not from the pads' `gpio_loopback_*` pins (see `src/openframe_project_wrapper.v`).
+   - **Supply pins:**
+     - vccd1 and vssd1 reach the core ring through ChipFoundry's `vccd1_connection`/`vssd1_connection` macros. Their LEF is only an obstruction, so OpenROAD's IR-drop analysis cannot see the connection and is off.
+     - Magic extracts from GDS with the tiles abstract, so LVS checks the real connection.
+     - Top-level port names are not uniquified in extraction, because the padframe joins the separate shapes of each unused supply pin (vddio, vccd2, ...).
+   - **Magic DRC** runs on the GDS. Abstract-view DRC would flag the tile LEF's n-well and the supply macros' obstruction.
 
 The ChipFoundry template files the chip harden depends on are vendored, unmodified, in `openframe/` (see `openframe/UPSTREAM.md`).
