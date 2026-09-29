@@ -146,7 +146,7 @@
     "CTS_CLK_MAX_WIRE_LENGTH": 400,
     "CTS_OBSTRUCTION_AWARE": true,
     "CLOCK_PERIOD": 20.0,
-    "PNR_SDC_FILE": "dir::chip.sdc",
+    "PNR_SDC_FILE": "dir::pnr.sdc",
     "SIGNOFF_SDC_FILE": "dir::chip.sdc",
     "DEFAULT_CORNER": "max_ss_100C_1v60",
     "OPENROAD_THREADS": 10,
