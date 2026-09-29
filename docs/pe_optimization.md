@@ -62,26 +62,37 @@ All numbers below come from hardened layouts, not estimates. Each PE was hardene
 
 ## FP16 and BF16 PEs
 
-The FP16 and BF16 chip variants use `fp_systolic_pe` (`src/fp_systolic_pe.sv`), a lean-contract PE with a fused multiply-add (one rounding, round to nearest even, flush to zero). Its 5-stage pipeline is multiply, align, add, round. The accumulator loop (align → add → round) spans three cycles, so a new compute can start at most every third cycle. The core issues SYS computes at least six cycles apart.
+The FP16 and BF16 chip variants use `fp_systolic_pe` (`src/fp_systolic_pe.sv`), a lean-contract PE with a fused multiply-add (one rounding, round to nearest even, flush to zero). Its 4-stage pipeline is: operand, multiply, align+add, round. The accumulator loop (align+add → round) spans two cycles, so a new compute can start at most every second cycle; the core issues SYS computes at least six cycles apart.
 
-The FP PEs were hardened with the same LibreLane settings as the SF16 lean PE, on a 200 × 220 µm die because they are larger. Power uses one stimulus for all three PEs (`librelane/pe_study/tb_power_fp.sv`): one weight load (≈ 0.337), then a compute every second cycle with a fresh random activation, and a clear every 64 computes. SF16 activations are |a| < 0.25; FP16/BF16 activations are |a| in [0.125, 2). The SF16 row re-measures the lean PE's 20 ns layout from the table above under this stimulus.
+The FP PEs were hardened with the same LibreLane settings as the SF16 lean PE, on a 200 × 220 µm die because they are larger.
+
+Power uses one stimulus for all three PEs (`librelane/pe_study/tb_power_fp.sv`):
+- one weight load (≈ 0.337)
+- then a compute every second cycle, each with a fresh random activation
+- a clear every 64 computes
+- activations: SF16 |a| < 0.25; FP16/BF16 |a| in [0.125, 2)
+
+The SF16 row re-measures the lean PE's 20 ns layout from the table above under this stimulus.
 
 | | SF16 (lean) | FP16 | BF16 |
 |---|---|---|---|
-| Std-cell area at 20 ns | 16,610.9 µm² | 22,469.0 µm² (+35%) | 18,883.1 µm² (+14%) |
-| Flip-flops | 66 | 183 | 168 |
-| Setup slack at 20 ns, max_ss_100C_1v60 | +7.311 ns | +6.862 ns | +5.902 ns |
-| Fmax at max_ss, from a 10 ns harden | 92.2 MHz | 90.8 MHz | 81.4 MHz |
-| Fmax at nom_tt, same runs | 175.5 MHz | 171.5 MHz | 156.9 MHz |
-| Worst hold slack at 20 ns | +0.047 ns | +0.092 ns | +0.043 ns |
-| Power, compute every 2nd cycle, 50 MHz, nom_tt | 0.782 mW | 1.710 mW (2.2×) | 1.500 mW (1.9×) |
-| Magic/KLayout DRC, LVS, antenna, slew, cap | 0 | 0 | 0 |
+| Std-cell area at 20 ns | 16,610.9 µm² | 21,774.6 µm² (+31%) | 18,161.2 µm² (+9%) |
+| Flip-flops | 66 | 121 | 115 |
+| Setup slack at 20 ns, max_ss_100C_1v60 | +7.311 ns | +1.753 ns | +2.533 ns |
+| Fmax at max_ss, from a 10 ns harden | 92.2 MHz | 69.9 MHz | 68.6 MHz |
+| Fmax at nom_tt, same runs | 175.5 MHz | 133.4 MHz | 129.7 MHz |
+| Worst hold slack at 20 ns | +0.047 ns | +0.107 ns | +0.062 ns |
+| Power, compute every 2nd cycle, 50 MHz, nom_tt | 0.782 mW | 1.330 mW (1.7×) | 1.180 mW (1.5×) |
+| Magic/KLayout DRC, LVS, antenna | 0 | 0 | 0 |
+| Max slew / cap at signoff | 0 | 8 / 1 | 0 |
 
-- **Where the FP cost goes:** most of it is pipeline state, not arithmetic.
-  - The FP PEs have almost three times the flip-flops. Sequential plus clock power is 61% of the FP16 total and 65% of BF16.
-  - The 11 × 11 (FP16) and 8 × 8 (BF16) significand multipliers are smaller than SF16's 15 × 15. The alignment shifter, normaliser and wider adder more than make up the difference.
-- **Timing:** FP16 is timed like SF16. BF16 is slower despite its narrower datapath: its 8-bit exponent widens the alignment compare and the exponent arithmetic.
-- **An earlier FP PE was 4 stages** (align and add in one cycle). It missed 20 ns at max_ss by 0.26 ns (BF16), which is why the adder is split.
+- **Critical path:** the FP PEs are limited by the align+add stage, not the multiplier. The exponent compare, the alignment shift with sticky, and the 2M+4-bit add or subtract happen in one cycle.
+- **Where the extra power goes:** sequential and clock power is 62% of the FP16 total and 68% of BF16, against 44% for SF16. The FP PEs carry nearly twice the pipeline state: product, exponent and flag registers, plus a sum register one adder-window wide.
+- **Pipeline depth:**
+  - A 5-stage version (align and add in separate cycles) had more slack: FP16 +6.862 ns, BF16 +5.902 ns.
+  - But it cost 183/168 flops, 22,469/18,883 µm² and 1.710/1.500 mW (FP16/BF16).
+  - In the tile it pushed the FP16 core tile to 0.57 utilisation, too dense to finish antenna repair. The 4-stage PE is the one used.
+- **The first 4-stage version** had a slower adder: one shifter per operand, a shifter-based sticky bit, and a zero detect on the sum. It missed 20 ns at max_ss by 0.26 ns (BF16).
 
 ## Reproducing
 
