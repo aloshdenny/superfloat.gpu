@@ -16,9 +16,9 @@
 // pass them through.
 //
 // Timing (rs/rt set at the end of DECODE and held):
-//   end of REQUEST:     aligned registers <= fp_align(rs * 1.0, rt)
-//   end of first WAIT:  sum registers     <= fp_addsub(aligned)
-//   EXECUTE:            activation_out    <= f(fp_round(sum))
+//   end of REQUEST:     sum registers  <= fp_addsub(fp_align(rs * 1.0, rt))
+//   end of first WAIT:  y              <= fp_round(sum)
+//   EXECUTE:            activation_out <= f(y)
 module fp_activation #(
     parameter EXP_BITS  = 5,
     parameter MANT_BITS = 10,
@@ -72,16 +72,12 @@ module fp_activation #(
         .sub(al_sub), .zero(al_zero), .inf(al_inf), .inf_sign(al_inf_sign), .nan(al_nan)
     );
 
-    reg [AW-1:0]        q_hi, q_lo;
-    reg signed [EW-1:0] q_top;
-    reg                 q_hi_sign, q_lo_sign, q_sub, q_zero, q_inf, q_inf_sign, q_nan;
-
     wire [AW:0]          add_mag;
     wire signed [EW-1:0] add_top;
     wire                 add_sign, add_zero, add_inf, add_nan;
     fp_addsub #(.EXP_BITS(EXP_BITS), .MANT_BITS(MANT_BITS)) u_addsub (
-        .hi(q_hi), .lo(q_lo), .in_top(q_top), .hi_sign(q_hi_sign), .lo_sign(q_lo_sign),
-        .sub(q_sub), .in_zero(q_zero), .in_inf(q_inf), .inf_sign(q_inf_sign), .in_nan(q_nan),
+        .hi(al_hi), .lo(al_lo), .in_top(al_top), .hi_sign(al_hi_sign), .lo_sign(al_lo_sign),
+        .sub(al_sub), .in_zero(al_zero), .in_inf(al_inf), .inf_sign(al_inf_sign), .in_nan(al_nan),
         .mag(add_mag), .top_exp(add_top),
         .sign(add_sign), .zero(add_zero), .inf(add_inf), .nan(add_nan)
     );
@@ -90,31 +86,26 @@ module fp_activation #(
     reg signed [EW-1:0] s_top;
     reg                 s_sign, s_zero, s_inf, s_nan;
 
-    wire [DATA_BITS-1:0] y;
+    wire [DATA_BITS-1:0] rounded;
     fp_round #(.EXP_BITS(EXP_BITS), .MANT_BITS(MANT_BITS)) u_round (
         .mag(s_mag), .top_exp(s_top),
         .sign(s_sign), .zero(s_zero), .inf(s_inf), .nan(s_nan),
-        .result(y)
+        .result(rounded)
     );
+
+    reg [DATA_BITS-1:0] y;
 
     always @(posedge clk) begin
         if (reset) begin
-            q_hi  <= {AW{1'b0}};
-            q_lo  <= {AW{1'b0}};
-            q_top <= {EW{1'b0}};
-            {q_hi_sign, q_lo_sign, q_sub, q_zero, q_inf, q_inf_sign, q_nan} <= 7'b0;
             s_mag <= {(AW+1){1'b0}};
             s_top <= {EW{1'b0}};
             {s_sign, s_zero, s_inf, s_nan} <= 4'b0;
+            y     <= {DATA_BITS{1'b0}};
         end else begin
-            q_hi  <= al_hi;
-            q_lo  <= al_lo;
-            q_top <= al_top;
-            {q_hi_sign, q_lo_sign, q_sub, q_zero, q_inf, q_inf_sign, q_nan} <=
-                {al_hi_sign, al_lo_sign, al_sub, al_zero, al_inf, al_inf_sign, al_nan};
             s_mag <= add_mag;
             s_top <= add_top;
             {s_sign, s_zero, s_inf, s_nan} <= {add_sign, add_zero, add_inf, add_nan};
+            y     <= rounded;
         end
     end
 
