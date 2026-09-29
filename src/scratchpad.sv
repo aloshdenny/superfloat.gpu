@@ -1,9 +1,13 @@
 `default_nettype none
 `timescale 1ns/1ns
 
-// Address-mapped 128B on-die scratchpad bridge for Tiny Tapeout RAM32 (32×32 1RW).
+// Address-mapped 128B on-die scratchpad bridge for a RAM32 (32×32 1RW).
 // Maps the top 64 SF16 halfwords (addr 0xFFC0..0xFFFF) onto the macro.
 // Hits stay on-die; misses pass through to the external data controller.
+// The hit/miss decision is registered: a request becomes visible on either
+// side one cycle after its valid rises. LSU addresses come straight from the
+// operand registers and stay stable for the whole request, so the decode
+// needs no second look at the address.
 module scratchpad #(
     parameter ADDR_BITS = 19,
     parameter DATA_BITS = 16,
@@ -53,8 +57,8 @@ module scratchpad #(
     wire [DATA_BITS-1:0] c_wdata [NUM_PORTS-1:0];
     wire [DATA_BITS-1:0] m_rdata [NUM_PORTS-1:0];
 
-    wire [NUM_PORTS-1:0] read_hit;
-    wire [NUM_PORTS-1:0] write_hit;
+    wire [NUM_PORTS-1:0] read_in_window;
+    wire [NUM_PORTS-1:0] write_in_window;
 
     genvar gi;
     generate
@@ -63,62 +67,81 @@ module scratchpad #(
             assign c_waddr[gi] = consumer_write_address_flat[gi*ADDR_BITS +: ADDR_BITS];
             assign c_wdata[gi] = consumer_write_data_flat[gi*DATA_BITS +: DATA_BITS];
             assign m_rdata[gi] = mem_read_data_flat[gi*DATA_BITS +: DATA_BITS];
-            assign read_hit[gi]  = consumer_read_valid[gi]  && (c_raddr[gi] >= BASE_ADDR);
-            assign write_hit[gi] = consumer_write_valid[gi] && (c_waddr[gi] >= BASE_ADDR);
+            assign read_in_window[gi]  = (c_raddr[gi] >= BASE_ADDR);
+            assign write_in_window[gi] = (c_waddr[gi] >= BASE_ADDR);
         end
     endgenerate
 
+    // Registered decode. *_seen marks a request whose decode is ready.
+    reg [NUM_PORTS-1:0] read_seen, write_seen;
+    reg [NUM_PORTS-1:0] read_hit_q, write_hit_q;
+    always @(posedge clk) begin
+        if (reset) begin
+            read_seen   <= {NUM_PORTS{1'b0}};
+            write_seen  <= {NUM_PORTS{1'b0}};
+            read_hit_q  <= {NUM_PORTS{1'b0}};
+            write_hit_q <= {NUM_PORTS{1'b0}};
+        end else begin
+            read_seen   <= consumer_read_valid;
+            write_seen  <= consumer_write_valid;
+            read_hit_q  <= consumer_read_valid  & read_in_window;
+            write_hit_q <= consumer_write_valid & write_in_window;
+        end
+    end
+
+    wire [NUM_PORTS-1:0] read_live  = consumer_read_valid  & read_seen;
+    wire [NUM_PORTS-1:0] write_live = consumer_write_valid & write_seen;
+    wire [NUM_PORTS-1:0] read_hit   = read_live  & read_hit_q;
+    wire [NUM_PORTS-1:0] write_hit  = write_live & write_hit_q;
+
     // Misses go off-chip unchanged
-    assign mem_read_valid         = consumer_read_valid & ~read_hit;
+    assign mem_read_valid         = read_live & ~read_hit_q;
     assign mem_read_address_flat  = consumer_read_address_flat;
-    assign mem_write_valid        = consumer_write_valid & ~write_hit;
+    assign mem_write_valid        = write_live & ~write_hit_q;
     assign mem_write_address_flat = consumer_write_address_flat;
     assign mem_write_data_flat    = consumer_write_data_flat;
 
-    // Priority encode writes then reads (port 0 highest). No shared integer loop vars.
-    wire                 any_write_hit = |write_hit;
-    wire                 any_read_hit  = |read_hit;
+    // Each request is served once; the port is re-armed when its valid drops.
+    reg  [NUM_PORTS-1:0] served;
+    wire [NUM_PORTS-1:0] write_pend = write_hit & ~served;
+    wire [NUM_PORTS-1:0] read_pend  = read_hit  & ~served;
+
+    // Priority encode writes then reads (port 0 highest).
+    wire                 any_write_hit = |write_pend;
+    wire                 any_read_hit  = |read_pend;
     wire                 found         = any_write_hit | any_read_hit;
     wire                 pick_write    = any_write_hit;
 
-    wire [SEL_BITS-1:0]  pick_w;
-    wire [SEL_BITS-1:0]  pick_r;
-    assign pick_w =
-        write_hit[0] ? {SEL_BITS{1'b0}} :
-        write_hit[1] ? SEL_BITS'(1) :
-        write_hit[2] ? SEL_BITS'(2) :
-                       SEL_BITS'(3);
-    assign pick_r =
-        read_hit[0] ? {SEL_BITS{1'b0}} :
-        read_hit[1] ? SEL_BITS'(1) :
-        read_hit[2] ? SEL_BITS'(2) :
-                      SEL_BITS'(3);
+    reg [SEL_BITS-1:0]    pick_w;
+    reg [SEL_BITS-1:0]    pick_r;
+    reg [OFFSET_BITS-1:0] pick_w_offset;
+    reg [OFFSET_BITS-1:0] pick_r_offset;
+    reg [DATA_BITS-1:0]   pick_wdata;
+
+    integer pick_i;
+    integer hit_i;
+    always @(*) begin
+        pick_w = {SEL_BITS{1'b0}};
+        pick_r = {SEL_BITS{1'b0}};
+        pick_w_offset = {OFFSET_BITS{1'b0}};
+        pick_r_offset = {OFFSET_BITS{1'b0}};
+        pick_wdata = {DATA_BITS{1'b0}};
+        // High index first so the lowest port number wins.
+        for (pick_i = NUM_PORTS - 1; pick_i >= 0; pick_i = pick_i - 1) begin
+            if (write_pend[pick_i]) begin
+                pick_w = pick_i[SEL_BITS-1:0];
+                pick_w_offset = c_waddr[pick_i][OFFSET_BITS-1:0];
+                pick_wdata = c_wdata[pick_i];
+            end
+            if (read_pend[pick_i]) begin
+                pick_r = pick_i[SEL_BITS-1:0];
+                pick_r_offset = c_raddr[pick_i][OFFSET_BITS-1:0];
+            end
+        end
+    end
+
     wire [SEL_BITS-1:0] pick = pick_write ? pick_w : pick_r;
-
-    wire [OFFSET_BITS-1:0] w_off0 = c_waddr[0][OFFSET_BITS-1:0];
-    wire [OFFSET_BITS-1:0] w_off1 = c_waddr[1][OFFSET_BITS-1:0];
-    wire [OFFSET_BITS-1:0] w_off2 = c_waddr[2][OFFSET_BITS-1:0];
-    wire [OFFSET_BITS-1:0] w_off3 = c_waddr[3][OFFSET_BITS-1:0];
-    wire [OFFSET_BITS-1:0] r_off0 = c_raddr[0][OFFSET_BITS-1:0];
-    wire [OFFSET_BITS-1:0] r_off1 = c_raddr[1][OFFSET_BITS-1:0];
-    wire [OFFSET_BITS-1:0] r_off2 = c_raddr[2][OFFSET_BITS-1:0];
-    wire [OFFSET_BITS-1:0] r_off3 = c_raddr[3][OFFSET_BITS-1:0];
-
-    wire [OFFSET_BITS-1:0] pick_w_offset =
-        (pick_w == 2'd0) ? w_off0 :
-        (pick_w == 2'd1) ? w_off1 :
-        (pick_w == 2'd2) ? w_off2 : w_off3;
-    wire [OFFSET_BITS-1:0] pick_r_offset =
-        (pick_r == 2'd0) ? r_off0 :
-        (pick_r == 2'd1) ? r_off1 :
-        (pick_r == 2'd2) ? r_off2 : r_off3;
     wire [OFFSET_BITS-1:0] pick_offset = pick_write ? pick_w_offset : pick_r_offset;
-
-    wire [DATA_BITS-1:0] pick_wdata =
-        !pick_write ? {DATA_BITS{1'b0}} :
-        (pick_w == 2'd0) ? c_wdata[0] :
-        (pick_w == 2'd1) ? c_wdata[1] :
-        (pick_w == 2'd2) ? c_wdata[2] : c_wdata[3];
 
     reg [1:0]                   state;
     reg [SEL_BITS-1:0]          sel;
@@ -127,7 +150,7 @@ module scratchpad #(
 
     reg [NUM_PORTS-1:0]         hit_read_ready;
     reg [NUM_PORTS-1:0]         hit_write_ready;
-    reg [DATA_BITS-1:0]         hit_rdata0, hit_rdata1, hit_rdata2, hit_rdata3;
+    reg [DATA_BITS-1:0]         hit_rdata [NUM_PORTS-1:0];
 
     wire issuing = (state == ST_READ_ISSUE) || (state == ST_WRITE);
 
@@ -149,17 +172,19 @@ module scratchpad #(
             sel_wdata <= {DATA_BITS{1'b0}};
             hit_read_ready <= {NUM_PORTS{1'b0}};
             hit_write_ready <= {NUM_PORTS{1'b0}};
-            hit_rdata0 <= {DATA_BITS{1'b0}};
-            hit_rdata1 <= {DATA_BITS{1'b0}};
-            hit_rdata2 <= {DATA_BITS{1'b0}};
-            hit_rdata3 <= {DATA_BITS{1'b0}};
+            served <= {NUM_PORTS{1'b0}};
+            for (hit_i = 0; hit_i < NUM_PORTS; hit_i = hit_i + 1) begin
+                hit_rdata[hit_i] <= {DATA_BITS{1'b0}};
+            end
         end else begin
             hit_read_ready <= {NUM_PORTS{1'b0}};
             hit_write_ready <= {NUM_PORTS{1'b0}};
+            served <= served & (consumer_read_valid | consumer_write_valid);
 
             case (state)
                 ST_IDLE: begin
                     if (found) begin
+                        served[pick] <= 1'b1;
                         sel <= pick;
                         sel_offset <= pick_offset;
                         sel_wdata <= pick_wdata;
@@ -170,12 +195,7 @@ module scratchpad #(
                     state <= ST_READ_DATA;
                 end
                 ST_READ_DATA: begin
-                    case (sel)
-                        2'd0: hit_rdata0 <= ram_half;
-                        2'd1: hit_rdata1 <= ram_half;
-                        2'd2: hit_rdata2 <= ram_half;
-                        default: hit_rdata3 <= ram_half;
-                    endcase
+                    hit_rdata[sel] <= ram_half;
                     hit_read_ready[sel] <= 1'b1;
                     state <= ST_IDLE;
                 end
@@ -187,12 +207,6 @@ module scratchpad #(
             endcase
         end
     end
-
-    wire [DATA_BITS-1:0] hit_rdata [NUM_PORTS-1:0];
-    assign hit_rdata[0] = hit_rdata0;
-    assign hit_rdata[1] = hit_rdata1;
-    assign hit_rdata[2] = hit_rdata2;
-    assign hit_rdata[3] = hit_rdata3;
 
     generate
         for (gi = 0; gi < NUM_PORTS; gi = gi + 1) begin : ready_mux
