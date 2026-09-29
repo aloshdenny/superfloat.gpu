@@ -19,7 +19,8 @@
     "DEFAULT_CORNER": "max_ss_100C_1v60",
     "SYNTH_CORNER": "nom_tt_025C_1v80",
     "CLOCK_PERIOD": 20.0,
-    "PNR_SDC_FILE": "dir::core.sdc",
+    "OPENROAD_THREADS": 10,
+    "PNR_SDC_FILE": "dir::pnr.sdc",
     "SIGNOFF_SDC_FILE": "dir::core.sdc",
     "CLOCK_UNCERTAINTY_CONSTRAINT": 0.25,
     "CLOCK_TRANSITION_CONSTRAINT": 0.30,
@@ -30,10 +31,10 @@
     "SYNTH_ADDER_TYPE": "FA",
     "SYNTH_HIERARCHY_MODE": "flatten",
     "SYNTH_MAX_TRAN": 1.5,
-    "MAX_FANOUT_CONSTRAINT": 10,
+    "MAX_FANOUT_CONSTRAINT": 8,
 
     "FP_SIZING": "absolute",
-    "DIE_AREA": [0.0, 0.0, 960.0, 500.0],
+    "DIE_AREA": [0.0, 0.0, 1600.0, 1100.0],
     "IO_EXCLUDE_PIN_REGION": ["bottom:*", "left:0-400", "right:0-400"],
     "RT_MAX_LAYER": "met4",
     "FP_MACRO_HORIZONTAL_HALO": 3.0,
@@ -46,16 +47,15 @@
 
     "PL_TIMING_DRIVEN": true,
     "PL_ROUTABILITY_DRIVEN": true,
-    "PL_TARGET_DENSITY_PCT": 70,
+    "PL_TARGET_DENSITY_PCT": 50,
 
     "CTS_SINK_CLUSTERING_ENABLE": true,
     "CTS_SINK_CLUSTERING_SIZE": 4,
     "CTS_CLK_BUFFERS": [
         "sky130_fd_sc_hd__clkbuf_16",
-        "sky130_fd_sc_hd__clkbuf_8",
-        "sky130_fd_sc_hd__clkbuf_4"
+        "sky130_fd_sc_hd__clkbuf_8"
     ],
-    "CTS_MAX_CAP": 0.30,
+    "CTS_MAX_CAP": 0.035,
     "CTS_MAX_SLEW": 0.30,
 
     "MAX_TRANSITION_CONSTRAINT": 2.5,
@@ -91,8 +91,10 @@
     "RUN_POST_GRT_DESIGN_REPAIR": true,
     "DESIGN_REPAIR_MAX_SLEW_PCT": 30,
     "DESIGN_REPAIR_MAX_CAP_PCT": 30,
+    "DESIGN_REPAIR_MAX_WIRE_LENGTH": 200,
     "GRT_DESIGN_REPAIR_MAX_SLEW_PCT": 30,
     "GRT_DESIGN_REPAIR_MAX_CAP_PCT": 30,
+    "GRT_DESIGN_REPAIR_MAX_WIRE_LENGTH": 200,
     "RUN_ANTENNA_REPAIR": true,
     "RUN_HEURISTIC_DIODE_INSERTION": false,
     "GRT_ANTENNA_REPAIR_JUMPER_ONLY": false,
@@ -104,6 +106,8 @@
     "EXTRA_EXCLUDED_CELLS": [
         "sky130_fd_sc_hd__buf_1",
         "sky130_fd_sc_hd__buf_2",
+        "sky130_fd_sc_hd__nor2_1",
+        "sky130_fd_sc_hd__nor2_2",
         "sky130_fd_sc_hd__clkbuf_1",
         "sky130_fd_sc_hd__clkdlybuf4s15_1",
         "sky130_fd_sc_hd__clkdlybuf4s15_2",
@@ -124,6 +128,6 @@
     "TIMING_VIOLATION_CORNERS": ["*"],
     "SETUP_VIOLATION_CORNERS": ["*"],
     "HOLD_VIOLATION_CORNERS": ["*"],
-    "MAX_SLEW_VIOLATION_CORNERS": [""],
-    "MAX_CAP_VIOLATION_CORNERS": [""]
+    "MAX_SLEW_VIOLATION_CORNERS": ["*"],
+    "MAX_CAP_VIOLATION_CORNERS": ["*"]
 }
