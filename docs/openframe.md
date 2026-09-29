@@ -177,5 +177,12 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
 2. **Chip:** in `librelane/openframe/`, run `./run_harden.sh config_fp16.json harden_fp16.log`.
    - The top design is `openframe_project_wrapper`. The four tiles are placed as macros, and the define `CORE_TILE_MACRO` makes `gpu.sv` instantiate them without parameter overrides.
    - Chip timing uses the tiles' signed-off `.lib` views.
+   - **Pin template:** the chip starts from `openframe/pins_extended.def`, not from ChipFoundry's fixed DEF directly.
+     - The fixed pins reach only 0.3 µm into the die, so the detailed router cannot place access points on them (DRT-1231).
+     - `extend_pins.py` derives the copy with every signal pin extended 3 µm inward. Nothing outside the die boundary changes, and that band is what precheck compares with the empty wrapper.
+   - **Chip-level repair settings:**
+     - No wire-length buffering. Repeaters every 200 µm on the strip-to-pad nets would fill the 46 µm channel between the tile columns.
+     - The pad-only `analog_*` nets are don't-touch.
+     - Legalization may move a cell up to 1000 × 1500 µm, so slew buffers that repair drops over a tile reach a legal row.
 
 The ChipFoundry template files the chip harden depends on are vendored, unmodified, in `openframe/` (see `openframe/UPSTREAM.md`).
