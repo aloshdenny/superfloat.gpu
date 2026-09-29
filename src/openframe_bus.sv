@@ -20,6 +20,12 @@
 // SEL is 0 for program memory, 1 for data memory. After reset REQ=0 and the
 // host must hold ACK=0. IN must be stable before the host changes ACK and stay
 // stable until REQ toggles again.
+//
+// Each channel first selects its own outgoing word (write data while the
+// address beat is being acknowledged, else its write or read address), so the
+// shared mux into bus_out sees one 16-bit word per channel. On the chip the
+// channels come from four tiles; the per-channel select sits by each tile and
+// only NUM_CHANNELS words reach the shared logic.
 module openframe_bus #(
     parameter NUM_CHANNELS = 8,
     parameter NUM_PROGRAM_CHANNELS = 4,
@@ -67,6 +73,19 @@ module openframe_bus #(
     wire [NUM_CHANNELS-1:0] pending = ch_read_valid | ch_write_valid;
     wire                    acked   = (ack_q2 == bus_req);
 
+    // Per-channel outgoing word: the data beat is loaded in S_ADDR_WAIT, the
+    // address beat in S_IDLE.
+    wire data_beat = (state == S_ADDR_WAIT);
+    wire [BUS_BITS-1:0] ch_word [NUM_CHANNELS-1:0];
+    genvar gc;
+    generate
+        for (gc = 0; gc < NUM_CHANNELS; gc = gc + 1) begin : words
+            assign ch_word[gc] = data_beat         ? ch_write_data_flat[gc*BUS_BITS +: BUS_BITS] :
+                                 ch_write_valid[gc] ? ch_write_address_flat[gc*BUS_BITS +: BUS_BITS] :
+                                                      ch_read_address_flat[gc*BUS_BITS +: BUS_BITS];
+        end
+    endgenerate
+
     // Round-robin pick: first pending channel at or after rr_next.
     reg                found;
     reg [CH_BITS-1:0]  pick;
@@ -110,9 +129,7 @@ module openframe_bus #(
                         bus_sel  <= (pick >= NUM_PROGRAM_CHANNELS);
                         bus_we   <= ch_write_valid[pick];
                         bus_beat <= 1'b0;
-                        bus_out  <= ch_write_valid[pick]
-                                    ? ch_write_address_flat[pick*BUS_BITS +: BUS_BITS]
-                                    : ch_read_address_flat[pick*BUS_BITS +: BUS_BITS];
+                        bus_out  <= ch_word[pick];
                         state    <= S_ADDR;
                     end
                 end
@@ -123,7 +140,7 @@ module openframe_bus #(
                 S_ADDR_WAIT: begin
                     if (acked) begin
                         if (bus_we) begin
-                            bus_out  <= ch_write_data_flat[cur*BUS_BITS +: BUS_BITS];
+                            bus_out  <= ch_word[cur];
                             bus_beat <= 1'b1;
                             state    <= S_DATA;
                         end else begin
