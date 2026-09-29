@@ -256,5 +256,6 @@
         "^core_tile$"
     ],
     "RUN_IRDROP_REPORT": false,
-    "FP_TAPCELL_DIST": 4
+    "FP_TAPCELL_DIST": 4,
+    "MAGIC_EXT_UNIQUE": "notopports"
 }
