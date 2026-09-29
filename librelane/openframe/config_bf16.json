@@ -258,5 +258,21 @@
     ],
     "RUN_IRDROP_REPORT": false,
     "MAGIC_EXT_UNIQUE": "notopports",
-    "ENDCAP_CELL": "sky130_fd_sc_hd__tapvpwrvgnd_1"
+    "ENDCAP_CELL": "sky130_fd_sc_hd__tapvpwrvgnd_1",
+    "ROUTING_OBSTRUCTIONS": [
+        [
+            "met5",
+            60.0,
+            2203.0,
+            3106.63,
+            2228.7
+        ],
+        [
+            "met5",
+            60.0,
+            2563.0,
+            3106.63,
+            2588.7
+        ]
+    ]
 }
