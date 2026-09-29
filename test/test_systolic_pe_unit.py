@@ -353,7 +353,7 @@ async def test_pe_clear_accumulator(dut):
 
 @cocotb.test()
 async def test_pe_data_passthrough(dut):
-    """Test systolic data passthrough (a_out, b_out)."""
+    """Test systolic data passthrough: a_out every cycle, b_out (the weight chain) on load."""
     logger = await setup_pe_test(dut, "pe_passthrough")
     
     test_values = [
@@ -367,7 +367,9 @@ async def test_pe_data_passthrough(dut):
     for a_in, b_in in test_values:
         dut.a_in.value = a_in
         dut.b_in.value = b_in
+        dut.load_weight.value = 1     # the weight chain shifts only on load
         await RisingEdge(dut.clk)
+        dut.load_weight.value = 0
         await RisingEdge(dut.clk)  # Passthrough has 1 cycle delay
         
         a_out = int(dut.a_out.value)
