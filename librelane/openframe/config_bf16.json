@@ -1,0 +1,260 @@
+{
+    "DESIGN_NAME": "openframe_project_wrapper",
+    "VERILOG_FILES": [
+        "dir::../../src/openframe_project_wrapper.v",
+        "dir::../../src/superfloat_openframe.sv",
+        "dir::../../src/gpu.sv",
+        "dir::../../src/openframe_bus.sv",
+        "dir::../../src/shared_icache.sv",
+        "dir::../../src/dcr.sv",
+        "dir::../../src/dispatch.sv",
+        "dir::../../src/controller.sv",
+        "dir::../../openframe/ip/CF_gpio_config/rtl/CF_gpio_config.v",
+        "dir::../../openframe/verilog/rtl/vccd1_connection.v",
+        "dir::../../openframe/verilog/rtl/vssd1_connection.v"
+    ],
+    "MACROS": {
+        "core_tile": {
+            "gds": [
+                "dir::../core_tile/views_bf16/gds/core_tile.gds"
+            ],
+            "lef": [
+                "dir::../core_tile/views_bf16/lef/core_tile.lef"
+            ],
+            "nl": [
+                "dir::../core_tile/views_bf16/nl/core_tile.nl.v"
+            ],
+            "pnl": [
+                "dir::../core_tile/views_bf16/pnl/core_tile.pnl.v"
+            ],
+            "lib": {
+                "min_ss_100C_1v60": [
+                    "dir::../core_tile/views_bf16/lib/min_ss_100C_1v60/core_tile__min_ss_100C_1v60.lib"
+                ],
+                "nom_ss_100C_1v60": [
+                    "dir::../core_tile/views_bf16/lib/nom_ss_100C_1v60/core_tile__nom_ss_100C_1v60.lib"
+                ],
+                "max_ss_100C_1v60": [
+                    "dir::../core_tile/views_bf16/lib/max_ss_100C_1v60/core_tile__max_ss_100C_1v60.lib"
+                ],
+                "min_tt_025C_1v80": [
+                    "dir::../core_tile/views_bf16/lib/min_tt_025C_1v80/core_tile__min_tt_025C_1v80.lib"
+                ],
+                "nom_tt_025C_1v80": [
+                    "dir::../core_tile/views_bf16/lib/nom_tt_025C_1v80/core_tile__nom_tt_025C_1v80.lib"
+                ],
+                "max_tt_025C_1v80": [
+                    "dir::../core_tile/views_bf16/lib/max_tt_025C_1v80/core_tile__max_tt_025C_1v80.lib"
+                ],
+                "min_ff_n40C_1v95": [
+                    "dir::../core_tile/views_bf16/lib/min_ff_n40C_1v95/core_tile__min_ff_n40C_1v95.lib"
+                ],
+                "nom_ff_n40C_1v95": [
+                    "dir::../core_tile/views_bf16/lib/nom_ff_n40C_1v95/core_tile__nom_ff_n40C_1v95.lib"
+                ],
+                "max_ff_n40C_1v95": [
+                    "dir::../core_tile/views_bf16/lib/max_ff_n40C_1v95/core_tile__max_ff_n40C_1v95.lib"
+                ]
+            },
+            "spef": {
+                "min_*": [
+                    "dir::../core_tile/views_bf16/spef/min/core_tile.min.spef"
+                ],
+                "nom_*": [
+                    "dir::../core_tile/views_bf16/spef/nom/core_tile.nom.spef"
+                ],
+                "max_*": [
+                    "dir::../core_tile/views_bf16/spef/max/core_tile.max.spef"
+                ]
+            },
+            "instances": {
+                "chip.gpu_inst.tiles[0].tile": {
+                    "location": [
+                        60.0,
+                        70.0
+                    ],
+                    "orientation": "N"
+                },
+                "chip.gpu_inst.tiles[1].tile": {
+                    "location": [
+                        1606.63,
+                        70.0
+                    ],
+                    "orientation": "FN"
+                },
+                "chip.gpu_inst.tiles[2].tile": {
+                    "location": [
+                        60.0,
+                        2446.63
+                    ],
+                    "orientation": "FS"
+                },
+                "chip.gpu_inst.tiles[3].tile": {
+                    "location": [
+                        1606.63,
+                        2446.63
+                    ],
+                    "orientation": "S"
+                }
+            },
+            "vh": [
+                "dir::../core_tile/views_bf16/vh/core_tile.vh"
+            ]
+        },
+        "vccd1_connection": {
+            "gds": [
+                "dir::../../openframe/gds/vccd1_connection.gds"
+            ],
+            "lef": [
+                "dir::../../openframe/lef/vccd1_connection.lef"
+            ],
+            "instances": {
+                "vccd1_connection": {
+                    "location": [
+                        3122.515,
+                        4327.51
+                    ],
+                    "orientation": "N"
+                }
+            }
+        },
+        "vssd1_connection": {
+            "gds": [
+                "dir::../../openframe/gds/vssd1_connection.gds"
+            ],
+            "lef": [
+                "dir::../../openframe/lef/vssd1_connection.lef"
+            ],
+            "instances": {
+                "vssd1_connection": {
+                    "location": [
+                        3122.515,
+                        2088.51
+                    ],
+                    "orientation": "N"
+                }
+            }
+        }
+    },
+    "PDN_MACRO_CONNECTIONS": [
+        "chip\\.gpu_inst\\.tiles.* vccd1 vssd1 VPWR VGND"
+    ],
+    "CLOCK_PORT": "gpio_in[38]",
+    "CLOCK_PERIOD": 20.0,
+    "PNR_SDC_FILE": "dir::chip.sdc",
+    "SIGNOFF_SDC_FILE": "dir::chip.sdc",
+    "DEFAULT_CORNER": "max_ss_100C_1v60",
+    "OPENROAD_THREADS": 10,
+    "FP_SIZING": "absolute",
+    "DIE_AREA": [
+        0.0,
+        0.0,
+        3166.63,
+        4766.63
+    ],
+    "CORE_AREA": [
+        40.0,
+        40.0,
+        3126.63,
+        4726.63
+    ],
+    "FP_DEF_TEMPLATE": "dir::../../openframe/openlane/openframe_project_wrapper/fixed_dont_change/openframe_project_wrapper.def",
+    "FP_TEMPLATE_MATCH_MODE": "permissive",
+    "FP_TEMPLATE_COPY_POWER_PINS": true,
+    "MAGIC_ZEROIZE_ORIGIN": false,
+    "VDD_NETS": [
+        "vccd1"
+    ],
+    "GND_NETS": [
+        "vssd1"
+    ],
+    "PDN_CORE_RING": true,
+    "PDN_CORE_RING_VWIDTH": 20,
+    "PDN_CORE_RING_HWIDTH": 20,
+    "PDN_CORE_RING_VSPACING": 2.4,
+    "PDN_CORE_RING_HSPACING": 2.4,
+    "PDN_CORE_RING_VOFFSET": -4,
+    "PDN_CORE_RING_HOFFSET": -4,
+    "PDN_VWIDTH": 3.1,
+    "PDN_HWIDTH": 3.1,
+    "PDN_VSPACING": 15.5,
+    "PDN_HSPACING": 15.5,
+    "PDN_VPITCH": 180,
+    "PDN_HPITCH": 180,
+    "PDN_VOFFSET": 5,
+    "PDN_HOFFSET": 5,
+    "PDN_HORIZONTAL_HALO": 10,
+    "PDN_VERTICAL_HALO": 10,
+    "FP_MACRO_HORIZONTAL_HALO": 10,
+    "FP_MACRO_VERTICAL_HALO": 10,
+    "PL_SOFT_OBSTRUCTIONS": [
+        [
+            1560.0,
+            70.0,
+            1606.63,
+            2320.0
+        ],
+        [
+            1560.0,
+            2446.63,
+            1606.63,
+            4696.63
+        ]
+    ],
+    "RT_MAX_LAYER": "met5",
+    "SYNTH_HIERARCHY_MODE": "flatten",
+    "SYNTH_STRATEGY": "AREA 2",
+    "ERROR_ON_NL_ASSIGN_STATEMENTS": false,
+    "PL_TARGET_DENSITY_PCT": 35,
+    "MAX_FANOUT_CONSTRAINT": 8,
+    "RUN_HEURISTIC_DIODE_INSERTION": false,
+    "GRT_ALLOW_CONGESTION": true,
+    "VERILOG_DEFINES": [
+        "CORE_TILE_MACRO"
+    ],
+    "STA_MACRO_PRIORITIZE_NL": false,
+    "STA_THREADS": 3,
+    "EXTRA_EXCLUDED_CELLS": [
+        "sky130_fd_sc_hd__buf_1",
+        "sky130_fd_sc_hd__buf_2",
+        "sky130_fd_sc_hd__nor2_1",
+        "sky130_fd_sc_hd__nor2_2",
+        "sky130_fd_sc_hd__clkbuf_1",
+        "sky130_fd_sc_hd__clkdlybuf4s15_1",
+        "sky130_fd_sc_hd__clkdlybuf4s15_2",
+        "sky130_fd_sc_hd__clkdlybuf4s18_1",
+        "sky130_fd_sc_hd__clkdlybuf4s18_2",
+        "sky130_fd_sc_hd__clkdlybuf4s25_1",
+        "sky130_fd_sc_hd__clkdlybuf4s25_2",
+        "sky130_fd_sc_hd__clkdlybuf4s50_1",
+        "sky130_fd_sc_hd__clkdlybuf4s50_2",
+        "sky130_fd_sc_hd__dlygate4sd1_1",
+        "sky130_fd_sc_hd__dlygate4sd2_1",
+        "sky130_fd_sc_hd__dlygate4sd3_1",
+        "sky130_fd_sc_hd__dlymetal6s2s_1",
+        "sky130_fd_sc_hd__dlymetal6s4s_1",
+        "sky130_fd_sc_hd__dlymetal6s6s_1",
+        "sky130_fd_sc_hd__a2111oi_0",
+        "sky130_fd_sc_hd__a21boi_0",
+        "sky130_fd_sc_hd__and2_0",
+        "sky130_fd_sc_hd__einvn_0",
+        "sky130_fd_sc_hd__o21ai_0",
+        "sky130_fd_sc_hd__o311ai_0",
+        "sky130_fd_sc_hd__or2_0",
+        "sky130_fd_sc_hd__o31ai_1"
+    ],
+    "DESIGN_REPAIR_MAX_SLEW_PCT": 50,
+    "DESIGN_REPAIR_MAX_CAP_PCT": 50,
+    "GRT_DESIGN_REPAIR_MAX_SLEW_PCT": 50,
+    "GRT_DESIGN_REPAIR_MAX_CAP_PCT": 50,
+    "DESIGN_REPAIR_MAX_WIRE_LENGTH": 0,
+    "GRT_DESIGN_REPAIR_MAX_WIRE_LENGTH": 0,
+    "RUN_POST_GRT_DESIGN_REPAIR": true,
+    "RSZ_DONT_TOUCH_RX": "^analog_",
+    "PL_RESIZER_SETUP_SLACK_MARGIN": 0.3,
+    "GRT_RESIZER_SETUP_SLACK_MARGIN": 0.3,
+    "PL_RESIZER_HOLD_SLACK_MARGIN": 0.1,
+    "GRT_RESIZER_HOLD_SLACK_MARGIN": 0.1,
+    "MAGIC_DRC_USE_GDS": false,
+    "KLAYOUT_DRC_THREADS": 8
+}

@@ -9,9 +9,12 @@ violation, and writes an ECO config that inserts a buffer after each one,
 re-routes the changed nets, and re-runs the full signoff sequence, starting
 from the routed state saved before fill insertion.
 
-usage: ./eco_fix.py runs/RUN_... [buffer_cell]
-Writes eco_<run>.json next to this script and prints the command to run it.
+usage: ./eco_fix.py runs/RUN_... [--config config.json] [--buffer CELL]
+--config is the harden config the run used, relative to this directory or
+absolute (e.g. config_fp16.json, ../openframe/config.json). The ECO config
+eco_<run>.json is written next to it; the command to run it is printed.
 """
+import argparse
 import glob
 import json
 import os
@@ -79,8 +82,14 @@ def violating_drivers(run):
 
 
 def main():
-    run = sys.argv[1].rstrip("/")
-    buffer = sys.argv[2] if len(sys.argv) > 2 else "sky130_fd_sc_hd__buf_4"
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("run")
+    ap.add_argument("--config", default="config.json")
+    ap.add_argument("--buffer", default="sky130_fd_sc_hd__buf_4")
+    args = ap.parse_args()
+    run = args.run.rstrip("/")
+    buffer = args.buffer
+    config = args.config if os.path.isabs(args.config) else os.path.join(HERE, args.config)
     pre_fill = sorted(glob.glob(os.path.join(run, "*-checker-wirelength", "state_out.json")))
     if not pre_fill:
         sys.exit(f"{run}: no routed state before fill insertion")
@@ -88,11 +97,11 @@ def main():
     if not drivers:
         sys.exit(f"{run}: no slew/cap violations; nothing to do")
 
-    cfg = json.load(open(os.path.join(HERE, "config.json")))
+    cfg = json.load(open(config))
     cfg["meta"] = {"version": 2, "flow": ECO_FLOW}
     cfg["INSERT_ECO_BUFFERS"] = [{"target": d, "buffer": buffer} for d in drivers]
     name = os.path.basename(run)
-    out = os.path.join(HERE, f"eco_{name}.json")
+    out = os.path.join(os.path.dirname(os.path.abspath(config)), f"eco_{name}.json")
     json.dump(cfg, open(out, "w"), indent=4)
 
     print(f"{len(drivers)} driver pins: {' '.join(drivers)}")
