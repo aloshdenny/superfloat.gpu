@@ -39,6 +39,6 @@ if {[llength $fp_nets_lsu] > 0} {
     set_false_path -through $fp_nets_lsu
 }
 
-set_max_fanout 10 [current_design]
+set_max_fanout 8 [current_design]
 set_max_transition 2.5 [current_design]
 set_max_capacitance 0.5 [current_design]
