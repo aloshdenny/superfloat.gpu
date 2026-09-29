@@ -95,31 +95,38 @@ module dispatch #(
                 done <= 1;
             end
 
-            // Use intermediate variables to correctly handle simultaneous
-            // core dispatch/completion (non-blocking <= in a for loop would
-            // cause both iterations to read the same old value).
+            // Every core waiting for a block this cycle is served in parallel.
+            // The j-th waiting core (in core order) gets block
+            // blocks_dispatched + j if that block exists. A core that gets a
+            // block implies every earlier waiting core got a smaller one, so
+            // no core's decision depends on another's (unlike a running count).
             begin : dispatch_block
-                reg [7:0] next_dispatched;
-                next_dispatched = blocks_dispatched;
-                
+                reg [7:0] block_idx;
+                reg [7:0] waiting_before;
+                reg [7:0] remaining;
+                waiting_before = 8'd0;
+                remaining = total_blocks - blocks_dispatched;
+
                 for (i = 0; i < NUM_CORES; i = i + 1) begin
-                    if (start_execution && core_reset[i]) begin 
+                    if (start_execution && core_reset[i]) begin
                         core_reset[i] <= 0;
+                        block_idx = blocks_dispatched + waiting_before;
 
                         // If this core was just reset, check if there are more blocks to be dispatched
-                        if (next_dispatched < total_blocks) begin 
+                        if (waiting_before < remaining) begin
                             core_start[i] <= 1;
-                            core_block_id[i] <= next_dispatched;
-                            core_thread_count[i] <= (next_dispatched == last_block)
+                            core_block_id[i] <= block_idx;
+                            core_thread_count[i] <= (block_idx == last_block)
                                 ? last_block_threads
                                 : TC_BITS'(THREADS_PER_BLOCK);
-
-                            next_dispatched = next_dispatched + 1;
                         end
+                        waiting_before = waiting_before + 8'd1;
                     end
                 end
-                
-                blocks_dispatched <= next_dispatched;
+
+                // Blocks handed out this cycle: min(waiting cores, remaining).
+                blocks_dispatched <= blocks_dispatched +
+                    ((waiting_before < remaining) ? waiting_before : remaining);
             end
 
             begin : done_block
