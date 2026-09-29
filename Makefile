@@ -50,6 +50,20 @@ test_openframe_chip: compile_openframe
 # Unit Test Targets for Individual Modules
 # =============================================================================
 
+# FP16/BF16 fused multiply-add datapath (src/fp_arith.sv) against the exact
+# reference model, FP_ARITH_VECTORS per format
+FP_ARITH_VECTORS ?= 1000000
+test_fp_arith:
+	@mkdir -p build
+	@set -e; for spec in fp16,5,10 bf16,8,7; do \
+		nm=$${spec%%,*}; rest=$${spec#*,}; e=$${rest%%,*}; m=$${rest#*,}; \
+		python3 test/fp_arith_vectors.py $$nm $(FP_ARITH_VECTORS) build/fp_arith_$$nm.hex; \
+		iverilog -g2012 -s tb_fp_arith -o build/fp_arith_$$nm.vvp \
+			-P tb_fp_arith.EXP_BITS=$$e -P tb_fp_arith.MANT_BITS=$$m \
+			-P tb_fp_arith.VEC=\"build/fp_arith_$$nm.hex\" test/tb_fp_arith.sv src/fp_arith.sv; \
+		vvp -n build/fp_arith_$$nm.vvp | grep -E "PASS|FAIL|MISMATCH"; \
+	done
+
 # FMA Unit
 compile_fma:
 	@mkdir -p build build/waves
