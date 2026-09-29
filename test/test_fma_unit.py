@@ -78,11 +78,14 @@ async def execute_fma(dut, rs: int, rt: int, rq: int) -> int:
     Returns:
         FMA result (Q1.15)
     """
-    # Load inputs in REQUEST state
+    # Load inputs in REQUEST state, then one WAIT cycle, as the core does
+    # (the product is computed over these two cycles)
     dut.core_state.value = STATE_REQUEST
     dut.rs.value = rs
     dut.rt.value = rt
     dut.rq.value = rq
+    await RisingEdge(dut.clk)
+    dut.core_state.value = STATE_WAIT
     await RisingEdge(dut.clk)
     
     # Execute cycle 1: Multiply stage - r3_weighted gets product

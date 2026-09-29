@@ -3,8 +3,8 @@
 
 // OPTIMIZED FUSED MULTIPLY-ADD UNIT (SF16 Fixed-Point, Sign-Magnitude)
 // 2-cycle pipelined MAC matched to the core scheduler:
-// - rs/rt/rq are held by the core from DECODE; (rs * rt) >> 15 is registered
-//   every cycle, so it is ready by EXECUTE
+// - rs/rt/rq are held by the core from DECODE; (rs * rt) >> 15 is computed in
+//   two registered stages over REQUEST and WAIT, so it is ready by EXECUTE
 // - EXECUTE cycle 0: canonicalise the registered product, latch into R3
 // - EXECUTE cycle 1: compute rq + R3 with SF16 saturation, latch to output
 //
@@ -52,14 +52,29 @@ module fma #(
     wire [14:0] mag_r1 = rs[14:0];
     wire [14:0] mag_r2 = rt[14:0];
 
-    // 15×15 unsigned multiply → 30-bit SF31 mantissa
-    wire [29:0] product_unsigned = mag_r1 * mag_r2;
+    // 15×15 unsigned multiply → 30-bit SF31 mantissa, in two registered stages.
+    // rs/rt are the core's operand registers: set at the end of DECODE and
+    // held through EXECUTE, with REQUEST and at least one WAIT cycle between.
+    //   end of REQUEST: partial products a*w[14:8] and a*w[7:0]
+    //   end of WAIT:    their sum >> 15
+    //   EXECUTE cycle 0 reads the finished product.
+    reg [21:0] partial_hi;      // mag_r1 * mag_r2[14:8]
+    reg [22:0] partial_lo;      // mag_r1 * mag_r2[7:0]
+    reg        partial_sign;
+    always @(posedge clk) begin
+        if (reset) begin
+            partial_hi   <= 22'b0;
+            partial_lo   <= 23'b0;
+            partial_sign <= 1'b0;
+        end else begin
+            partial_hi   <= mag_r1 * mag_r2[14:8];
+            partial_lo   <= mag_r1 * mag_r2[7:0];
+            partial_sign <= sign_product;
+        end
+    end
 
-    // The product is registered every cycle. rs/rt are the core's operand
-    // registers, set at DECODE and held through EXECUTE, so by the multiply
-    // stage (EXECUTE cycle 0) this register holds the product of the current
-    // operands. Registering it keeps the multiplier and the zero-detect below
-    // in separate cycles.
+    wire [29:0] product_unsigned = {partial_hi, 8'b0} + {7'b0, partial_lo};
+
     reg [14:0] product_mag;     // product >> 15 (SF16 mantissa)
     reg        product_sign;
     always @(posedge clk) begin
@@ -68,7 +83,7 @@ module fma #(
             product_sign <= 1'b0;
         end else begin
             product_mag  <= product_unsigned[29:15];
-            product_sign <= sign_product;
+            product_sign <= partial_sign;
         end
     end
 
