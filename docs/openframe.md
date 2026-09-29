@@ -1,6 +1,6 @@
 # Atreides on ChipFoundry OpenFrame
 
-This document covers the `cf-openframe` build of the Atreides SF16 GPU for the ChipFoundry OpenFrame harness on SKY130: the architecture, the floorplan, the pin map, the memory bus protocol a host must implement, and how to simulate and harden the design. The Tiny Tapeout build on `main` is separate and unaffected.
+This document covers the `cf-openframe` build of the Atreides GPU for the ChipFoundry OpenFrame harness on SKY130: the architecture, the number formats, the floorplan, the pin map, the memory bus protocol a host must implement, and how to simulate and harden the design. The Tiny Tapeout build on `main` is separate and unaffected.
 
 ## Architecture
 
@@ -8,7 +8,8 @@ This document covers the `cf-openframe` build of the Atreides SF16 GPU for the C
 |---|---|
 | Compute tiles | 4 |
 | Threads per tile (block size) | 8 |
-| Systolic array per tile | 8 × 8 SF16, weight-stationary |
+| Systolic array per tile | 8 × 8, weight-stationary |
+| Number format | SF16, FP16 or BF16, fixed per chip (see below) |
 | MAC units | 256 |
 | Target clock | 50 MHz (20 ns) |
 | Program memory (host side) | 512 × 16-bit instructions |
@@ -23,6 +24,28 @@ Each **core tile** (`src/core_tile.sv`) is one hardened macro. It contains:
 - an arbiter that merges the 8 LSUs into a single data-memory port
 
 The top level (`src/superfloat_openframe.sv`) holds only the block dispatcher, the device control register, a launch sequencer and the pin bus (`src/openframe_bus.sv`).
+
+### Number formats
+
+The same chip is built in three variants that differ only inside the core tile. The `NUMBER_FORMAT` parameter selects the variant, from `superfloat_openframe` down to the PEs: 0 = SF16, 1 = FP16, 2 = BF16. The ALU, the addressing, the pin bus and the ISA are the same in all three; FMA, ACT and the systolic array change arithmetic.
+
+| | SF16 | FP16 | BF16 |
+|---|---|---|---|
+| Encoding | Q1.15 sign-magnitude | IEEE binary16 (1/5/10) | bfloat16 (1/8/7) |
+| Range | (−1, 1) | ±65504 | ±3.4 × 10³⁸ |
+| Multiply-accumulate | 15 × 15 product truncated to Q1.15, saturating add | fused `round(a × b + acc)` | fused `round(a × b + acc)` |
+| Systolic accumulator | 16-bit two's complement, saturating | FP16 | BF16 |
+| PE pipeline | 3 stages | 4 stages | 4 stages |
+
+FP16 and BF16 arithmetic (`src/fp_arith.sv`):
+- Every multiply-accumulate rounds the exact `a × b + c` once, to nearest with ties to even.
+- Subnormal inputs read as zero, and a result below the smallest normal becomes a signed zero (flush to zero, tininess before rounding). Overflow gives infinity.
+- A NaN input, `inf × 0` or `inf − inf` gives the quiet NaN `0x7E00` (FP16) or `0x7FC0` (BF16).
+- Zero signs follow IEEE 754: an exact zero sum of non-zero terms is +0, and `0 + 0` is −0 only when both are −0.
+- ACT computes `f(round(x + bias))`. ReLU maps negatives, including −0, to +0. Leaky ReLU multiplies negatives by 2⁻⁷ exactly, flushing to −0 below the smallest normal. Clipped ReLU is `min(1.0, ReLU)` and keeps NaN.
+- `test/helpers/fp16fmt.py` is the bit-exact reference for all of the above.
+
+Every kernel runs in the same number of cycles in all three formats. The FP PE's extra pipeline stage is hidden, since two SYS instructions are always at least five cycles apart.
 
 ### Programming notes
 
@@ -104,25 +127,55 @@ The chip is the bus master. The host holds program memory and data memory and an
 
 ## Simulation
 
+Every target below takes `NUMBER_FORMAT=0|1|2` (default 0, SF16) and checks results against the model of that format.
+
 ```bash
-make test_openframe_tile
+make test_openframe_tile NUMBER_FORMAT=1
 ```
 
 Runs at the GPU level with ideal memory. It checks an 8 × 8 systolic matmul on all four tiles bit-exactly, and that each tile's scratchpad is private.
 
 ```bash
-make test_openframe_chip
+make test_openframe_chip NUMBER_FORMAT=1
 ```
 
 Drives the chip-level digital top through its pins. It runs two kernels back to back and a partial launch.
+
+```bash
+make test_openframe_fp NUMBER_FORMAT=1
+```
+
+FP16/BF16 only:
+- FMA and all four ACT functions on 256 vectors that mix normal values, signed zeros, infinities, NaN, values near overflow and near the smallest normal, and cancelling operands.
+- The systolic kernel on the same kinds of operands.
+
+Results must match `test/helpers/fp16fmt.py` bit for bit.
+
+```bash
+make test_fp_arith
+```
+
+Checks the fused multiply-add datapath on its own against the reference model: 1 M vectors per format (FP16 and BF16).
 
 The existing instruction-level suites (`make test_matadd`, `make test_matmul`, `make test_matmul_large` and others) run on the same 4-tile configuration through `test/tb_gpu.sv`.
 
 ## Hardening
 
-Both steps use LibreLane from `/Users/aoxo/vscode/librelane` in its nix shell. See `librelane/librelane.md` for the environment.
+Both steps use LibreLane in its nix shell. `run_harden.sh` finds the `librelane` checkout next to this repository, or takes its path from `$LIBRELANE`. Run each harden in a detached `tmux` or `screen` session; a harden takes hours. The log ends with `HARDEN_EXIT <code>`.
 
-1. **Core tile:** `librelane/core_tile/`. Launch `run_harden.sh` in a detached `screen` session; it writes `harden.log`.
-2. **Chip:** `librelane/openframe/`. The top design is `openframe_project_wrapper`. The four tiles are placed as macros, and the define `CORE_TILE_MACRO` makes `gpu.sv` instantiate them without parameter overrides. Point the `core_tile` macro views in `config.json` at the signoff run of step 1 before running.
+| Format | Tile config | Tile views | Chip config |
+|---|---|---|---|
+| SF16 | `core_tile/config.json` | `core_tile/views/` | `openframe/config.json` |
+| FP16 | `core_tile/config_fp16.json` | `core_tile/views_fp16/` | `openframe/config_fp16.json` |
+| BF16 | `core_tile/config_bf16.json` | `core_tile/views_bf16/` | `openframe/config_bf16.json` |
+
+The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_variants.py`; rerun it after editing an SF16 config.
+
+1. **Core tile:** in `librelane/core_tile/`, run `./run_harden.sh config_fp16.json harden_fp16.log`.
+   - If signoff reports residual max-slew or max-cap violations, `./eco_fix.py runs/<run> --config config_fp16.json` writes an ECO config. It buffers the violating drivers from the routed state and re-runs signoff, and prints the command to run it.
+   - `./export_views.sh runs/<signed-off run> views_fp16` copies the views the chip uses.
+2. **Chip:** in `librelane/openframe/`, run `./run_harden.sh config_fp16.json harden_fp16.log`.
+   - The top design is `openframe_project_wrapper`. The four tiles are placed as macros, and the define `CORE_TILE_MACRO` makes `gpu.sv` instantiate them without parameter overrides.
+   - Chip timing uses the tiles' signed-off `.lib` views.
 
 The ChipFoundry template files the chip harden depends on are vendored, unmodified, in `openframe/` (see `openframe/UPSTREAM.md`).
