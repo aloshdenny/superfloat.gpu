@@ -185,6 +185,9 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
    - **Chip timing** uses the tiles' `.lib` timing models (see step 1), which have hold arcs on every tile input.
      - Without them the chip missed hold violations into the tiles: up to 0.21 ns at max_ff on the memory ready inputs.
      - Loading each tile's full netlist and SPEF instead needs about 4 GB per corner. It also under-counts the boundary nets, because each SPEF stops at the tile pin.
+   - **Tile clocks:** each tile's `clk` pin is 0.28 pF, and CTS drives the tiles in pairs from one buffer (0.60 pF against the 0.5 pF limit), even with macro clustering of 1.
+     - `Odb.InsertECOBuffers` runs right after CTS and puts a `clkbuf_16` next to each tile's `clk` pin (`INSERT_ECO_BUFFERS` in the config, via `meta.substituting_steps`).
+     - Hold repair then runs on the final clock tree.
    - **Pin template:** the chip starts from `openframe/pins_extended.def`, not from ChipFoundry's fixed DEF directly.
      - The fixed pins reach only 0.3 µm into the die, so the detailed router cannot place access points on them (DRT-1231).
      - `extend_pins.py` derives the copy with every signal pin extended 3 µm inward. Nothing outside the die boundary changes, and that band is what precheck compares with the empty wrapper.

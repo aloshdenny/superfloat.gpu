@@ -1,4 +1,11 @@
 {
+    "meta": {
+        "version": 2,
+        "flow": "Classic",
+        "substituting_steps": {
+            "+OpenROAD.CTS": "Odb.InsertECOBuffers"
+        }
+    },
     "DESIGN_NAME": "openframe_project_wrapper",
     "VERILOG_FILES": [
         "dir::../../src/openframe_project_wrapper.v",
@@ -148,6 +155,28 @@
     "CTS_OBSTRUCTION_AWARE": true,
     "CTS_MAX_CAP": 0.3,
     "CTS_DISTANCE_BETWEEN_BUFFERS": 300,
+    "INSERT_ECO_BUFFERS": [
+        {
+            "target": "chip.gpu_inst.tiles[0].tile/clk",
+            "buffer": "sky130_fd_sc_hd__clkbuf_16",
+            "placement": [1373.99, 2319.86]
+        },
+        {
+            "target": "chip.gpu_inst.tiles[1].tile/clk",
+            "buffer": "sky130_fd_sc_hd__clkbuf_16",
+            "placement": [1792.64, 2319.86]
+        },
+        {
+            "target": "chip.gpu_inst.tiles[2].tile/clk",
+            "buffer": "sky130_fd_sc_hd__clkbuf_16",
+            "placement": [1373.99, 2446.77]
+        },
+        {
+            "target": "chip.gpu_inst.tiles[3].tile/clk",
+            "buffer": "sky130_fd_sc_hd__clkbuf_16",
+            "placement": [1792.64, 2446.77]
+        }
+    ],
     "CLOCK_PERIOD": 20.0,
     "PNR_SDC_FILE": "dir::pnr.sdc",
     "SIGNOFF_SDC_FILE": "dir::chip.sdc",
