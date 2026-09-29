@@ -19,10 +19,10 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, FallingEdge, RisingEdge
 
 sys.path.insert(0, os.path.dirname(__file__))
-from helpers.q115 import float_to_q115
+from helpers.number_format import NAMES, number_format, fp_format
 from test_openframe_tile import (
     N, NUM_TILES, BLOCK_STRIDE, A_OFF, B_OFF, C_OFF, SCRATCH_BASE, SCRATCH_OUT,
-    build_systolic8_program, build_scratchpad_program, expected_block,
+    build_systolic8_program, build_scratchpad_program, expected_block, random_operand,
 )
 
 PROGRAM_WORDS = 512
@@ -110,18 +110,18 @@ async def launch(dut, host: Host, thread_count: int, max_cycles: int) -> int:
     return cycle, active_seen
 
 
-def systolic_data(seed: int):
+def systolic_data(seed: int, fmt=None):
     rng = random.Random(seed)
     data, expected = {}, {}
     for b in range(NUM_TILES):
-        A = [[float_to_q115(rng.uniform(-0.3, 0.3)) for _ in range(N)] for _ in range(N)]
-        B = [[float_to_q115(rng.uniform(-0.3, 0.3)) for _ in range(N)] for _ in range(N)]
+        A = [[random_operand(rng, fmt) for _ in range(N)] for _ in range(N)]
+        B = [[random_operand(rng, fmt) for _ in range(N)] for _ in range(N)]
         base = b * BLOCK_STRIDE
         for i in range(N):
             for k in range(N):
                 data[base + A_OFF + i * N + k] = A[i][k]
                 data[base + B_OFF + i * N + k] = B[i][k]
-        expected[b] = expected_block(A, B)
+        expected[b] = expected_block(A, B, fmt)
     return data, expected
 
 
@@ -154,7 +154,9 @@ async def test_chip_systolic8_then_scratchpad(dut):
     cocotb.start_soon(host.serve())
     await chip_reset(dut)
 
-    host.data, expected = systolic_data(seed=0x8A8)
+    fmt_id = number_format(dut)
+    dut._log.info(f"number format: {NAMES[fmt_id]}")
+    host.data, expected = systolic_data(seed=0x8A8, fmt=fp_format(fmt_id))
     host.load_program(build_systolic8_program())
     cycles, active = await launch(dut, host, thread_count=N * NUM_TILES, max_cycles=400000)
     dut._log.info(f"systolic8 via pins: {cycles} cycles, program reads {host.reads[0]}, "

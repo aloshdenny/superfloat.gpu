@@ -6,11 +6,14 @@ test_systolic8_all_tiles
     kernel on its own A/B pair through the ISA: SYS clear, eight SYS load
     (weight rows 7..0), eight SYS compute (activation columns k = 0..7), one
     flush compute, then 64 SYS reads stored back to memory. The result is
-    checked bit-exactly against a model of systolic_pe.
+    checked bit-exactly against a model of systolic_pe (SF16) or
+    fp_systolic_pe (FP16/BF16, helpers/fp16fmt.py), following the
+    NUMBER_FORMAT the testbench was compiled with.
 
     Array semantics at the ISA level (weight-stationary):
       PE(i,j) holds B[i][j]; thread i streams row i of A.
-      C[i][j] = sum_k trunc(A[i][k] * B[i][j])   (16-bit saturating)
+      SF16:      C[i][j] = sum_k trunc(A[i][k] * B[i][j])   (16-bit saturating)
+      FP16/BF16: C[i][j] = fma(A[i][k], B[i][j], C[i][j]) per k, from +0
     Column 0 accumulates the operand of the current compute; columns >= 1
     accumulate the previous one after it has drained across the row, so one
     trailing compute with R0 = 0 lines every column up.
@@ -30,6 +33,7 @@ import cocotb
 
 sys.path.insert(0, os.path.dirname(__file__))
 from helpers.q115 import float_to_q115, q115_to_float
+from helpers.number_format import NAMES, number_format, fp_format
 from helpers.memory import (
     read_memory_range,
     asm_mul, asm_add, asm_sub, asm_div, asm_const, asm_ldr, asm_str, asm_ret,
@@ -76,8 +80,11 @@ def pe_accumulate(activations: list, weight: int) -> int:
     return (0x8000 | (-acc)) if acc < 0 else acc
 
 
-def expected_block(A: list, B: list) -> list:
-    """C[i][j] = PE(i,j) after the ISA sequence used by the kernel."""
+def expected_block(A: list, B: list, fmt=None) -> list:
+    """C[i][j] = PE(i,j) after the ISA sequence used by the kernel.
+
+    fmt is the FP16/BF16 model (helpers.fp16fmt), or None for SF16.
+    """
     C = []
     for i in range(N):
         for j in range(N):
@@ -85,8 +92,15 @@ def expected_block(A: list, B: list) -> list:
                 acts = [A[i][k] for k in range(N)] + [0]
             else:
                 acts = [0] + [A[i][k] for k in range(N)]
-            C.append(pe_accumulate(acts, B[i][j]))
+            C.append(fmt.pe_accumulate(acts, B[i][j]) if fmt else pe_accumulate(acts, B[i][j]))
     return C
+
+
+def random_operand(rng: random.Random, fmt=None) -> int:
+    """SF16: uniform in +-0.3. FP16/BF16: uniform in +-2 (many binades)."""
+    if fmt:
+        return fmt.from_float(rng.uniform(-2.0, 2.0))
+    return float_to_q115(rng.uniform(-0.3, 0.3))
 
 
 # ---------------------------------------------------------------------------
@@ -178,18 +192,21 @@ def build_scratchpad_program() -> list:
 
 @cocotb.test()
 async def test_systolic8_all_tiles(dut):
+    fmt_id = number_format(dut)
+    fmt = fp_format(fmt_id)
+    dut._log.info(f"number format: {NAMES[fmt_id]}")
     rng = random.Random(0x8A8)
     data = [0] * (BLOCK_STRIDE * NUM_TILES)
     expected = {}
     for b in range(NUM_TILES):
-        A = [[float_to_q115(rng.uniform(-0.3, 0.3)) for _ in range(N)] for _ in range(N)]
-        B = [[float_to_q115(rng.uniform(-0.3, 0.3)) for _ in range(N)] for _ in range(N)]
+        A = [[random_operand(rng, fmt) for _ in range(N)] for _ in range(N)]
+        B = [[random_operand(rng, fmt) for _ in range(N)] for _ in range(N)]
         base = b * BLOCK_STRIDE
         for i in range(N):
             for k in range(N):
                 data[base + A_OFF + i * N + k] = A[i][k]
                 data[base + B_OFF + i * N + k] = B[i][k]
-        expected[b] = expected_block(A, B)
+        expected[b] = expected_block(A, B, fmt)
 
     program = build_systolic8_program()
     logger = await setup_test(dut, "systolic8_all_tiles", program, data,
