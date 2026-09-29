@@ -183,7 +183,8 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
    - **Chip-level repair settings:**
      - Repair works against `pnr.sdc` (1.0 ns max transition, fanout 8); signoff uses `chip.sdc` (1.5 ns, fanout 10). The margin covers the difference between pre-route estimates and routed parasitics on the ~1 mm strip nets, and the antenna diodes added after routing.
      - Repeaters are inserted only on nets over 1000 µm, which are the strip-to-pad nets. A 200 µm limit filled the 46 µm channel between the tile columns.
-     - Timing repair aims for 1 ns of setup slack. The longest top-level path is the shared instruction cache's tag compare and select, about 19 ns at max_ss.
+     - Timing repair aims for 0.6 ns of setup slack, and glue logic is placed at 25% target density. All four tiles' pins meet at the chip centre; at 35% density with a 1 ns margin, repair crowded that area until detailed routing left met5 shorts over the tiles.
+     - The dispatcher registers the block count and the last block's thread count, so its per-core dispatch chain stays short. Without this it was the longest top-level path, about 19 ns at max_ss. A launch takes one extra cycle.
      - Clock sinks are clustered by 8, clock wires are buffered every 400 µm, and clock buffers drive at most 0.3 pF.
      - The pad-only `analog_*` and `gpio_loopback_*` nets are don't-touch.
      - Legalization may move a cell up to 1000 × 1500 µm, so slew buffers that repair drops over a tile reach a legal row.
