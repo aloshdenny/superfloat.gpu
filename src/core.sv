@@ -5,7 +5,7 @@
 // > Handles processing 1 block at a time
 // > Each core contains 1 fetcher, and per-thread: registers, ALU, FMA, Activation, LSU, PC
 // > The GPU top level owns instruction decoding and passes decoded controls in.
-// > Includes one 2x2 systolic array for accelerated matrix operations
+// > Includes one SYSTOLIC_SIZE x SYSTOLIC_SIZE systolic array (8x8 on OpenFrame)
 // > Supports neural network operations: FMA for matmul, ACT for activation functions
 // > Hierarchical design for improved physical synthesis
 
@@ -14,8 +14,8 @@ module core #(
     parameter DATA_MEM_DATA_BITS = 16,       // SF16 fixed-point (16-bit)
     parameter PROGRAM_MEM_ADDR_BITS = 9,     // 512 instructions
     parameter PROGRAM_MEM_DATA_BITS = 16,
-    parameter THREADS_PER_BLOCK = 2,          // 2 threads per block
-    parameter SYSTOLIC_SIZE = 2,              // 2x2 systolic array size
+    parameter THREADS_PER_BLOCK = 8,          // 8 threads, one per 8x8 edge
+    parameter SYSTOLIC_SIZE = 8,              // 8x8 systolic array size
     parameter NUM_SYSTOLIC_ARRAYS = 1,        // One array per core
     parameter CACHE_SIZE = 2                 // Instruction cache entries (reserved)
 ) (
@@ -413,45 +413,54 @@ module core #(
     // ============================================
     // Systolic Array
     // SYS instruction op: 00=clear, 01=load weights, 10=compute, 11=read.
-    // The first SYSTOLIC_SIZE threads provide rs/rt stream inputs; the first
-    // SYSTOLIC_SIZE*SYSTOLIC_SIZE threads can read flattened result cells.
+    // The first SYSTOLIC_SIZE threads provide rs/rt stream inputs.
+    // A thread reads result cell rs[CELL_BITS-1:0], so every accumulator stays live.
     // ============================================
 
     localparam [1:0] SYSTOLIC_OP_CLEAR   = 2'b00;
     localparam [1:0] SYSTOLIC_OP_LOAD    = 2'b01;
     localparam [1:0] SYSTOLIC_OP_COMPUTE = 2'b10;
-    localparam int unsigned FMA_VISIBLE_LATENCY = 3;
-    localparam int unsigned SYSTOLIC_DRAIN_CYCLES =
-        SYSTOLIC_SIZE + FMA_VISIBLE_LATENCY;
     localparam int unsigned SYSTOLIC_RESULT_COUNT =
         SYSTOLIC_SIZE * SYSTOLIC_SIZE;
+    localparam int unsigned CELL_BITS = $clog2(SYSTOLIC_RESULT_COUNT);
 
     wire systolic_exec = (core_state == 3'b101) && pipe_systolic_enable;
     wire systolic_clear_acc = systolic_exec && (pipe_systolic_op == SYSTOLIC_OP_CLEAR);
     wire systolic_load_weights = systolic_exec && (pipe_systolic_op == SYSTOLIC_OP_LOAD);
     wire systolic_compute_enable = systolic_exec && (pipe_systolic_op == SYSTOLIC_OP_COMPUTE);
 
-    reg [SYSTOLIC_DRAIN_CYCLES-1:0] systolic_compute_drain;
-    wire systolic_enable =
-        systolic_clear_acc ||
-        systolic_load_weights ||
-        systolic_compute_enable ||
-        (|systolic_compute_drain);
-
-    always @(posedge clk) begin
-        if (reset) begin
-            systolic_compute_drain <= {SYSTOLIC_DRAIN_CYCLES{1'b0}};
-        end else begin
-            systolic_compute_drain[0] <= systolic_compute_enable;
-            systolic_compute_drain[SYSTOLIC_DRAIN_CYCLES-1:1] <=
-                systolic_compute_drain[SYSTOLIC_DRAIN_CYCLES-2:0];
-        end
-    end
-
     wire [DATA_MEM_DATA_BITS*SYSTOLIC_SIZE-1:0] systolic_a_inputs_flat [NUM_SYSTOLIC_ARRAYS-1:0];
     wire [DATA_MEM_DATA_BITS*SYSTOLIC_SIZE-1:0] systolic_b_inputs_flat [NUM_SYSTOLIC_ARRAYS-1:0];
     wire [DATA_MEM_DATA_BITS*SYSTOLIC_RESULT_COUNT-1:0] systolic_results_flat [NUM_SYSTOLIC_ARRAYS-1:0];
     wire [NUM_SYSTOLIC_ARRAYS-1:0] systolic_ready;
+
+    // SYS operand hold. The array's activation path runs freely, and the next
+    // instruction's DECODE overwrites pipe_rs/pipe_rt. Feed the array the
+    // operands of the SYS instruction itself: live during its EXECUTE cycle,
+    // held afterwards until the next clear/load/compute, so each row settles
+    // to the last compute's operand.
+    wire systolic_operand_update = systolic_clear_acc || systolic_load_weights || systolic_compute_enable;
+    reg  [DATA_MEM_DATA_BITS-1:0] sys_a_hold [THREADS_PER_BLOCK-1:0];
+    reg  [DATA_MEM_DATA_BITS-1:0] sys_b_hold [THREADS_PER_BLOCK-1:0];
+    wire [DATA_MEM_DATA_BITS-1:0] sys_a [THREADS_PER_BLOCK-1:0];
+    wire [DATA_MEM_DATA_BITS-1:0] sys_b [THREADS_PER_BLOCK-1:0];
+
+    genvar hold_idx;
+    generate
+        for (hold_idx = 0; hold_idx < THREADS_PER_BLOCK; hold_idx = hold_idx + 1) begin : sys_operand_hold
+            always @(posedge clk) begin
+                if (reset) begin
+                    sys_a_hold[hold_idx] <= {DATA_MEM_DATA_BITS{1'b0}};
+                    sys_b_hold[hold_idx] <= {DATA_MEM_DATA_BITS{1'b0}};
+                end else if (systolic_operand_update) begin
+                    sys_a_hold[hold_idx] <= pipe_rs[hold_idx];
+                    sys_b_hold[hold_idx] <= pipe_rt[hold_idx];
+                end
+            end
+            assign sys_a[hold_idx] = systolic_operand_update ? pipe_rs[hold_idx] : sys_a_hold[hold_idx];
+            assign sys_b[hold_idx] = systolic_operand_update ? pipe_rt[hold_idx] : sys_b_hold[hold_idx];
+        end
+    endgenerate
 
     // Distribute data across both arrays:
     // Array k maps inputs from threads k*SYSTOLIC_SIZE to (k+1)*SYSTOLIC_SIZE - 1.
@@ -461,8 +470,8 @@ module core #(
             for (elem_idx = 0; elem_idx < SYSTOLIC_SIZE; elem_idx = elem_idx + 1) begin : elem_map
                 localparam int thread_idx = arr_idx * SYSTOLIC_SIZE + elem_idx;
                 if (thread_idx < THREADS_PER_BLOCK) begin : active_thread
-                    assign systolic_a_inputs_flat[arr_idx][elem_idx*DATA_MEM_DATA_BITS +: DATA_MEM_DATA_BITS] = pipe_rs[thread_idx];
-                    assign systolic_b_inputs_flat[arr_idx][elem_idx*DATA_MEM_DATA_BITS +: DATA_MEM_DATA_BITS] = pipe_rt[thread_idx];
+                    assign systolic_a_inputs_flat[arr_idx][elem_idx*DATA_MEM_DATA_BITS +: DATA_MEM_DATA_BITS] = sys_a[thread_idx];
+                    assign systolic_b_inputs_flat[arr_idx][elem_idx*DATA_MEM_DATA_BITS +: DATA_MEM_DATA_BITS] = sys_b[thread_idx];
                 end else begin : inactive_thread
                     assign systolic_a_inputs_flat[arr_idx][elem_idx*DATA_MEM_DATA_BITS +: DATA_MEM_DATA_BITS] = {DATA_MEM_DATA_BITS{1'b0}};
                     assign systolic_b_inputs_flat[arr_idx][elem_idx*DATA_MEM_DATA_BITS +: DATA_MEM_DATA_BITS] = {DATA_MEM_DATA_BITS{1'b0}};
@@ -471,20 +480,34 @@ module core #(
         end
     endgenerate
 
-    // Read logic: route outputs from the selected array to systolic_out
-    integer systolic_result_idx;
-    always @(*) begin
-        for (systolic_result_idx = 0; systolic_result_idx < THREADS_PER_BLOCK; systolic_result_idx = systolic_result_idx + 1) begin
-            if (systolic_result_idx < SYSTOLIC_RESULT_COUNT) begin
-                if (pipe_systolic_idx < NUM_SYSTOLIC_ARRAYS) begin
-                    systolic_out[systolic_result_idx] =
-                        systolic_results_flat[pipe_systolic_idx][systolic_result_idx*DATA_MEM_DATA_BITS +: DATA_MEM_DATA_BITS];
-                end else begin
-                    systolic_out[systolic_result_idx] = {DATA_MEM_DATA_BITS{1'b0}};
-                end
+    // Read logic: rs[CELL_BITS-1:0] selects any of the SYSTOLIC_SIZE^2 result cells.
+    // The gather spans the whole array, so it is split in two:
+    //   1. every cycle, the cell named by pipe_rs is captured in systolic_sel_q;
+    //   2. at UPDATE the register file takes it, converted to SF16 sign-magnitude.
+    // pipe_rs is set at DECODE and the write happens at UPDATE, at least three
+    // cycles later, so the captured cell is always the requested one. The
+    // accumulator saturates at -32767, so its negation fits in 15 bits.
+    // An indexed part-select gives a balanced mux tree; a per-cell if-chain
+    // synthesises as a SYSTOLIC_SIZE^2-deep priority chain, too slow at 8x8.
+    reg [DATA_MEM_DATA_BITS-1:0] systolic_sel_q [THREADS_PER_BLOCK-1:0];
+    integer systolic_thread_idx;
+    always @(posedge clk) begin
+        for (systolic_thread_idx = 0; systolic_thread_idx < THREADS_PER_BLOCK; systolic_thread_idx = systolic_thread_idx + 1) begin
+            if (reset || !(pipe_systolic_idx < NUM_SYSTOLIC_ARRAYS)) begin
+                systolic_sel_q[systolic_thread_idx] <= {DATA_MEM_DATA_BITS{1'b0}};
             end else begin
-                systolic_out[systolic_result_idx] = {DATA_MEM_DATA_BITS{1'b0}};
+                systolic_sel_q[systolic_thread_idx] <=
+                    systolic_results_flat[pipe_systolic_idx][pipe_rs[systolic_thread_idx][CELL_BITS-1:0]*DATA_MEM_DATA_BITS +: DATA_MEM_DATA_BITS];
             end
+        end
+    end
+
+    integer systolic_conv_idx;
+    always @(*) begin
+        for (systolic_conv_idx = 0; systolic_conv_idx < THREADS_PER_BLOCK; systolic_conv_idx = systolic_conv_idx + 1) begin
+            systolic_out[systolic_conv_idx] = systolic_sel_q[systolic_conv_idx][DATA_MEM_DATA_BITS-1]
+                ? {1'b1, (DATA_MEM_DATA_BITS-1)'(-systolic_sel_q[systolic_conv_idx])}
+                : systolic_sel_q[systolic_conv_idx];
         end
     end
 
@@ -498,7 +521,6 @@ module core #(
             ) systolic_array_inst (
                 .clk(clk),
                 .reset(reset),
-                .enable(systolic_enable),
                 .clear_acc(systolic_clear_acc),
                 .load_weights(systolic_load_weights),
                 .compute_enable(systolic_compute_enable),
