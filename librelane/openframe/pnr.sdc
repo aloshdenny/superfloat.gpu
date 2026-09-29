@@ -27,6 +27,3 @@ set_max_fanout 6 [current_design]
 set_max_transition 1.0 [current_design]
 set_max_capacitance 0.5 [current_design]
 
-# The tiles' outputs come from small port buffers inside the macro and drive
-# up to ~1 mm to the bus logic; hold them to 0.5 ns so repair buffers them.
-set_max_transition 0.5 [get_pins -of_objects [get_cells -hierarchical -filter "ref_name == core_tile" *] -filter "direction == output"]

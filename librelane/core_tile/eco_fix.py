@@ -10,9 +10,16 @@ re-routes the changed nets, and re-runs the full signoff sequence, starting
 from the routed state saved before fill insertion.
 
 usage: ./eco_fix.py runs/RUN_... [--config config.json] [--buffer CELL]
+                                  [--clock-buffer CELL]
 --config is the harden config the run used, relative to this directory or
 absolute (e.g. config_fp16.json, ../openframe/config.json). The ECO config
 eco_<run>.json is written next to it; the command to run it is printed.
+
+Only standard-cell output pins are buffered; a macro output pin (a tile's
+port at chip level) is reported and skipped, since the buffer would be
+placed from the macro's origin. Clock-tree drivers (CTS's clkbuf_* and
+delaybuf_* instances) get --clock-buffer so clock nets stay on clock cells.
+The IR-drop step is left out when the config disables it.
 """
 import argparse
 import glob
@@ -63,8 +70,10 @@ ECO_FLOW = [
 
 
 def violating_drivers(run):
+    """(driver pins to buffer, other violating pins that are not cell drivers)"""
     sta = sorted(glob.glob(os.path.join(run, "*-openroad-stapostpnr")))[-1]
     drivers = set()
+    others = set()
     for rpt in glob.glob(os.path.join(sta, "*", "checks.rpt")):
         section = None
         for line in open(rpt):
@@ -78,7 +87,9 @@ def violating_drivers(run):
                 inst, _, name = pin.rpartition("/")
                 if inst and name in DRIVER_PINS:
                     drivers.add(pin)
-    return sorted(drivers)
+                else:
+                    others.add(pin)
+    return sorted(drivers), sorted(others - drivers)
 
 
 def main():
@@ -86,6 +97,7 @@ def main():
     ap.add_argument("run")
     ap.add_argument("--config", default="config.json")
     ap.add_argument("--buffer", default="sky130_fd_sc_hd__buf_4")
+    ap.add_argument("--clock-buffer", default="sky130_fd_sc_hd__clkbuf_8")
     args = ap.parse_args()
     run = args.run.rstrip("/")
     buffer = args.buffer
@@ -93,13 +105,21 @@ def main():
     pre_fill = sorted(glob.glob(os.path.join(run, "*-checker-wirelength", "state_out.json")))
     if not pre_fill:
         sys.exit(f"{run}: no routed state before fill insertion")
-    drivers = violating_drivers(run)
+    drivers, others = violating_drivers(run)
+    if others:
+        print(f"not cell drivers (loads or macro pins), not buffered: {' '.join(others)}")
     if not drivers:
-        sys.exit(f"{run}: no slew/cap violations; nothing to do")
+        sys.exit(f"{run}: no slew/cap violations on cell drivers; nothing to do")
 
     cfg = json.load(open(config))
-    cfg["meta"] = {"version": 2, "flow": ECO_FLOW}
-    cfg["INSERT_ECO_BUFFERS"] = [{"target": d, "buffer": buffer} for d in drivers]
+    flow = [s for s in ECO_FLOW
+            if not (s == "OpenROAD.IRDropReport" and cfg.get("RUN_IRDROP_REPORT") is False)]
+    cfg["meta"] = {"version": 2, "flow": flow}
+
+    def cell_for(pin):
+        inst = pin.rpartition("/")[0]
+        return args.clock_buffer if inst.startswith(("clkbuf", "delaybuf")) else buffer
+    cfg["INSERT_ECO_BUFFERS"] = [{"target": d, "buffer": cell_for(d)} for d in drivers]
     name = os.path.basename(run)
     out = os.path.join(os.path.dirname(os.path.abspath(config)), f"eco_{name}.json")
     json.dump(cfg, open(out, "w"), indent=4)
