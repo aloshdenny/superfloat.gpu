@@ -1,0 +1,4451 @@
+library (openframe_project_wrapper) {
+  comment                        : "";
+  delay_model                    : table_lookup;
+  simulation                     : false;
+  capacitive_load_unit (1,pF);
+  leakage_power_unit             : 1pW;
+  current_unit                   : "1mA";
+  pulling_resistance_unit        : "1kohm";
+  time_unit                      : "1ns";
+  voltage_unit                   : "1v";
+  library_features(report_delay_calculation);
+
+  input_threshold_pct_rise : 50;
+  input_threshold_pct_fall : 50;
+  output_threshold_pct_rise : 50;
+  output_threshold_pct_fall : 50;
+  slew_lower_threshold_pct_rise : 20;
+  slew_lower_threshold_pct_fall : 20;
+  slew_upper_threshold_pct_rise : 80;
+  slew_upper_threshold_pct_fall : 80;
+  slew_derate_from_library : 1.0;
+
+
+  nom_process                    : 1.0;
+  nom_temperature                : 25.0;
+  nom_voltage                    : 1.80;
+
+  lu_table_template(template_1) {
+    variable_1 : total_output_net_capacitance;
+    index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+  }
+  type ("analog_io") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("analog_noesd_io") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_analog_en") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_analog_pol") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_analog_sel") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_dm0") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_dm1") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_dm2") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_holdover") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_ib_mode_sel") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_in") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_in_h") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_inp_dis") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_loopback_one") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_loopback_zero") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_oeb") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_out") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_slow_sel") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("gpio_vtrip_sel") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 44;
+    bit_from : 43;
+    bit_to : 0;
+  }
+  type ("mask_rev") {
+    base_type : array;
+    data_type : bit;
+    bit_width : 32;
+    bit_from : 31;
+    bit_to : 0;
+  }
+
+  cell ("openframe_project_wrapper") {
+    area : 13122125.000 
+    is_macro_cell : true;
+    pin("por_l") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("porb_h") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("porb_l") {
+      direction : input;
+      capacitance : 0.0060;
+    }
+    pin("resetb_h") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("resetb_l") {
+      direction : input;
+      capacitance : 0.0051;
+    }
+    bus("analog_io") {
+      bus_type : analog_io;
+      direction : inout;
+      capacitance : 0.0000;
+    pin("analog_io[43]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[42]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[41]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[40]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[39]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[38]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[37]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[36]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[35]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[34]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[33]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[32]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[31]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[30]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[29]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[28]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[27]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[26]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[25]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[24]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[23]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[22]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[21]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[20]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[19]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[18]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[17]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[16]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[15]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[14]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[13]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[12]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[11]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[10]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[9]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[8]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[7]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[6]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[5]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[4]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[3]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[2]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[1]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_io[0]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    }
+    bus("analog_noesd_io") {
+      bus_type : analog_noesd_io;
+      direction : inout;
+      capacitance : 0.0000;
+    pin("analog_noesd_io[43]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[42]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[41]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[40]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[39]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[38]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[37]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[36]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[35]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[34]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[33]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[32]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[31]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[30]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[29]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[28]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[27]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[26]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[25]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[24]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[23]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[22]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[21]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[20]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[19]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[18]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[17]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[16]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[15]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[14]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[13]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[12]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[11]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[10]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[9]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[8]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[7]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[6]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[5]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[4]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[3]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[2]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[1]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    pin("analog_noesd_io[0]") {
+      direction : inout;
+      capacitance : 0.0000;
+    }
+    }
+    bus("gpio_analog_en") {
+      bus_type : gpio_analog_en;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_analog_en[43]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_en[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_analog_en[41]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_analog_en[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_en[39]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_analog_en[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_analog_en[37]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_analog_en[36]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_analog_en[35]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_analog_en[34]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_analog_en[33]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_analog_en[32]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_en[31]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_analog_en[30]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_analog_en[29]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_analog_en[28]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_analog_en[27]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_analog_en[26]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_analog_en[25]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_analog_en[24]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_analog_en[23]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_en[22]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_en[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_en[20]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_en[19]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_en[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_en[17]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_analog_en[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_en[15]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_en[14]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_analog_en[13]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_en[12]") {
+      direction : output;
+      capacitance : 0.0042;
+    }
+    pin("gpio_analog_en[11]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_analog_en[10]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_analog_en[9]") {
+      direction : output;
+      capacitance : 0.0039;
+    }
+    pin("gpio_analog_en[8]") {
+      direction : output;
+      capacitance : 0.0042;
+    }
+    pin("gpio_analog_en[7]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_en[6]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_analog_en[5]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_analog_en[4]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_analog_en[3]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_analog_en[2]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_en[1]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_analog_en[0]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    }
+    bus("gpio_analog_pol") {
+      bus_type : gpio_analog_pol;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_analog_pol[43]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_analog_pol[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_analog_pol[41]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_pol[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_pol[39]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_analog_pol[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_analog_pol[37]") {
+      direction : output;
+      capacitance : 0.0067;
+    }
+    pin("gpio_analog_pol[36]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_analog_pol[35]") {
+      direction : output;
+      capacitance : 0.0073;
+    }
+    pin("gpio_analog_pol[34]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_analog_pol[33]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_analog_pol[32]") {
+      direction : output;
+      capacitance : 0.0062;
+    }
+    pin("gpio_analog_pol[31]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_analog_pol[30]") {
+      direction : output;
+      capacitance : 0.0046;
+    }
+    pin("gpio_analog_pol[29]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_analog_pol[28]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_analog_pol[27]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_analog_pol[26]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_analog_pol[25]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_analog_pol[24]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_analog_pol[23]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_pol[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_pol[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_pol[20]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_pol[19]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_pol[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_pol[17]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_pol[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_pol[15]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_pol[14]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_analog_pol[13]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_pol[12]") {
+      direction : output;
+      capacitance : 0.0040;
+    }
+    pin("gpio_analog_pol[11]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_analog_pol[10]") {
+      direction : output;
+      capacitance : 0.0048;
+    }
+    pin("gpio_analog_pol[9]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_analog_pol[8]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_analog_pol[7]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_analog_pol[6]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_analog_pol[5]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_pol[4]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_analog_pol[3]") {
+      direction : output;
+      capacitance : 0.0046;
+    }
+    pin("gpio_analog_pol[2]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_pol[1]") {
+      direction : output;
+      capacitance : 0.0047;
+    }
+    pin("gpio_analog_pol[0]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    }
+    bus("gpio_analog_sel") {
+      bus_type : gpio_analog_sel;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_analog_sel[43]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_sel[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_analog_sel[41]") {
+      direction : output;
+      capacitance : 0.0041;
+    }
+    pin("gpio_analog_sel[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_sel[39]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_sel[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_analog_sel[37]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_analog_sel[36]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_sel[35]") {
+      direction : output;
+      capacitance : 0.0050;
+    }
+    pin("gpio_analog_sel[34]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_analog_sel[33]") {
+      direction : output;
+      capacitance : 0.0057;
+    }
+    pin("gpio_analog_sel[32]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_analog_sel[31]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_analog_sel[30]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_analog_sel[29]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_analog_sel[28]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_analog_sel[27]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_analog_sel[26]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_analog_sel[25]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_analog_sel[24]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_analog_sel[23]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_sel[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_sel[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_sel[20]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_sel[19]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_sel[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_sel[17]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_sel[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_analog_sel[15]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_analog_sel[14]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_analog_sel[13]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_analog_sel[12]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_sel[11]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_analog_sel[10]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_analog_sel[9]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_sel[8]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_analog_sel[7]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_analog_sel[6]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_analog_sel[5]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_analog_sel[4]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_sel[3]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_analog_sel[2]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_analog_sel[1]") {
+      direction : output;
+      capacitance : 0.0050;
+    }
+    pin("gpio_analog_sel[0]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    }
+    bus("gpio_dm0") {
+      bus_type : gpio_dm0;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_dm0[43]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm0[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm0[41]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm0[40]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm0[39]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm0[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm0[37]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm0[36]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_dm0[35]") {
+      direction : output;
+      capacitance : 0.0066;
+    }
+    pin("gpio_dm0[34]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm0[33]") {
+      direction : output;
+      capacitance : 0.0063;
+    }
+    pin("gpio_dm0[32]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_dm0[31]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_dm0[30]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_dm0[29]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_dm0[28]") {
+      direction : output;
+      capacitance : 0.0049;
+    }
+    pin("gpio_dm0[27]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_dm0[26]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_dm0[25]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_dm0[24]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm0[23]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_dm0[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm0[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm0[20]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm0[19]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_dm0[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm0[17]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_dm0[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm0[15]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_dm0[14]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_dm0[13]") {
+      direction : output;
+      capacitance : 0.0057;
+    }
+    pin("gpio_dm0[12]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_dm0[11]") {
+      direction : output;
+      capacitance : 0.0042;
+    }
+    pin("gpio_dm0[10]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_dm0[9]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_dm0[8]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm0[7]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_dm0[6]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_dm0[5]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_dm0[4]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_dm0[3]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_dm0[2]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_dm0[1]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm0[0]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    }
+    bus("gpio_dm1") {
+      bus_type : gpio_dm1;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_dm1[43]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_dm1[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm1[41]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm1[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm1[39]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm1[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm1[37]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_dm1[36]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_dm1[35]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm1[34]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_dm1[33]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_dm1[32]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_dm1[31]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_dm1[30]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_dm1[29]") {
+      direction : output;
+      capacitance : 0.0050;
+    }
+    pin("gpio_dm1[28]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_dm1[27]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_dm1[26]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_dm1[25]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_dm1[24]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_dm1[23]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_dm1[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm1[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm1[20]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm1[19]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm1[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm1[17]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm1[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm1[15]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm1[14]") {
+      direction : output;
+      capacitance : 0.0040;
+    }
+    pin("gpio_dm1[13]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm1[12]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm1[11]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_dm1[10]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_dm1[9]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_dm1[8]") {
+      direction : output;
+      capacitance : 0.0042;
+    }
+    pin("gpio_dm1[7]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_dm1[6]") {
+      direction : output;
+      capacitance : 0.0040;
+    }
+    pin("gpio_dm1[5]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_dm1[4]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_dm1[3]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_dm1[2]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_dm1[1]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_dm1[0]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    }
+    bus("gpio_dm2") {
+      bus_type : gpio_dm2;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_dm2[43]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm2[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm2[41]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_dm2[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm2[39]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm2[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_dm2[37]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm2[36]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_dm2[35]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_dm2[34]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_dm2[33]") {
+      direction : output;
+      capacitance : 0.0063;
+    }
+    pin("gpio_dm2[32]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_dm2[31]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_dm2[30]") {
+      direction : output;
+      capacitance : 0.0057;
+    }
+    pin("gpio_dm2[29]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_dm2[28]") {
+      direction : output;
+      capacitance : 0.0059;
+    }
+    pin("gpio_dm2[27]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_dm2[26]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_dm2[25]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_dm2[24]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_dm2[23]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm2[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm2[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm2[20]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_dm2[19]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm2[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm2[17]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm2[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_dm2[15]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_dm2[14]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_dm2[13]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_dm2[12]") {
+      direction : output;
+      capacitance : 0.0046;
+    }
+    pin("gpio_dm2[11]") {
+      direction : output;
+      capacitance : 0.0047;
+    }
+    pin("gpio_dm2[10]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_dm2[9]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_dm2[8]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_dm2[7]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_dm2[6]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_dm2[5]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_dm2[4]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_dm2[3]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm2[2]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_dm2[1]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_dm2[0]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    }
+    bus("gpio_holdover") {
+      bus_type : gpio_holdover;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_holdover[43]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_holdover[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_holdover[41]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_holdover[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_holdover[39]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_holdover[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_holdover[37]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_holdover[36]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_holdover[35]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_holdover[34]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_holdover[33]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_holdover[32]") {
+      direction : output;
+      capacitance : 0.0050;
+    }
+    pin("gpio_holdover[31]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_holdover[30]") {
+      direction : output;
+      capacitance : 0.0062;
+    }
+    pin("gpio_holdover[29]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_holdover[28]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_holdover[27]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_holdover[26]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_holdover[25]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_holdover[24]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_holdover[23]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_holdover[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_holdover[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_holdover[20]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_holdover[19]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_holdover[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_holdover[17]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_holdover[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_holdover[15]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_holdover[14]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_holdover[13]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_holdover[12]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_holdover[11]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_holdover[10]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_holdover[9]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_holdover[8]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_holdover[7]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_holdover[6]") {
+      direction : output;
+      capacitance : 0.0039;
+    }
+    pin("gpio_holdover[5]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_holdover[4]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_holdover[3]") {
+      direction : output;
+      capacitance : 0.0046;
+    }
+    pin("gpio_holdover[2]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_holdover[1]") {
+      direction : output;
+      capacitance : 0.0046;
+    }
+    pin("gpio_holdover[0]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    }
+    bus("gpio_ib_mode_sel") {
+      bus_type : gpio_ib_mode_sel;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_ib_mode_sel[43]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_ib_mode_sel[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_ib_mode_sel[41]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_ib_mode_sel[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_ib_mode_sel[39]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_ib_mode_sel[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_ib_mode_sel[37]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_ib_mode_sel[36]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_ib_mode_sel[35]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_ib_mode_sel[34]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_ib_mode_sel[33]") {
+      direction : output;
+      capacitance : 0.0057;
+    }
+    pin("gpio_ib_mode_sel[32]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_ib_mode_sel[31]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_ib_mode_sel[30]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_ib_mode_sel[29]") {
+      direction : output;
+      capacitance : 0.0046;
+    }
+    pin("gpio_ib_mode_sel[28]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_ib_mode_sel[27]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_ib_mode_sel[26]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_ib_mode_sel[25]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_ib_mode_sel[24]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_ib_mode_sel[23]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_ib_mode_sel[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_ib_mode_sel[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_ib_mode_sel[20]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_ib_mode_sel[19]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_ib_mode_sel[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_ib_mode_sel[17]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_ib_mode_sel[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_ib_mode_sel[15]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_ib_mode_sel[14]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_ib_mode_sel[13]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_ib_mode_sel[12]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_ib_mode_sel[11]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_ib_mode_sel[10]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_ib_mode_sel[9]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_ib_mode_sel[8]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_ib_mode_sel[7]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_ib_mode_sel[6]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_ib_mode_sel[5]") {
+      direction : output;
+      capacitance : 0.0040;
+    }
+    pin("gpio_ib_mode_sel[4]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_ib_mode_sel[3]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_ib_mode_sel[2]") {
+      direction : output;
+      capacitance : 0.0039;
+    }
+    pin("gpio_ib_mode_sel[1]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_ib_mode_sel[0]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    }
+    bus("gpio_in") {
+      bus_type : gpio_in;
+      direction : input;
+      capacitance : 0.0000;
+    pin("gpio_in[43]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[42]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[41]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[40]") {
+      direction : input;
+      capacitance : 0.0051;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.09820");
+	}
+	fall_constraint(scalar) {
+          values("-3.20204");
+	}
+      }
+    }
+    pin("gpio_in[39]") {
+      direction : input;
+      capacitance : 0.0050;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-2.78308");
+	}
+	fall_constraint(scalar) {
+          values("-2.75911");
+	}
+      }
+    }
+    pin("gpio_in[38]") {
+      direction : input;
+      clock : true;
+      capacitance : 0.0289;
+      timing() {
+        timing_sense : positive_unate;
+        timing_type : min_clock_tree_path;
+	cell_rise(scalar) {
+          values("4.34195");
+	}
+	cell_fall(scalar) {
+          values("1.87429");
+	}
+      }
+      timing() {
+        timing_sense : positive_unate;
+        timing_type : max_clock_tree_path;
+	cell_rise(scalar) {
+          values("6.81693");
+	}
+	cell_fall(scalar) {
+          values("7.07557");
+	}
+      }
+    }
+    pin("gpio_in[37]") {
+      direction : input;
+      capacitance : 0.0061;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.49527");
+	}
+	fall_constraint(scalar) {
+          values("-3.38964");
+	}
+      }
+    }
+    pin("gpio_in[36]") {
+      direction : input;
+      capacitance : 0.0082;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.61026");
+	}
+	fall_constraint(scalar) {
+          values("-3.52695");
+	}
+      }
+    }
+    pin("gpio_in[35]") {
+      direction : input;
+      capacitance : 0.0082;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.62902");
+	}
+	fall_constraint(scalar) {
+          values("-3.63650");
+	}
+      }
+    }
+    pin("gpio_in[34]") {
+      direction : input;
+      capacitance : 0.0084;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.94466");
+	}
+	fall_constraint(scalar) {
+          values("-3.87740");
+	}
+      }
+    }
+    pin("gpio_in[33]") {
+      direction : input;
+      capacitance : 0.0086;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.96101");
+	}
+	fall_constraint(scalar) {
+          values("-3.88187");
+	}
+      }
+    }
+    pin("gpio_in[32]") {
+      direction : input;
+      capacitance : 0.0082;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-4.07243");
+	}
+	fall_constraint(scalar) {
+          values("-3.99363");
+	}
+      }
+    }
+    pin("gpio_in[31]") {
+      direction : input;
+      capacitance : 0.0062;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.90333");
+	}
+	fall_constraint(scalar) {
+          values("-3.86047");
+	}
+      }
+    }
+    pin("gpio_in[30]") {
+      direction : input;
+      capacitance : 0.0076;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.75910");
+	}
+	fall_constraint(scalar) {
+          values("-3.78148");
+	}
+      }
+    }
+    pin("gpio_in[29]") {
+      direction : input;
+      capacitance : 0.0077;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.72621");
+	}
+	fall_constraint(scalar) {
+          values("-3.64407");
+	}
+      }
+    }
+    pin("gpio_in[28]") {
+      direction : input;
+      capacitance : 0.0066;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.64149");
+	}
+	fall_constraint(scalar) {
+          values("-3.58362");
+	}
+      }
+    }
+    pin("gpio_in[27]") {
+      direction : input;
+      capacitance : 0.0075;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.51445");
+	}
+	fall_constraint(scalar) {
+          values("-3.44791");
+	}
+      }
+    }
+    pin("gpio_in[26]") {
+      direction : input;
+      capacitance : 0.0077;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.40420");
+	}
+	fall_constraint(scalar) {
+          values("-3.32834");
+	}
+      }
+    }
+    pin("gpio_in[25]") {
+      direction : input;
+      capacitance : 0.0078;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-3.14450");
+	}
+	fall_constraint(scalar) {
+          values("-3.14881");
+	}
+      }
+    }
+    pin("gpio_in[24]") {
+      direction : input;
+      capacitance : 0.0104;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : setup_rising;
+	rise_constraint(scalar) {
+          values("-2.91079");
+	}
+	fall_constraint(scalar) {
+          values("-2.92918");
+	}
+      }
+    }
+    pin("gpio_in[23]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[22]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[21]") {
+      direction : input;
+      capacitance : 0.0084;
+    }
+    pin("gpio_in[20]") {
+      direction : input;
+      capacitance : 0.0059;
+    }
+    pin("gpio_in[19]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[18]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[17]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[16]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[15]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[14]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[13]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[12]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[11]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[10]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[9]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[8]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[7]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[6]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[5]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[4]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[3]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[2]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[1]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in[0]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    }
+    bus("gpio_in_h") {
+      bus_type : gpio_in_h;
+      direction : input;
+      capacitance : 0.0000;
+    pin("gpio_in_h[43]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[42]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[41]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[40]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[39]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[38]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[37]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[36]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[35]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[34]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[33]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[32]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[31]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[30]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[29]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[28]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[27]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[26]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[25]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[24]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[23]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[22]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[21]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[20]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[19]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[18]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[17]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[16]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[15]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[14]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[13]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[12]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[11]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[10]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[9]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[8]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[7]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[6]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[5]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[4]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[3]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[2]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[1]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_in_h[0]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    }
+    bus("gpio_inp_dis") {
+      bus_type : gpio_inp_dis;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_inp_dis[43]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_inp_dis[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_inp_dis[41]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_inp_dis[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[39]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_inp_dis[37]") {
+      direction : output;
+      capacitance : 0.0072;
+    }
+    pin("gpio_inp_dis[36]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_inp_dis[35]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_inp_dis[34]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_inp_dis[33]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_inp_dis[32]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_inp_dis[31]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_inp_dis[30]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_inp_dis[29]") {
+      direction : output;
+      capacitance : 0.0057;
+    }
+    pin("gpio_inp_dis[28]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_inp_dis[27]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_inp_dis[26]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_inp_dis[25]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_inp_dis[24]") {
+      direction : output;
+      capacitance : 0.0050;
+    }
+    pin("gpio_inp_dis[23]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[20]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[19]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[17]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[15]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_inp_dis[14]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_inp_dis[13]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_inp_dis[12]") {
+      direction : output;
+      capacitance : 0.0048;
+    }
+    pin("gpio_inp_dis[11]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_inp_dis[10]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_inp_dis[9]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_inp_dis[8]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_inp_dis[7]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_inp_dis[6]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_inp_dis[5]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_inp_dis[4]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_inp_dis[3]") {
+      direction : output;
+      capacitance : 0.0042;
+    }
+    pin("gpio_inp_dis[2]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_inp_dis[1]") {
+      direction : output;
+      capacitance : 0.0046;
+    }
+    pin("gpio_inp_dis[0]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    }
+    bus("gpio_loopback_one") {
+      bus_type : gpio_loopback_one;
+      direction : input;
+      capacitance : 0.0000;
+    pin("gpio_loopback_one[43]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[42]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[41]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[40]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[39]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[38]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[37]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[36]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[35]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[34]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[33]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[32]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[31]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[30]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[29]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[28]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[27]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[26]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[25]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[24]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[23]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[22]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[21]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[20]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[19]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[18]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[17]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[16]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[15]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[14]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[13]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[12]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[11]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[10]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[9]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[8]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[7]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[6]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[5]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[4]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[3]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[2]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[1]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_one[0]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    }
+    bus("gpio_loopback_zero") {
+      bus_type : gpio_loopback_zero;
+      direction : input;
+      capacitance : 0.0000;
+    pin("gpio_loopback_zero[43]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[42]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[41]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[40]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[39]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[38]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[37]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[36]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[35]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[34]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[33]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[32]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[31]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[30]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[29]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[28]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[27]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[26]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[25]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[24]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[23]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[22]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[21]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[20]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[19]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[18]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[17]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[16]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[15]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[14]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[13]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[12]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[11]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[10]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[9]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[8]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[7]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[6]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[5]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[4]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[3]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[2]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[1]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("gpio_loopback_zero[0]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    }
+    bus("gpio_oeb") {
+      bus_type : gpio_oeb;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_oeb[43]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_oeb[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_oeb[41]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_oeb[40]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_oeb[39]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_oeb[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_oeb[37]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_oeb[36]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_oeb[35]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_oeb[34]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_oeb[33]") {
+      direction : output;
+      capacitance : 0.0048;
+    }
+    pin("gpio_oeb[32]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_oeb[31]") {
+      direction : output;
+      capacitance : 0.0049;
+    }
+    pin("gpio_oeb[30]") {
+      direction : output;
+      capacitance : 0.0042;
+    }
+    pin("gpio_oeb[29]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_oeb[28]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_oeb[27]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_oeb[26]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_oeb[25]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_oeb[24]") {
+      direction : output;
+      capacitance : 0.0056;
+    }
+    pin("gpio_oeb[23]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_oeb[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_oeb[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_oeb[20]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_oeb[19]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_oeb[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_oeb[17]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_oeb[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_oeb[15]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_oeb[14]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_oeb[13]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_oeb[12]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_oeb[11]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_oeb[10]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_oeb[9]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_oeb[8]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_oeb[7]") {
+      direction : output;
+      capacitance : 0.0039;
+    }
+    pin("gpio_oeb[6]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_oeb[5]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_oeb[4]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_oeb[3]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_oeb[2]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_oeb[1]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_oeb[0]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    }
+    bus("gpio_out") {
+      bus_type : gpio_out;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_out[43]") {
+      direction : output;
+      capacitance : 0.0035;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.88913,7.89413,7.90621,7.93566,8.01589,8.24863,8.93253");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01727,0.02178,0.03428,0.07131,0.18464,0.52176,1.50575");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.58104,7.58563,7.59592,7.61687,7.66229,7.77839,8.11273");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01765,0.02072,0.02790,0.04576,0.09404,0.24289,0.69601");
+	}
+      }
+    }
+    pin("gpio_out[42]") {
+      direction : output;
+      capacitance : 0.0035;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.49778,7.50277,7.51481,7.54427,7.62478,7.85808,8.54280");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01732,0.02173,0.03420,0.07132,0.18443,0.52108,1.50714");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.27412,7.27880,7.28908,7.31007,7.35546,7.47157,7.80583");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01767,0.02067,0.02791,0.04580,0.09400,0.24268,0.69535");
+	}
+      }
+    }
+    pin("gpio_out[41]") {
+      direction : output;
+      capacitance : 0.0034;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.50495,7.51003,7.52213,7.55153,7.63196,7.86410,8.56043");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01843,0.02275,0.03495,0.07167,0.18499,0.52127,1.50807");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.29748,7.30228,7.31255,7.33363,7.37900,7.49514,7.82975");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01779,0.02062,0.02791,0.04570,0.09385,0.24221,0.69586");
+	}
+      }
+    }
+    pin("gpio_out[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_out[39]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_out[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_out[37]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_out[36]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_out[35]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_out[34]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_out[33]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_out[32]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_out[31]") {
+      direction : output;
+      capacitance : 0.0042;
+    }
+    pin("gpio_out[30]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_out[29]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_out[28]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_out[27]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_out[26]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_out[25]") {
+      direction : output;
+      capacitance : 0.0061;
+    }
+    pin("gpio_out[24]") {
+      direction : output;
+      capacitance : 0.0058;
+    }
+    pin("gpio_out[23]") {
+      direction : output;
+      capacitance : 0.0035;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.33017,7.33520,7.34723,7.37659,7.45704,7.68917,8.38544");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01811,0.02244,0.03470,0.07154,0.18495,0.52118,1.50813");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.12250,7.12734,7.13761,7.15869,7.20404,7.32018,7.65472");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01780,0.02060,0.02791,0.04570,0.09385,0.24220,0.69558");
+	}
+      }
+    }
+    pin("gpio_out[22]") {
+      direction : output;
+      capacitance : 0.0033;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.73681,7.74182,7.75389,7.78334,7.86360,8.09639,8.78056");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01727,0.02177,0.03427,0.07131,0.18464,0.52175,1.50567");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.51715,7.52173,7.53202,7.55297,7.59839,7.71449,8.04879");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01764,0.02072,0.02790,0.04578,0.09405,0.24290,0.69588");
+	}
+      }
+    }
+    pin("gpio_out[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_out[20]") {
+      direction : output;
+      capacitance : 0.0035;
+    }
+    pin("gpio_out[19]") {
+      direction : output;
+      capacitance : 0.0034;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.01788,7.02298,7.03512,7.06456,7.14499,7.37718,8.07300");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01860,0.02290,0.03508,0.07174,0.18499,0.52131,1.50799");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.94341,6.94822,6.95848,6.97956,7.02493,7.14107,7.47569");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01779,0.02062,0.02791,0.04570,0.09385,0.24221,0.69588");
+	}
+      }
+    }
+    pin("gpio_out[18]") {
+      direction : output;
+      capacitance : 0.0033;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.62055,7.62554,7.63758,7.66704,7.74756,7.98085,8.66557");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01732,0.02173,0.03420,0.07132,0.18444,0.52108,1.50713");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.48178,7.48646,7.49675,7.51773,7.56313,7.67923,8.01350");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01767,0.02067,0.02791,0.04580,0.09400,0.24268,0.69536");
+	}
+      }
+    }
+    pin("gpio_out[17]") {
+      direction : output;
+      capacitance : 0.0034;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.62571,7.63071,7.64278,7.67223,7.75247,7.98524,8.66937");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01727,0.02178,0.03428,0.07131,0.18465,0.52178,1.50558");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.50637,7.51095,7.52124,7.54219,7.58761,7.70371,8.03802");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01764,0.02072,0.02790,0.04578,0.09405,0.24290,0.69592");
+	}
+      }
+    }
+    pin("gpio_out[16]") {
+      direction : output;
+      capacitance : 0.0034;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.44797,7.45297,7.46505,7.49450,7.57472,7.80746,8.49115");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01728,0.02177,0.03428,0.07131,0.18463,0.52172,1.50597");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.32167,7.32625,7.33654,7.35750,7.40291,7.51901,7.85337");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01766,0.02072,0.02790,0.04575,0.09404,0.24289,0.69606");
+	}
+      }
+    }
+    pin("gpio_out[15]") {
+      direction : output;
+      capacitance : 0.0034;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.44357,7.44865,7.46074,7.49015,7.57058,7.80271,8.49907");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01843,0.02274,0.03494,0.07167,0.18499,0.52126,1.50807");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.28994,7.29475,7.30501,7.32610,7.37146,7.48761,7.82223");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01779,0.02062,0.02791,0.04570,0.09385,0.24221,0.69590");
+	}
+      }
+    }
+    pin("gpio_out[14]") {
+      direction : output;
+      capacitance : 0.0038;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.83947,6.84449,6.85652,6.88592,6.96640,7.19895,7.89134");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01784,0.02220,0.03453,0.07147,0.18476,0.52112,1.50787");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.75497,6.75986,6.77014,6.79122,6.83654,6.95266,7.28707");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01781,0.02057,0.02791,0.04571,0.09385,0.24216,0.69496");
+	}
+      }
+    }
+    pin("gpio_out[13]") {
+      direction : output;
+      capacitance : 0.0052;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.81003,6.81504,6.82707,6.85649,6.93701,7.16994,7.85879");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01760,0.02198,0.03437,0.07140,0.18460,0.52105,1.50763");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.69606,6.70086,6.71114,6.73218,6.77753,6.89365,7.22798");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01775,0.02061,0.02791,0.04575,0.09392,0.24239,0.69510");
+	}
+      }
+    }
+    pin("gpio_out[12]") {
+      direction : output;
+      capacitance : 0.0052;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.67612,6.68113,6.69316,6.72259,6.80311,7.03611,7.72432");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01756,0.02194,0.03434,0.07139,0.18457,0.52104,1.50758");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.60154,6.60633,6.61661,6.63764,6.68300,6.79911,7.13344");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01774,0.02062,0.02791,0.04576,0.09393,0.24243,0.69513");
+	}
+      }
+    }
+    pin("gpio_out[11]") {
+      direction : output;
+      capacitance : 0.0043;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.68479,6.68979,6.70182,6.73128,6.81182,7.04511,7.73063");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01738,0.02177,0.03422,0.07134,0.18444,0.52099,1.50740");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.64939,6.65410,6.66439,6.68538,6.73077,6.84688,7.18116");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01769,0.02065,0.02791,0.04578,0.09397,0.24259,0.69528");
+	}
+      }
+    }
+    pin("gpio_out[10]") {
+      direction : output;
+      capacitance : 0.0052;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.53716,6.54217,6.55424,6.58369,6.66394,6.89672,7.58086");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01727,0.02177,0.03428,0.07131,0.18464,0.52177,1.50562");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.46701,6.47158,6.48188,6.50282,6.54825,6.66434,6.99863");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01763,0.02072,0.02790,0.04579,0.09405,0.24291,0.69583");
+	}
+      }
+    }
+    pin("gpio_out[9]") {
+      direction : output;
+      capacitance : 0.0043;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.33743,6.34243,6.35451,6.38396,6.46419,6.69694,7.38105");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01727,0.02178,0.03428,0.07131,0.18466,0.52181,1.50553");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.27603,6.28061,6.29090,6.31185,6.35727,6.47337,6.80768");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01764,0.02072,0.02790,0.04578,0.09405,0.24290,0.69592");
+	}
+      }
+    }
+    pin("gpio_out[8]") {
+      direction : output;
+      capacitance : 0.0037;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.08843,6.09342,6.10545,6.13492,6.21544,6.44873,7.13346");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01732,0.02173,0.03420,0.07132,0.18443,0.52107,1.50716");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("5.87433,5.87901,5.88930,5.91028,5.95568,6.07178,6.40605");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01767,0.02067,0.02791,0.04580,0.09399,0.24267,0.69535");
+	}
+      }
+    }
+    pin("gpio_out[7]") {
+      direction : output;
+      capacitance : 0.0058;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("5.77001,5.77503,5.78706,5.81645,5.89692,6.12935,6.82284");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01792,0.02227,0.03457,0.07149,0.18481,0.52114,1.50794");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("5.61009,5.61498,5.62526,5.64634,5.69166,5.80779,6.14222");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01781,0.02057,0.02791,0.04571,0.09385,0.24217,0.69506");
+	}
+      }
+    }
+    pin("gpio_out[6]") {
+      direction : output;
+      capacitance : 0.0054;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.38425,6.38925,6.40128,6.43074,6.51125,6.74453,7.42923");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01732,0.02173,0.03420,0.07132,0.18444,0.52110,1.50709");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.30973,6.31442,6.32470,6.34569,6.39109,6.50719,6.84146");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01768,0.02066,0.02791,0.04579,0.09399,0.24264,0.69533");
+	}
+      }
+    }
+    pin("gpio_out[5]") {
+      direction : output;
+      capacitance : 0.0037;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.36947,6.37446,6.38651,6.41597,6.49641,6.72957,7.41414");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01731,0.02174,0.03422,0.07132,0.18449,0.52126,1.50674");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.30050,6.30516,6.31545,6.33642,6.38183,6.49793,6.83219");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01765,0.02068,0.02791,0.04580,0.09401,0.24272,0.69539");
+	}
+      }
+    }
+    pin("gpio_out[4]") {
+      direction : output;
+      capacitance : 0.0052;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.66477,6.66977,6.68181,6.71127,6.79173,7.02491,7.70951");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01731,0.02174,0.03422,0.07132,0.18448,0.52122,1.50682");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.60688,6.61154,6.62183,6.64281,6.68821,6.80431,7.13857");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01766,0.02067,0.02791,0.04580,0.09400,0.24270,0.69538");
+	}
+      }
+    }
+    pin("gpio_out[3]") {
+      direction : output;
+      capacitance : 0.0040;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.87646,6.88146,6.89349,6.92295,7.00350,7.23685,7.92177");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01734,0.02173,0.03420,0.07133,0.18441,0.52098,1.50736");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.79109,6.79579,6.80608,6.82707,6.87246,6.98856,7.32284");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01768,0.02066,0.02791,0.04579,0.09398,0.24263,0.69532");
+	}
+      }
+    }
+    pin("gpio_out[2]") {
+      direction : output;
+      capacitance : 0.0047;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.62891,6.63391,6.64594,6.67538,6.75591,6.98895,7.67671");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01753,0.02191,0.03432,0.07138,0.18455,0.52103,1.50755");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.52261,6.52738,6.53766,6.55869,6.60405,6.72016,7.05448");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01773,0.02063,0.02791,0.04576,0.09394,0.24247,0.69517");
+	}
+      }
+    }
+    pin("gpio_out[1]") {
+      direction : output;
+      capacitance : 0.0053;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.06189,7.06691,7.07894,7.10833,7.18881,7.42129,8.11428");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01788,0.02224,0.03455,0.07148,0.18479,0.52113,1.50791");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("6.97291,6.97780,6.98807,7.00915,7.05448,7.17060,7.50503");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01781,0.02057,0.02791,0.04571,0.09385,0.24217,0.69505");
+	}
+      }
+    }
+    pin("gpio_out[0]") {
+      direction : output;
+      capacitance : 0.0052;
+      timing() {
+        related_pin : "gpio_in[38]";
+        timing_type : rising_edge;
+	cell_rise(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.18579,7.19082,7.20285,7.23223,7.31269,7.54502,8.23945");
+	}
+	rise_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01798,0.02233,0.03462,0.07150,0.18486,0.52115,1.50800");
+	}
+	cell_fall(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("7.03243,7.03729,7.04757,7.06865,7.11398,7.23011,7.56459");
+	}
+	fall_transition(template_1) {
+          index_1("0.00050,  0.00146,  0.00429,  0.01257,  0.03681,  0.10783,  0.31587");
+          values("0.01781,0.02058,0.02791,0.04571,0.09385,0.24218,0.69525");
+	}
+      }
+    }
+    }
+    bus("gpio_slow_sel") {
+      bus_type : gpio_slow_sel;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_slow_sel[43]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_slow_sel[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_slow_sel[41]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_slow_sel[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_slow_sel[39]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_slow_sel[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_slow_sel[37]") {
+      direction : output;
+      capacitance : 0.0046;
+    }
+    pin("gpio_slow_sel[36]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_slow_sel[35]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_slow_sel[34]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_slow_sel[33]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_slow_sel[32]") {
+      direction : output;
+      capacitance : 0.0057;
+    }
+    pin("gpio_slow_sel[31]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_slow_sel[30]") {
+      direction : output;
+      capacitance : 0.0050;
+    }
+    pin("gpio_slow_sel[29]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_slow_sel[28]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_slow_sel[27]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_slow_sel[26]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_slow_sel[25]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_slow_sel[24]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_slow_sel[23]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_slow_sel[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_slow_sel[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_slow_sel[20]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_slow_sel[19]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_slow_sel[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_slow_sel[17]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_slow_sel[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_slow_sel[15]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_slow_sel[14]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_slow_sel[13]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_slow_sel[12]") {
+      direction : output;
+      capacitance : 0.0038;
+    }
+    pin("gpio_slow_sel[11]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_slow_sel[10]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_slow_sel[9]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_slow_sel[8]") {
+      direction : output;
+      capacitance : 0.0051;
+    }
+    pin("gpio_slow_sel[7]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_slow_sel[6]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_slow_sel[5]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_slow_sel[4]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_slow_sel[3]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    pin("gpio_slow_sel[2]") {
+      direction : output;
+      capacitance : 0.0042;
+    }
+    pin("gpio_slow_sel[1]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_slow_sel[0]") {
+      direction : output;
+      capacitance : 0.0045;
+    }
+    }
+    bus("gpio_vtrip_sel") {
+      bus_type : gpio_vtrip_sel;
+      direction : output;
+      capacitance : 0.0000;
+    pin("gpio_vtrip_sel[43]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_vtrip_sel[42]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_vtrip_sel[41]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_vtrip_sel[40]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_vtrip_sel[39]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_vtrip_sel[38]") {
+      direction : output;
+      capacitance : 0.0032;
+    }
+    pin("gpio_vtrip_sel[37]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_vtrip_sel[36]") {
+      direction : output;
+      capacitance : 0.0050;
+    }
+    pin("gpio_vtrip_sel[35]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_vtrip_sel[34]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_vtrip_sel[33]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_vtrip_sel[32]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_vtrip_sel[31]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_vtrip_sel[30]") {
+      direction : output;
+      capacitance : 0.0046;
+    }
+    pin("gpio_vtrip_sel[29]") {
+      direction : output;
+      capacitance : 0.0053;
+    }
+    pin("gpio_vtrip_sel[28]") {
+      direction : output;
+      capacitance : 0.0055;
+    }
+    pin("gpio_vtrip_sel[27]") {
+      direction : output;
+      capacitance : 0.0050;
+    }
+    pin("gpio_vtrip_sel[26]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_vtrip_sel[25]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_vtrip_sel[24]") {
+      direction : output;
+      capacitance : 0.0054;
+    }
+    pin("gpio_vtrip_sel[23]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_vtrip_sel[22]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_vtrip_sel[21]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_vtrip_sel[20]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_vtrip_sel[19]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_vtrip_sel[18]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_vtrip_sel[17]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_vtrip_sel[16]") {
+      direction : output;
+      capacitance : 0.0033;
+    }
+    pin("gpio_vtrip_sel[15]") {
+      direction : output;
+      capacitance : 0.0034;
+    }
+    pin("gpio_vtrip_sel[14]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_vtrip_sel[13]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_vtrip_sel[12]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_vtrip_sel[11]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_vtrip_sel[10]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_vtrip_sel[9]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_vtrip_sel[8]") {
+      direction : output;
+      capacitance : 0.0039;
+    }
+    pin("gpio_vtrip_sel[7]") {
+      direction : output;
+      capacitance : 0.0037;
+    }
+    pin("gpio_vtrip_sel[6]") {
+      direction : output;
+      capacitance : 0.0036;
+    }
+    pin("gpio_vtrip_sel[5]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_vtrip_sel[4]") {
+      direction : output;
+      capacitance : 0.0042;
+    }
+    pin("gpio_vtrip_sel[3]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    pin("gpio_vtrip_sel[2]") {
+      direction : output;
+      capacitance : 0.0052;
+    }
+    pin("gpio_vtrip_sel[1]") {
+      direction : output;
+      capacitance : 0.0043;
+    }
+    pin("gpio_vtrip_sel[0]") {
+      direction : output;
+      capacitance : 0.0044;
+    }
+    }
+    bus("mask_rev") {
+      bus_type : mask_rev;
+      direction : input;
+      capacitance : 0.0000;
+    pin("mask_rev[31]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[30]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[29]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[28]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[27]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[26]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[25]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[24]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[23]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[22]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[21]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[20]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[19]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[18]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[17]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[16]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[15]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[14]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[13]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[12]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[11]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[10]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[9]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[8]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[7]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[6]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[5]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[4]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[3]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[2]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[1]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    pin("mask_rev[0]") {
+      direction : input;
+      capacitance : 0.0000;
+    }
+    }
+  }
+
+}
