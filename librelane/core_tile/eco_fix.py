@@ -8,9 +8,10 @@ reads a finished run's signoff checks in every corner and writes an ECO
 config that inserts buffers for them, routes again and re-runs the full
 signoff sequence:
 
-  slew or cap on a standard-cell driver   a buffer after the driver
-                                          (--clock-buffer for CTS's clkbuf_*
-                                          and delaybuf_* instances)
+  slew or cap on a standard-cell driver   a buffer after the driver, placed
+                                          beside it (--clock-buffer for CTS's
+                                          clkbuf_* and delaybuf_* instances,
+                                          --near-buffer after a weak driver)
   cap on a driver of macro input pins     a buffer in front of each macro pin,
                                           placed at the pin (a core_tile clk
                                           pin is 0.28 pF, and CTS drives two
@@ -34,7 +35,7 @@ fill insertion.
 
 usage: ./eco_fix.py RUN [ECO_RUN] [--config config.json] [--buffer CELL]
                                    [--clock-buffer CELL] [--long-buffer CELL]
-                                   [--reroute]
+                                   [--near-buffer CELL] [--reroute]
 --config is the harden config the run used, relative to this directory or
 absolute (e.g. config_fp16.json, ../openframe/config.json). The ECO config
 eco_<run>.json is written next to it; the command to run it is printed.
@@ -60,6 +61,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DRIVER_PINS = {"X", "Y", "Q", "Q_N", "Z", "HI", "LO"}
+WEAK_DRIVER_PF = 0.06                 # max capacitance of a _1 gate, roughly
 COMP = re.compile(r"^\s*- (\S+) (\S+) .*?\+ (?:PLACED|FIXED) \( (-?\d+) (-?\d+) \) (\w+)")
 CONN = re.compile(r"\( (\S+) (\S+) \)")
 
@@ -108,10 +110,12 @@ def step_dirs(run):
 
 
 def violations(run):
-    """{'slew', 'cap', 'fanout'} -> set of violating pins, over every corner."""
+    """{'slew', 'cap', 'fanout'} -> set of violating pins, over every corner,
+    and {'cap_limit'} -> {pin: its max capacitance (pF)}."""
     sta = [d for d in step_dirs(run) if d.endswith("-openroad-stapostpnr")][-1]
     headers = {"max slew": "slew", "max capacitance": "cap", "max fanout": "fanout"}
     found = {kind: set() for kind in headers.values()}
+    found["cap_limit"] = {}
     for rpt in glob.glob(os.path.join(sta, "*", "checks.rpt")):
         section = None
         for line in open(rpt):
@@ -121,6 +125,8 @@ def violations(run):
                 section = None
             elif section and "(VIOLATED)" in line:
                 found[section].add(line.split()[0])
+                if section == "cap":
+                    found["cap_limit"][line.split()[0]] = float(line.split()[1])
     return found
 
 
@@ -305,6 +311,10 @@ def main():
     ap.add_argument("--buffer", default="sky130_fd_sc_hd__buf_4")
     ap.add_argument("--clock-buffer", default="sky130_fd_sc_hd__clkbuf_8")
     ap.add_argument("--long-buffer", default="sky130_fd_sc_hd__buf_8")
+    # buf_1 takes 3 sites; in the FP16 tile's crowded corner no run of 4 free
+    # sites lay within 100 um of the weak drivers, only runs of 3
+    ap.add_argument("--near-buffer", default="sky130_fd_sc_hd__buf_1",
+                    help="buffer after a driver whose max capacitance is under %g pF" % 0.06)
     ap.add_argument("--reroute", action="store_true",
                     help="start from the state before detailed routing")
     args = ap.parse_args()
@@ -335,10 +345,18 @@ def main():
 
     inserts, skipped, reroute = [], [], args.reroute
     if run != base:
-        # The earlier ECO's buffers. A placed one may be a fanout fix, which
-        # only holds on a reroute that drops the old diodes.
+        # The earlier ECO's buffers. One in front of a cell's input (a fanout
+        # or long-net fix) only holds on a reroute that drops the old diodes;
+        # buffers after a driver or at a macro pin do not need one.
         inserts = json.load(open(os.path.join(run, "resolved.json"))).get("INSERT_ECO_BUFFERS") or []
-        reroute = reroute or any(b.get("placement") for b in inserts)
+        # one buffer per target: an older version of this script added a
+        # second one after a driver that still failed, chaining the two
+        inserts = list({b["target"]: b for b in reversed(inserts)}.values())[::-1]
+
+        def before_input(b):
+            inst, _, pin = b["target"].rpartition("/")
+            return pin not in DRIVER_PINS and not (inst in comps and comps[inst][0] in macros)
+        reroute = reroute or any(before_input(b) for b in inserts)
     # macro and halo boxes, where a buffer cannot go
     halo = float(cfg.get("FP_MACRO_HORIZONTAL_HALO") or 0)
     core = cfg.get("CORE_AREA") or [-1e9, -1e9, 1e9, 1e9]
@@ -396,7 +414,21 @@ def main():
                 inserts.append({"target": f"{i}/{p}", "buffer": cell,
                                 "placement": pin_location(comps[i], size, pins[p])})
         elif findable(inst):
-            inserts.append({"target": pin, "buffer": cell})
+            # beside the driver: left to itself the ECO step puts the buffer
+            # at the mean of the driver and its loads, and a small driver
+            # kept most of a long net (FP16 tile: 0.058 pF on a 0.029 pF cell).
+            # A weak driver gets the smallest buffer, which finds a site beside
+            # it in a crowded row where a buf_4 was legalised 150 um away. It
+            # can drive whatever the weak driver could (buf_1: 0.081 pF).
+            if found["cap_limit"].get(pin, 1.0) < WEAK_DRIVER_PF and cell == args.buffer:
+                cell = args.near_buffer
+            at = [round(comps[inst][1], 3), round(comps[inst][2], 3)]
+            earlier = next((b for b in inserts if b["target"] == pin), None)
+            if earlier:
+                earlier["placement"] = at
+                earlier["buffer"] = cell
+            else:
+                inserts.append({"target": pin, "buffer": cell, "placement": at})
         else:
             skipped.append(f"{pin} (instance name not found by the ECO step)")
 
