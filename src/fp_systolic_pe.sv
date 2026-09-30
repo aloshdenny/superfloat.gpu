@@ -1,5 +1,5 @@
 // =============================================================================
-// FP SYSTOLIC PE: FP16 / BF16 weight-stationary MAC (4-stage pipeline)
+// FP SYSTOLIC PE: FP16 / BF16 weight-stationary MAC (4- or 5-stage pipeline)
 //
 // Same contract as systolic_pe (see there), with an IEEE-style 16-bit format:
 //   FP16: EXP_BITS 5, MANT_BITS 10      BF16: EXP_BITS 8, MANT_BITS 7
@@ -13,11 +13,15 @@
 //   Stage 1 : product registers <= fp_mul(a_out, b_out)
 //   Stage 2 : sum registers     <= fp_addsub(fp_align(product, acc))
 //   Stage 3 : acc               <= fp_round(sum)    (on valid)
-// Stages 0-2 run every cycle; only the accumulator is gated.
+// With ALIGN_STAGE = 1 the aligned operands are registered between fp_align
+// and fp_addsub, which adds one stage (FP16: its 11-bit significands made the
+// align-and-add stage the tile's critical path). Every stage but the
+// accumulator runs every cycle.
 //
-// The accumulator loop (stages 2 and 3) spans two cycles, so two computes
-// must be at least two cycles apart. The core issues at most one SYS compute
-// per instruction, and an instruction takes at least six cycles.
+// The accumulator loop (align/add and round) spans two cycles, three with
+// ALIGN_STAGE, so two computes must be at least that far apart. The core
+// issues at most one SYS compute per instruction, and an instruction takes
+// at least six cycles.
 //
 // Unlike SF16 there is no canonicalisation: negative zero is a valid operand
 // and affects the sign of a zero result. acc is the result in the same format.
@@ -26,9 +30,10 @@
 `timescale 1ns / 1ps
 
 module fp_systolic_pe #(
-    parameter EXP_BITS  = 5,
-    parameter MANT_BITS = 10,
-    parameter DATA_BITS = 1 + EXP_BITS + MANT_BITS
+    parameter EXP_BITS    = 5,
+    parameter MANT_BITS   = 10,
+    parameter ALIGN_STAGE = 0,               // 1: register between align and add
+    parameter DATA_BITS   = 1 + EXP_BITS + MANT_BITS
 ) (
     input  wire                  clk,
     input  wire                  reset,
@@ -51,7 +56,7 @@ module fp_systolic_pe #(
     localparam EW = EXP_BITS + 4;
     localparam AW = 2 * M + 3;
 
-    reg valid_s0, valid_s1, valid_s2;
+    reg valid_s0, valid_s1, valid_s2, valid_s3;
 
     // Stage 1: significand product
     wire [2*M-1:0]       mul_prod;
@@ -79,12 +84,45 @@ module fp_systolic_pe #(
         .sub(al_sub), .zero(al_zero), .inf(al_inf), .inf_sign(al_inf_sign), .nan(al_nan)
     );
 
+    // Optional register between align and add (ALIGN_STAGE)
+    wire [AW-1:0]        ad_hi, ad_lo;
+    wire signed [EW-1:0] ad_top;
+    wire                 ad_hi_sign, ad_lo_sign, ad_sub, ad_zero, ad_inf, ad_inf_sign, ad_nan;
+    generate
+        if (ALIGN_STAGE) begin : g_align_reg
+            reg [AW-1:0]        r_hi, r_lo;
+            reg signed [EW-1:0] r_top;
+            reg                 r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan;
+            always @(posedge clk) begin
+                if (reset) begin
+                    r_hi  <= {AW{1'b0}};
+                    r_lo  <= {AW{1'b0}};
+                    r_top <= {EW{1'b0}};
+                    {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan} <= 7'b0;
+                end else begin
+                    r_hi  <= al_hi;
+                    r_lo  <= al_lo;
+                    r_top <= al_top;
+                    {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan} <=
+                        {al_hi_sign, al_lo_sign, al_sub, al_zero, al_inf, al_inf_sign, al_nan};
+                end
+            end
+            assign {ad_hi, ad_lo, ad_top} = {r_hi, r_lo, r_top};
+            assign {ad_hi_sign, ad_lo_sign, ad_sub, ad_zero, ad_inf, ad_inf_sign, ad_nan} =
+                {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan};
+        end else begin : g_align_comb
+            assign {ad_hi, ad_lo, ad_top} = {al_hi, al_lo, al_top};
+            assign {ad_hi_sign, ad_lo_sign, ad_sub, ad_zero, ad_inf, ad_inf_sign, ad_nan} =
+                {al_hi_sign, al_lo_sign, al_sub, al_zero, al_inf, al_inf_sign, al_nan};
+        end
+    endgenerate
+
     wire [AW:0]          add_mag;
     wire signed [EW-1:0] add_top;
     wire                 add_sign, add_zero, add_inf, add_nan;
     fp_addsub #(.EXP_BITS(EXP_BITS), .MANT_BITS(MANT_BITS)) u_addsub (
-        .hi(al_hi), .lo(al_lo), .in_top(al_top), .hi_sign(al_hi_sign), .lo_sign(al_lo_sign),
-        .sub(al_sub), .in_zero(al_zero), .in_inf(al_inf), .inf_sign(al_inf_sign), .in_nan(al_nan),
+        .hi(ad_hi), .lo(ad_lo), .in_top(ad_top), .hi_sign(ad_hi_sign), .lo_sign(ad_lo_sign),
+        .sub(ad_sub), .in_zero(ad_zero), .in_inf(ad_inf), .inf_sign(ad_inf_sign), .in_nan(ad_nan),
         .mag(add_mag), .top_exp(add_top),
         .sign(add_sign), .zero(add_zero), .inf(add_inf), .nan(add_nan)
     );
@@ -115,6 +153,7 @@ module fp_systolic_pe #(
             valid_s0 <= 1'b0;
             valid_s1 <= 1'b0;
             valid_s2 <= 1'b0;
+            valid_s3 <= 1'b0;
         end else begin
             a_out <= a_in;
             if (load_weight) b_out <= b_in;
@@ -129,11 +168,13 @@ module fp_systolic_pe #(
                 valid_s0 <= 1'b0;
                 valid_s1 <= 1'b0;
                 valid_s2 <= 1'b0;
+                valid_s3 <= 1'b0;
             end else begin
                 valid_s0 <= compute_enable;
                 valid_s1 <= valid_s0;
                 valid_s2 <= valid_s1;
-                if (valid_s2) acc <= rounded;
+                valid_s3 <= valid_s2;
+                if (ALIGN_STAGE ? valid_s3 : valid_s2) acc <= rounded;
             end
         end
     end
