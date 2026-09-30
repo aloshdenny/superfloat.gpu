@@ -1,0 +1,25 @@
+# Files stored in parts (GitHub's 100 MB limit); join.sh rebuilds them.
+/bf16/chip/final/gds/openframe_project_wrapper.gds
+/bf16/tile/final/def/core_tile.def
+/bf16/tile/final/gds/core_tile.gds
+/bf16/tile/final/mag/core_tile.mag
+/bf16/tile/final/odb/core_tile.odb
+/bf16/tile/final/spef/max/core_tile.max.spef
+/bf16/tile/final/spef/min/core_tile.min.spef
+/bf16/tile/final/spef/nom/core_tile.nom.spef
+/fp16/chip/final/gds/openframe_project_wrapper.gds
+/fp16/tile/final/def/core_tile.def
+/fp16/tile/final/gds/core_tile.gds
+/fp16/tile/final/mag/core_tile.mag
+/fp16/tile/final/odb/core_tile.odb
+/fp16/tile/final/spef/max/core_tile.max.spef
+/fp16/tile/final/spef/min/core_tile.min.spef
+/fp16/tile/final/spef/nom/core_tile.nom.spef
+/sf16/chip/final/gds/openframe_project_wrapper.gds
+/sf16/tile/final/def/core_tile.def
+/sf16/tile/final/gds/core_tile.gds
+/sf16/tile/final/mag/core_tile.mag
+/sf16/tile/final/odb/core_tile.odb
+/sf16/tile/final/spef/max/core_tile.max.spef
+/sf16/tile/final/spef/min/core_tile.min.spef
+/sf16/tile/final/spef/nom/core_tile.nom.spef
