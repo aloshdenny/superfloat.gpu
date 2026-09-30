@@ -62,7 +62,7 @@ All numbers below come from hardened layouts, not estimates. Each PE was hardene
 
 ## FP16 and BF16 PEs
 
-The FP16 and BF16 chip variants use `fp_systolic_pe` (`src/fp_systolic_pe.sv`), a lean-contract PE with a fused multiply-add (one rounding, round to nearest even, flush to zero). BF16 uses its 4-stage pipeline: operand, multiply, align+add, round. FP16 sets `ALIGN_STAGE`, which registers the aligned operands between align and add (5 stages). The accumulator loop spans two cycles (BF16) or three (FP16); the core issues SYS computes at least six cycles apart.
+The FP16 and BF16 chip variants use `fp_systolic_pe` (`src/fp_systolic_pe.sv`), a lean-contract PE with a fused multiply-add (one rounding, round to nearest even, flush to zero). Both formats set `ALIGN_STAGE`, which registers the aligned operands between align and add, so the pipeline has 5 stages: operand, multiply, align, add, round. The accumulator loop spans three cycles; the core issues SYS computes at least six cycles apart. The thread FMA and activation units take the same register (below).
 
 The FP PEs were hardened with the same LibreLane settings as the SF16 lean PE, on a 200 × 220 µm die because they are larger.
 
@@ -93,8 +93,11 @@ The SF16 row re-measures the lean PE's 20 ns layout from the table above under t
   - But it cost 183/168 flops, 22,469/18,883 µm² and 1.710/1.500 mW (FP16/BF16).
   - An earlier 5-stage FP16 tile reached 0.57 utilisation and could not place its antenna diodes (DPL-0036), so the 4-stage PE was tried first.
   - The 4-stage FP16 tile then missed 20 ns at max_ss by 1.95 ns before routing and 3.02 ns after. The failing path is the align+add stage, and in the tile the accumulator also drives the eight threads' result muxes. FP16 therefore uses the 5-stage PE (`ALIGN_STAGE`).
-  - The BF16 tile meets timing before routing with the 4-stage PE (+0.27 ns at 0.43 utilisation), and keeps it.
-  - With the FP16 PE split, the tile's only paths within 1 ns of 20 ns at max_ss were the eight thread FMAs' align+add, at −0.098 ns before routing. `fp_fma` takes the same `ALIGN_STAGE` register. It fills the FMA's idle first EXECUTE cycle, so no cycles are added.
+  - With the FP16 PE split, the tile's only paths within 1 ns of 20 ns at max_ss were the eight thread FMAs' align+add, at −0.098 ns before routing.
+  - The BF16 tile met timing before routing with the 4-stage PE (+0.27 ns at 0.43 utilisation) but missed it after routing in all three units. Routing cost 1.3 to 2.7 ns: PE −2.37 ns, FMA −0.93 ns, activation −0.67 ns.
+  - The failing paths were not clock skew (launch and capture within 0.08 ns). They were data paths of about 21 ns through about 25 repeaters, because placement spread each unit across the tile.
+  - The fix, in both FP formats:
+    - `ALIGN_STAGE` in the PE, the FMA and the activation unit. The FMA's register fills its idle first EXECUTE cycle; the activation unit rounds and applies f in EXECUTE. No cycles are added.
 - **The first 4-stage version** had a slower adder: one shifter per operand, a shifter-based sticky bit, and a zero detect on the sum. It missed 20 ns at max_ss by 0.26 ns (BF16).
 
 ## Reproducing

@@ -35,7 +35,7 @@ The same chip is built in three variants that differ only inside the core tile. 
 | Range | (−1, 1) | ±65504 | ±3.4 × 10³⁸ |
 | Multiply-accumulate | 15 × 15 product truncated to Q1.15, saturating add | fused `round(a × b + acc)` | fused `round(a × b + acc)` |
 | Systolic accumulator | 16-bit two's complement, saturating | FP16 | BF16 |
-| PE pipeline | 3 stages | 5 stages (multiply, align, add, round) | 4 stages (multiply, align+add, round) |
+| PE pipeline | 3 stages | 5 stages (multiply, align, add, round) | 5 stages |
 
 FP16 and BF16 arithmetic (`src/fp_arith.sv`):
 - Every multiply-accumulate rounds the exact `a × b + c` once, to nearest with ties to even.
@@ -45,7 +45,7 @@ FP16 and BF16 arithmetic (`src/fp_arith.sv`):
 - ACT computes `f(round(x + bias))`. ReLU maps negatives, including −0, to +0. Leaky ReLU multiplies negatives by 2⁻⁷ exactly, flushing to −0 below the smallest normal. Clipped ReLU is `min(1.0, ReLU)` and keeps NaN.
 - `test/helpers/fp16fmt.py` is the bit-exact reference for all of the above.
 
-Every kernel runs in the same number of cycles in all three formats. The FP PE's accumulator loop takes two cycles for BF16 and three for FP16, and the extra pipeline depth is hidden, since two SYS instructions are always at least six cycles apart.
+Every kernel runs in the same number of cycles in all three formats. The FP PE's accumulator loop takes three cycles, and the extra pipeline depth is hidden, since two SYS instructions are always at least six cycles apart.
 
 ### Programming notes
 

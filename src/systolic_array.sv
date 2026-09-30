@@ -129,7 +129,7 @@ module systolic_array #(
                     fp_systolic_pe #(
                         .EXP_BITS       (NUMBER_FORMAT == 2 ? 8 : 5),
                         .MANT_BITS      (NUMBER_FORMAT == 2 ? 7 : 10),
-                        .ALIGN_STAGE    (NUMBER_FORMAT == 1 ? 1 : 0)
+                        .ALIGN_STAGE    (1)
                     ) pe (
                         .clk            (clk),
                         .reset          (reset),

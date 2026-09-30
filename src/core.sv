@@ -345,7 +345,7 @@ module core #(
                 fp_fma #(
                     .EXP_BITS(NUMBER_FORMAT == 2 ? 8 : 5),
                     .MANT_BITS(NUMBER_FORMAT == 2 ? 7 : 10),
-                    .ALIGN_STAGE(NUMBER_FORMAT == 1 ? 1 : 0)
+                    .ALIGN_STAGE(1)
                 ) fma_instance (
                     .clk(clk),
                     .reset(reset),
@@ -360,7 +360,8 @@ module core #(
 
                 fp_activation #(
                     .EXP_BITS(NUMBER_FORMAT == 2 ? 8 : 5),
-                    .MANT_BITS(NUMBER_FORMAT == 2 ? 7 : 10)
+                    .MANT_BITS(NUMBER_FORMAT == 2 ? 7 : 10),
+                    .ALIGN_STAGE(1)
                 ) activation_instance (
                     .clk(clk),
                     .reset(reset),

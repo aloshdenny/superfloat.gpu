@@ -19,10 +19,14 @@
 //   end of REQUEST:     sum registers  <= fp_addsub(fp_align(rs * 1.0, rt))
 //   end of first WAIT:  y              <= fp_round(sum)
 //   EXECUTE:            activation_out <= f(y)
+// With ALIGN_STAGE = 1 the aligned operands are registered at the end of
+// REQUEST and the sum at the end of the first WAIT; EXECUTE then computes
+// activation_out <= f(fp_round(sum)). Same number of cycles.
 module fp_activation #(
-    parameter EXP_BITS  = 5,
-    parameter MANT_BITS = 10,
-    parameter DATA_BITS = 1 + EXP_BITS + MANT_BITS
+    parameter EXP_BITS    = 5,
+    parameter MANT_BITS   = 10,
+    parameter ALIGN_STAGE = 0,               // 1: register between align and add
+    parameter DATA_BITS   = 1 + EXP_BITS + MANT_BITS
 ) (
     input wire clk,
     input wire reset,
@@ -72,12 +76,45 @@ module fp_activation #(
         .sub(al_sub), .zero(al_zero), .inf(al_inf), .inf_sign(al_inf_sign), .nan(al_nan)
     );
 
+    // Optional register between align and add (ALIGN_STAGE)
+    wire [AW-1:0]        ad_hi, ad_lo;
+    wire signed [EW-1:0] ad_top;
+    wire                 ad_hi_sign, ad_lo_sign, ad_sub, ad_zero, ad_inf, ad_inf_sign, ad_nan;
+    generate
+        if (ALIGN_STAGE) begin : g_align_reg
+            reg [AW-1:0]        r_hi, r_lo;
+            reg signed [EW-1:0] r_top;
+            reg                 r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan;
+            always @(posedge clk) begin
+                if (reset) begin
+                    r_hi  <= {AW{1'b0}};
+                    r_lo  <= {AW{1'b0}};
+                    r_top <= {EW{1'b0}};
+                    {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan} <= 7'b0;
+                end else begin
+                    r_hi  <= al_hi;
+                    r_lo  <= al_lo;
+                    r_top <= al_top;
+                    {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan} <=
+                        {al_hi_sign, al_lo_sign, al_sub, al_zero, al_inf, al_inf_sign, al_nan};
+                end
+            end
+            assign {ad_hi, ad_lo, ad_top} = {r_hi, r_lo, r_top};
+            assign {ad_hi_sign, ad_lo_sign, ad_sub, ad_zero, ad_inf, ad_inf_sign, ad_nan} =
+                {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan};
+        end else begin : g_align_comb
+            assign {ad_hi, ad_lo, ad_top} = {al_hi, al_lo, al_top};
+            assign {ad_hi_sign, ad_lo_sign, ad_sub, ad_zero, ad_inf, ad_inf_sign, ad_nan} =
+                {al_hi_sign, al_lo_sign, al_sub, al_zero, al_inf, al_inf_sign, al_nan};
+        end
+    endgenerate
+
     wire [AW:0]          add_mag;
     wire signed [EW-1:0] add_top;
     wire                 add_sign, add_zero, add_inf, add_nan;
     fp_addsub #(.EXP_BITS(EXP_BITS), .MANT_BITS(MANT_BITS)) u_addsub (
-        .hi(al_hi), .lo(al_lo), .in_top(al_top), .hi_sign(al_hi_sign), .lo_sign(al_lo_sign),
-        .sub(al_sub), .in_zero(al_zero), .in_inf(al_inf), .inf_sign(al_inf_sign), .in_nan(al_nan),
+        .hi(ad_hi), .lo(ad_lo), .in_top(ad_top), .hi_sign(ad_hi_sign), .lo_sign(ad_lo_sign),
+        .sub(ad_sub), .in_zero(ad_zero), .in_inf(ad_inf), .inf_sign(ad_inf_sign), .in_nan(ad_nan),
         .mag(add_mag), .top_exp(add_top),
         .sign(add_sign), .zero(add_zero), .inf(add_inf), .nan(add_nan)
     );
@@ -93,19 +130,22 @@ module fp_activation #(
         .result(rounded)
     );
 
-    reg [DATA_BITS-1:0] y;
+    // y: registered, or with ALIGN_STAGE the rounded sum itself (the sum is
+    // registered a cycle later, so round and f share EXECUTE)
+    reg  [DATA_BITS-1:0] y_reg;
+    wire [DATA_BITS-1:0] y = ALIGN_STAGE ? rounded : y_reg;
 
     always @(posedge clk) begin
         if (reset) begin
             s_mag <= {(AW+1){1'b0}};
             s_top <= {EW{1'b0}};
             {s_sign, s_zero, s_inf, s_nan} <= 4'b0;
-            y     <= {DATA_BITS{1'b0}};
+            y_reg <= {DATA_BITS{1'b0}};
         end else begin
             s_mag <= add_mag;
             s_top <= add_top;
             {s_sign, s_zero, s_inf, s_nan} <= {add_sign, add_zero, add_inf, add_nan};
-            y     <= rounded;
+            y_reg <= rounded;
         end
     end
 
