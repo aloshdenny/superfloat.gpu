@@ -5,10 +5,11 @@
   openframe/config.json -> openframe/config_fp16.json, config_bf16.json
 
 Tile: adds the floating-point sources and sets the core_tile NUMBER_FORMAT
-parameter through SYNTH_PARAMETERS. Antenna repair uses jumpers only: the
-FP16 tile reaches ~0.57 utilisation and diodes could not be legalised
-(DPL-0036). Everything else (floorplan, pins, closure settings) stays that
-of the signed-off SF16 tile.
+parameter through SYNTH_PARAMETERS. Everything else (floorplan, pins,
+closure settings, diode antenna repair) stays that of the signed-off SF16
+tile. Jumper-only antenna repair inserted no jumpers on the FP16 tile and
+left 629 nets; with the 4-stage PE the tile is at 0.49 utilisation and
+diodes fit.
 
 Chip: points the core_tile macro at core_tile/views_fp16/ or views_bf16/.
 The chip RTL does not depend on the format, since the tiles are black
@@ -54,8 +55,6 @@ def main():
         t = dict(tile)
         t["VERILOG_FILES"] = tile["VERILOG_FILES"] + [f"dir::../../src/{s}" for s in FP_SOURCES]
         t["SYNTH_PARAMETERS"] = [f"NUMBER_FORMAT={fmt}"]
-        t["GRT_ANTENNA_REPAIR_JUMPER_ONLY"] = True
-        t["DRT_ANTENNA_REPAIR_JUMPER_ONLY"] = True
         save(f"core_tile/config_{name}.json", t)
         save(f"openframe/config_{name}.json", retarget_views(chip, f"views_{name}"))
 
