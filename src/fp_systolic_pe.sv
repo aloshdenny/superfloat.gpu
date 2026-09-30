@@ -93,19 +93,12 @@ module fp_systolic_pe #(
             reg [AW-1:0]        r_hi, r_lo;
             reg signed [EW-1:0] r_top;
             reg                 r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan;
-            always @(posedge clk) begin
-                if (reset) begin
-                    r_hi  <= {AW{1'b0}};
-                    r_lo  <= {AW{1'b0}};
-                    r_top <= {EW{1'b0}};
-                    {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan} <= 7'b0;
-                end else begin
-                    r_hi  <= al_hi;
-                    r_lo  <= al_lo;
-                    r_top <= al_top;
-                    {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan} <=
-                        {al_hi_sign, al_lo_sign, al_sub, al_zero, al_inf, al_inf_sign, al_nan};
-                end
+            always @(posedge clk) begin      // datapath only: no reset (see below)
+                r_hi  <= al_hi;
+                r_lo  <= al_lo;
+                r_top <= al_top;
+                {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan} <=
+                    {al_hi_sign, al_lo_sign, al_sub, al_zero, al_inf, al_inf_sign, al_nan};
             end
             assign {ad_hi, ad_lo, ad_top} = {r_hi, r_lo, r_top};
             assign {ad_hi_sign, ad_lo_sign, ad_sub, ad_zero, ad_inf, ad_inf_sign, ad_nan} =
@@ -139,16 +132,23 @@ module fp_systolic_pe #(
         .result(rounded)
     );
 
+    // The product, aligned and sum registers carry no reset: they run every
+    // cycle from reset-cleared operands, and only valid-qualified results
+    // reach acc. Leaving them out keeps the tile's core_reset fan-out (and
+    // the reset input the chip must time) close to SF16's.
+    always @(posedge clk) begin
+        p_prod <= mul_prod;
+        p_top  <= mul_top;
+        {p_sign, p_zero, p_inf, p_nan} <= {mul_sign, mul_zero, mul_inf, mul_nan};
+        s_mag  <= add_mag;
+        s_top  <= add_top;
+        {s_sign, s_zero, s_inf, s_nan} <= {add_sign, add_zero, add_inf, add_nan};
+    end
+
     always @(posedge clk) begin
         if (reset) begin
             a_out    <= {DATA_BITS{1'b0}};
             b_out    <= {DATA_BITS{1'b0}};
-            p_prod   <= {(2*M){1'b0}};
-            p_top    <= {EW{1'b0}};
-            {p_sign, p_zero, p_inf, p_nan} <= 4'b0;
-            s_mag    <= {(AW+1){1'b0}};
-            s_top    <= {EW{1'b0}};
-            {s_sign, s_zero, s_inf, s_nan} <= 4'b0;
             acc      <= {DATA_BITS{1'b0}};
             valid_s0 <= 1'b0;
             valid_s1 <= 1'b0;
@@ -157,12 +157,6 @@ module fp_systolic_pe #(
         end else begin
             a_out <= a_in;
             if (load_weight) b_out <= b_in;
-            p_prod <= mul_prod;
-            p_top  <= mul_top;
-            {p_sign, p_zero, p_inf, p_nan} <= {mul_sign, mul_zero, mul_inf, mul_nan};
-            s_mag  <= add_mag;
-            s_top  <= add_top;
-            {s_sign, s_zero, s_inf, s_nan} <= {add_sign, add_zero, add_inf, add_nan};
             if (clear_acc) begin
                 acc      <= {DATA_BITS{1'b0}};
                 valid_s0 <= 1'b0;

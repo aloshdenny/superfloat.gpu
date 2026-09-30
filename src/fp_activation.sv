@@ -85,19 +85,12 @@ module fp_activation #(
             reg [AW-1:0]        r_hi, r_lo;
             reg signed [EW-1:0] r_top;
             reg                 r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan;
-            always @(posedge clk) begin
-                if (reset) begin
-                    r_hi  <= {AW{1'b0}};
-                    r_lo  <= {AW{1'b0}};
-                    r_top <= {EW{1'b0}};
-                    {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan} <= 7'b0;
-                end else begin
-                    r_hi  <= al_hi;
-                    r_lo  <= al_lo;
-                    r_top <= al_top;
-                    {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan} <=
-                        {al_hi_sign, al_lo_sign, al_sub, al_zero, al_inf, al_inf_sign, al_nan};
-                end
+            always @(posedge clk) begin      // datapath only: no reset
+                r_hi  <= al_hi;
+                r_lo  <= al_lo;
+                r_top <= al_top;
+                {r_hi_sign, r_lo_sign, r_sub, r_zero, r_inf, r_inf_sign, r_nan} <=
+                    {al_hi_sign, al_lo_sign, al_sub, al_zero, al_inf, al_inf_sign, al_nan};
             end
             assign {ad_hi, ad_lo, ad_top} = {r_hi, r_lo, r_top};
             assign {ad_hi_sign, ad_lo_sign, ad_sub, ad_zero, ad_inf, ad_inf_sign, ad_nan} =
@@ -135,18 +128,14 @@ module fp_activation #(
     reg  [DATA_BITS-1:0] y_reg;
     wire [DATA_BITS-1:0] y = ALIGN_STAGE ? rounded : y_reg;
 
+    // The pipeline registers carry no reset: they run every cycle from the
+    // core's operand registers, and activation_out takes their result only in
+    // EXECUTE, after they have settled. This keeps core_reset's fan-out small.
     always @(posedge clk) begin
-        if (reset) begin
-            s_mag <= {(AW+1){1'b0}};
-            s_top <= {EW{1'b0}};
-            {s_sign, s_zero, s_inf, s_nan} <= 4'b0;
-            y_reg <= {DATA_BITS{1'b0}};
-        end else begin
-            s_mag <= add_mag;
-            s_top <= add_top;
-            {s_sign, s_zero, s_inf, s_nan} <= {add_sign, add_zero, add_inf, add_nan};
-            y_reg <= rounded;
-        end
+        s_mag <= add_mag;
+        s_top <= add_top;
+        {s_sign, s_zero, s_inf, s_nan} <= {add_sign, add_zero, add_inf, add_nan};
+        y_reg <= rounded;
     end
 
     // Activation functions on y
