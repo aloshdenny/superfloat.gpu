@@ -12,7 +12,9 @@ added 1.3-2.7 ns. The FP tiles therefore place at 70% target density and
 repair to a 1.5 ns setup margin. FP16 is denser (0.56 utilisation against
 0.50 for BF16): at 70% its post-route repairs congested global routing, so
 it places at 62%, and synthesises with ABC's AREA 0 script, whose logic was
-6% faster than AREA 2 on the FP16 PE for 0.8% more area. Everything else
+6% faster than AREA 2 on the FP16 PE for 0.8% more area. Routing has cost
+the FP tiles 1.1-2.6 ns of setup, and FP16 enters routing with the least
+slack, so its post-global-route repair aims for 3 ns. Everything else
 (floorplan, pins, diode antenna repair) stays that of the signed-off SF16
 tile. Jumper-only antenna repair inserted no jumpers on the FP16 tile and
 left 629 nets; diodes fit.
@@ -29,7 +31,8 @@ import os
 HERE = os.path.dirname(os.path.abspath(__file__))
 FP_SOURCES = ["fp_arith.sv", "fp_systolic_pe.sv", "fp_fma.sv", "fp_activation.sv"]
 VARIANTS = {"fp16": 1, "bf16": 2}
-TILE_OVERRIDES = {"fp16": {"PL_TARGET_DENSITY_PCT": 62, "SYNTH_STRATEGY": "AREA 0"}}
+TILE_OVERRIDES = {"fp16": {"PL_TARGET_DENSITY_PCT": 62, "SYNTH_STRATEGY": "AREA 0",
+                            "GRT_RESIZER_SETUP_SLACK_MARGIN": 3.0}}
 
 
 def load(path):
