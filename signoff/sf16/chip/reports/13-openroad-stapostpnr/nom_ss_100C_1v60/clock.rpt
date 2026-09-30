@@ -1,0 +1,42 @@
+Clock: clk
+Sources: gpio_in[38] 
+Generated: no
+Virtual: yes
+Propagated: no
+Period: 20.000000
+
+===========================================================================
+report_clock_properties
+============================================================================
+Clock                   Period          Waveform
+----------------------------------------------------
+clk                  20.000000    0.000000 10.000000
+
+===========================================================================
+report_clock_latency
+============================================================================
+Clock clk
+rise -> rise
+    min     max
+0.000000 0.000000 source latency
+3.717567         network latency chip.gpu_inst.tiles[0].tile/clk
+        11.998325 network latency _4237_/CLK
+---------------
+3.717567 11.998325 latency
+        8.280758 skew
+
+fall -> fall
+    min     max
+0.000000 0.000000 source latency
+3.456562         network latency chip.gpu_inst.tiles[0].tile/clk
+        12.397235 network latency _4237_/CLK
+---------------
+3.456562 12.397235 latency
+        8.940673 skew
+
+
+
+===========================================================================
+report_clock_min_period
+============================================================================
+clk period_min = 15.87 fmax = 63.03

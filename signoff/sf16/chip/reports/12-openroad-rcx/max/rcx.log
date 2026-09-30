@@ -1,0 +1,78 @@
+Reading technology LEF file at '/home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__max.tlef'…
+[INFO ODB-0227] LEF file: /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__max.tlef, created 14 layers, 25 vias
+Making fake IO site sky130_io…
+Making fake IO site sky130_io_corner…
+Reading cell LEF file at '/home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_ef_sc_hd.lef'…
+[WARNING ODB-0220] WARNING (LEFPARS-2008): NOWIREEXTENSIONATPIN statement is obsolete in version 5.6 or later.
+The NOWIREEXTENSIONATPIN statement will be ignored. See file /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_ef_sc_hd.lef at line 2.
+
+[INFO ODB-0227] LEF file: /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_ef_sc_hd.lef, created 8 library cells
+Reading cell LEF file at '/home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef'…
+[WARNING ODB-0220] WARNING (LEFPARS-2008): NOWIREEXTENSIONATPIN statement is obsolete in version 5.6 or later.
+The NOWIREEXTENSIONATPIN statement will be ignored. See file /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef at line 2.
+
+[INFO ODB-0227] LEF file: /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef, created 437 library cells
+Reading macro LEF file at '/home/research/alosh/superfloat.gpu/librelane/core_tile/views/lef/core_tile.lef'…
+[WARNING ODB-0220] WARNING (LEFPARS-2008): NOWIREEXTENSIONATPIN statement is obsolete in version 5.6 or later.
+The NOWIREEXTENSIONATPIN statement will be ignored. See file /home/research/alosh/superfloat.gpu/librelane/core_tile/views/lef/core_tile.lef at line 2.
+
+[INFO ODB-0227] LEF file: /home/research/alosh/superfloat.gpu/librelane/core_tile/views/lef/core_tile.lef, created 1 library cells
+Reading macro LEF file at '/home/research/alosh/superfloat.gpu/openframe/lef/vccd1_connection.lef'…
+[WARNING ODB-0220] WARNING (LEFPARS-2008): NOWIREEXTENSIONATPIN statement is obsolete in version 5.6 or later.
+The NOWIREEXTENSIONATPIN statement will be ignored. See file /home/research/alosh/superfloat.gpu/openframe/lef/vccd1_connection.lef at line 2.
+
+[INFO ODB-0227] LEF file: /home/research/alosh/superfloat.gpu/openframe/lef/vccd1_connection.lef, created 1 library cells
+Reading macro LEF file at '/home/research/alosh/superfloat.gpu/openframe/lef/vssd1_connection.lef'…
+[WARNING ODB-0220] WARNING (LEFPARS-2008): NOWIREEXTENSIONATPIN statement is obsolete in version 5.6 or later.
+The NOWIREEXTENSIONATPIN statement will be ignored. See file /home/research/alosh/superfloat.gpu/openframe/lef/vssd1_connection.lef at line 2.
+
+[INFO ODB-0227] LEF file: /home/research/alosh/superfloat.gpu/openframe/lef/vssd1_connection.lef, created 1 library cells
+Reading gpio pad LEF file at '/home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_io/lef/sky130_ef_io.lef'…
+[WARNING ODB-0220] WARNING (LEFPARS-2008): NOWIREEXTENSIONATPIN statement is obsolete in version 5.6 or later.
+The NOWIREEXTENSIONATPIN statement will be ignored. See file /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_io/lef/sky130_ef_io.lef at line 2.
+
+[INFO ODB-0227] LEF file: /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_io/lef/sky130_ef_io.lef, created 39 library cells
+[INFO ODB-0127] Reading DEF file: /home/research/alosh/superfloat.gpu/librelane/openframe/runs/chip_20_eco2/11-odb-cellfrequencytables/openframe_project_wrapper.def
+[INFO ODB-0128] Design: openframe_project_wrapper
+[INFO ODB-0130]     Created 887 pins.
+[INFO ODB-0131]     Created 76046 components and 287040 component-terminals.
+[INFO ODB-0132]     Created 14 special nets and 268900 connections.
+[INFO ODB-0133]     Created 6663 nets and 17517 connections.
+[INFO ODB-0134] Finished DEF file: /home/research/alosh/superfloat.gpu/librelane/openframe/runs/chip_20_eco2/11-odb-cellfrequencytables/openframe_project_wrapper.def
+Using RCX ruleset '/home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.tech/librelane/rules.openrcx.sky130A.max.calibre'…
+[INFO RCX-0431] Defined process_corner CURRENT_CORNER with ext_model_index 0
+[INFO RCX-0029] Defined extraction corner CURRENT_CORNER
++ extract_parasitics  -ext_model_file /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.tech/librelane/rules.openrcx.sky130A.max.calibre -lef_res
+[INFO RCX-0435] Reading extraction model file /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.tech/librelane/rules.openrcx.sky130A.max.calibre ...
+[INFO RCX-0436] RC segment generation openframe_project_wrapper (max_merge_res 50.0) ...
+[INFO RCX-0040] Final 34617 rc segments
+[INFO RCX-0439] Coupling Cap extraction openframe_project_wrapper ...
+[INFO RCX-0440] Coupling threshhold is 0.1000 fF, coupling capacitance less than 0.1000 fF will be grounded.
+[INFO RCX-0442] 5% of 66358 wires extracted
+[INFO RCX-0442] 11% of 66358 wires extracted
+[INFO RCX-0442] 15% of 66358 wires extracted
+[INFO RCX-0442] 51% of 66358 wires extracted
+[INFO RCX-0442] 57% of 66358 wires extracted
+[INFO RCX-0442] 62% of 66358 wires extracted
+[INFO RCX-0442] 73% of 66358 wires extracted
+[INFO RCX-0442] 91% of 66358 wires extracted
+[INFO RCX-0442] 98% of 66358 wires extracted
+[INFO RCX-0442] 100% of 66358 wires extracted
+[INFO RCX-0045] Extract 6675 nets, 40976 rsegs, 40976 caps, 65603 ccs
+Setting global connections for newly added cells…
+[INFO] Setting global connections...
+chip\.gpu_inst\.tiles.* matched with chip.gpu_inst.tiles\[0\].tile
+chip\.gpu_inst\.tiles.* matched with chip.gpu_inst.tiles\[1\].tile
+chip\.gpu_inst\.tiles.* matched with chip.gpu_inst.tiles\[2\].tile
+chip\.gpu_inst\.tiles.* matched with chip.gpu_inst.tiles\[3\].tile
+[INFO ODB-0403] 0 connections made, 0 conflicts skipped.
+Updating metrics…
+Cell type report:                       Count       Area
+  Macro                                     6 13506773.68
+  Fill cell                             52011  536564.61
+  Tap cell                              17634   22063.66
+  Antenna cell                            226     565.54
+  Standard cell                          6169   72007.81
+  Total                                 76046 14137975.30
+Writing extracted parasitics to '/home/research/alosh/superfloat.gpu/librelane/openframe/runs/chip_20_eco2/12-openroad-rcx/max/openframe_project_wrapper.max.spef'…
+[INFO RCX-0443] 6663 nets finished

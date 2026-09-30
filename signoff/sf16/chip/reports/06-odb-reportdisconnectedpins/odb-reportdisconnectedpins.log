@@ -1,0 +1,4 @@
+[WARNING ORD-0039] .openroad ignored with -python
+[ERROR] Macro/instance vccd1_connection has no power pins- add it to IGNORE_DISCONNECTED_MODULES if this is intentional
+[ERROR] Macro/instance vssd1_connection has no power pins- add it to IGNORE_DISCONNECTED_MODULES if this is intentional
+Found 294 disconnected pin(s), of which 0 are critical.
