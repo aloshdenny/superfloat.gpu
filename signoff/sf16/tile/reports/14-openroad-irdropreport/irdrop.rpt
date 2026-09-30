@@ -1,0 +1,26 @@
++ analyze_power_grid -net VPWR -voltage_file /home/research/alosh/superfloat.gpu/librelane/core_tile/runs/RUN_2026-09-29_00-38-54_eco/14-openroad-irdropreport/net-VPWR.csv
+[INFO PSM-0040] All shapes on net VPWR are connected.
+########## IR report #################
+Net              : VPWR
+Corner           : max_ss_100C_1v60
+Total power      : 5.25e-02 W
+Supply voltage   : 1.60e+00 V
+Worstcase voltage: 1.60e+00 V
+Average voltage  : 1.60e+00 V
+Average IR drop  : 8.56e-05 V
+Worstcase IR drop: 7.46e-04 V
+Percentage drop  : 0.05 %
+######################################
++ analyze_power_grid -net VGND -voltage_file /home/research/alosh/superfloat.gpu/librelane/core_tile/runs/RUN_2026-09-29_00-38-54_eco/14-openroad-irdropreport/net-VGND.csv
+[INFO PSM-0040] All shapes on net VGND are connected.
+########## IR report #################
+Net              : VGND
+Corner           : max_ss_100C_1v60
+Total power      : 5.25e-02 W
+Supply voltage   : 0.00e+00 V
+Worstcase voltage: 6.70e-04 V
+Average voltage  : 8.52e-05 V
+Average IR drop  : 8.52e-05 V
+Worstcase IR drop: 6.70e-04 V
+Percentage drop  : 0.04 %
+######################################

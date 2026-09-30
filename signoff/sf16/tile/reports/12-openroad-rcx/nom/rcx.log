@@ -1,0 +1,61 @@
+Reading technology LEF file at '/home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef'…
+[INFO ODB-0227] LEF file: /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef, created 14 layers, 25 vias
+Making fake IO site sky130_io…
+Making fake IO site sky130_io_corner…
+Reading cell LEF file at '/home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_ef_sc_hd.lef'…
+[WARNING ODB-0220] WARNING (LEFPARS-2008): NOWIREEXTENSIONATPIN statement is obsolete in version 5.6 or later.
+The NOWIREEXTENSIONATPIN statement will be ignored. See file /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_ef_sc_hd.lef at line 2.
+
+[INFO ODB-0227] LEF file: /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_ef_sc_hd.lef, created 8 library cells
+Reading cell LEF file at '/home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef'…
+[WARNING ODB-0220] WARNING (LEFPARS-2008): NOWIREEXTENSIONATPIN statement is obsolete in version 5.6 or later.
+The NOWIREEXTENSIONATPIN statement will be ignored. See file /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef at line 2.
+
+[INFO ODB-0227] LEF file: /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef, created 437 library cells
+Reading gpio pad LEF file at '/home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_io/lef/sky130_ef_io.lef'…
+[WARNING ODB-0220] WARNING (LEFPARS-2008): NOWIREEXTENSIONATPIN statement is obsolete in version 5.6 or later.
+The NOWIREEXTENSIONATPIN statement will be ignored. See file /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_io/lef/sky130_ef_io.lef at line 2.
+
+[INFO ODB-0227] LEF file: /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.ref/sky130_fd_io/lef/sky130_ef_io.lef, created 39 library cells
+[INFO ODB-0127] Reading DEF file: /home/research/alosh/superfloat.gpu/librelane/core_tile/runs/RUN_2026-09-29_00-38-54_eco/11-odb-cellfrequencytables/core_tile.def
+[INFO ODB-0128] Design: core_tile
+[INFO ODB-0094] 		Created 100000 Insts
+[INFO ODB-0094] 		Created 200000 Insts
+[INFO ODB-0094] 		Created 300000 Insts
+[INFO ODB-0094] 		Created 400000 Insts
+[INFO ODB-0097] 		Created 100000 Nets
+[INFO ODB-0130]     Created 120 pins.
+[INFO ODB-0131]     Created 430525 components and 2103242 component-terminals.
+[INFO ODB-0132]     Created 2 special nets and 1627686 connections.
+[INFO ODB-0133]     Created 143918 nets and 474782 connections.
+[INFO ODB-0134] Finished DEF file: /home/research/alosh/superfloat.gpu/librelane/core_tile/runs/RUN_2026-09-29_00-38-54_eco/11-odb-cellfrequencytables/core_tile.def
+Using RCX ruleset '/home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.tech/librelane/rules.openrcx.sky130A.nom.calibre'…
+[INFO RCX-0431] Defined process_corner CURRENT_CORNER with ext_model_index 0
+[INFO RCX-0029] Defined extraction corner CURRENT_CORNER
++ extract_parasitics  -ext_model_file /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.tech/librelane/rules.openrcx.sky130A.nom.calibre -lef_res
+[INFO RCX-0435] Reading extraction model file /home/research/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A/libs.tech/librelane/rules.openrcx.sky130A.nom.calibre ...
+[INFO RCX-0436] RC segment generation core_tile (max_merge_res 50.0) ...
+[INFO RCX-0040] Final 583824 rc segments
+[INFO RCX-0439] Coupling Cap extraction core_tile ...
+[INFO RCX-0440] Coupling threshhold is 0.1000 fF, coupling capacitance less than 0.1000 fF will be grounded.
+[INFO RCX-0442] 7% of 1174764 wires extracted
+[INFO RCX-0442] 18% of 1174764 wires extracted
+[INFO RCX-0442] 30% of 1174764 wires extracted
+[INFO RCX-0442] 51% of 1174764 wires extracted
+[INFO RCX-0442] 64% of 1174764 wires extracted
+[INFO RCX-0442] 81% of 1174764 wires extracted
+[INFO RCX-0442] 100% of 1174764 wires extracted
+[INFO RCX-0045] Extract 143918 nets, 727742 rsegs, 727742 caps, 1562343 ccs
+Setting global connections for newly added cells…
+[INFO] Setting global connections...
+[INFO ODB-0403] 0 connections made, 0 conflicts skipped.
+Updating metrics…
+Cell type report:                       Count       Area
+  Fill cell                            237972 1914512.42
+  Tap cell                              47207   59065.40
+  Antenna cell                            711    1779.21
+  Standard cell                        144635 1340678.32
+  Total                                430525 3316035.34
+Writing extracted parasitics to '/home/research/alosh/superfloat.gpu/librelane/core_tile/runs/RUN_2026-09-29_00-38-54_eco/12-openroad-rcx/nom/core_tile.nom.spef'…
+[INFO RCX-0042] 100000 nets finished
+[INFO RCX-0443] 143918 nets finished
