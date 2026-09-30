@@ -344,7 +344,8 @@ module core #(
                 // FP16 / BF16 FMA and activation, same EXECUTE timing
                 fp_fma #(
                     .EXP_BITS(NUMBER_FORMAT == 2 ? 8 : 5),
-                    .MANT_BITS(NUMBER_FORMAT == 2 ? 7 : 10)
+                    .MANT_BITS(NUMBER_FORMAT == 2 ? 7 : 10),
+                    .ALIGN_STAGE(NUMBER_FORMAT == 1 ? 1 : 0)
                 ) fma_instance (
                     .clk(clk),
                     .reset(reset),

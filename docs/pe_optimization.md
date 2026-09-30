@@ -94,6 +94,7 @@ The SF16 row re-measures the lean PE's 20 ns layout from the table above under t
   - An earlier 5-stage FP16 tile reached 0.57 utilisation and could not place its antenna diodes (DPL-0036), so the 4-stage PE was tried first.
   - The 4-stage FP16 tile then missed 20 ns at max_ss by 1.95 ns before routing and 3.02 ns after. The failing path is the align+add stage, and in the tile the accumulator also drives the eight threads' result muxes. FP16 therefore uses the 5-stage PE (`ALIGN_STAGE`).
   - The BF16 tile meets timing before routing with the 4-stage PE (+0.27 ns at 0.43 utilisation), and keeps it.
+  - With the FP16 PE split, the tile's only paths within 1 ns of 20 ns at max_ss were the eight thread FMAs' align+add, at −0.098 ns before routing. `fp_fma` takes the same `ALIGN_STAGE` register. It fills the FMA's idle first EXECUTE cycle, so no cycles are added.
 - **The first 4-stage version** had a slower adder: one shifter per operand, a shifter-based sticky bit, and a zero detect on the sum. It missed 20 ns at max_ss by 0.26 ns (BF16).
 
 ## Reproducing
