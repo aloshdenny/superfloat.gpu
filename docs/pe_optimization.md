@@ -98,7 +98,11 @@ The SF16 row re-measures the lean PE's 20 ns layout from the table above under t
   - The failing paths were not clock skew (launch and capture within 0.08 ns). They were data paths of about 21 ns through about 25 repeaters, because placement spread each unit across the tile.
   - The fix, in both FP formats:
     - `ALIGN_STAGE` in the PE, the FMA and the activation unit. The FMA's register fills its idle first EXECUTE cycle; the activation unit rounds and applies f in EXECUTE. No cycles are added.
-    - FP tiles place at 70% target density and repair to a 1.5 ns setup margin (`librelane/make_variants.py`).
+    - BF16 places at 70% target density and repairs to a 1.5 ns setup margin (`librelane/make_variants.py`).
+    - FP16 is denser (0.57 utilisation against 0.50). At 70% and at 62% its repairs congested global routing, with overflow left after 90 iterations at 62%. It keeps the SF16 tile's 55%, synthesises with ABC's `AREA 0` script (6% faster logic on the PE than `AREA 2`, for 0.8% more area) and repairs to 3 ns after global routing.
+- **Reset:**
+  - Only the operand, accumulator, output and valid registers reset. The product, align and sum registers in the PE, FMA and activation unit have none. They run every cycle from reset-cleared operands, and only valid-qualified results reach the accumulator or a unit's output.
+  - With reset on those registers, the BF16 tile's `core_reset` input needed 12.6 ns at max_ss, against 8.1 ns on SF16. The BF16 chip then missed setup by 0.027 ns on the dispatcher's reset into a tile.
 - **The first 4-stage version** had a slower adder: one shifter per operand, a shifter-based sticky bit, and a zero detect on the sum. It missed 20 ns at max_ss by 0.26 ns (BF16).
 
 ## Reproducing
