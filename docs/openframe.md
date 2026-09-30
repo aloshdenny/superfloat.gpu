@@ -174,7 +174,7 @@ Both steps use LibreLane in its nix shell. `run_harden.sh` finds the `librelane`
 The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_variants.py`; rerun it after editing an SF16 config.
 
 1. **Core tile:** in `librelane/core_tile/`, run `./run_harden.sh config_fp16.json harden_fp16.log`.
-   - If signoff reports residual max-slew or max-cap violations, `./eco_fix.py runs/<run> --config config_fp16.json` writes an ECO config. It buffers the violating drivers from the routed state and re-runs signoff, and prints the command to run it.
+   - If signoff reports residual max-slew or max-cap violations, `./eco_fix.py runs/<run> --config config_fp16.json` writes an ECO config. It buffers the violating drivers from the routed state and re-runs signoff, and prints the command to run it (see Post-route ECO below).
    - `./export_views.sh runs/<signed-off run> views_fp16` copies the views the chip uses.
    - `./timing_model.sh runs/<signed-off run> views_fp16 config_fp16.json` then rewrites the `.lib` views with `model.sdc`.
      - Tile signoff uses `tile.sdc`, where hold at the ports is a false path. The tile's clock insertion delay (1.6 ns at ff to 4.5 ns at ss) exceeds its 3 ns I/O delay, so port hold is only meaningful against the chip's clock tree.
@@ -211,6 +211,7 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
      - **LVS extraction** reads the chip from GDS, so the supply macros' metal is extracted and LVS checks the real connection.
        - The tiles are read from their LEF instead (pins and power ports only), by `Magic.SpiceExtractionAbstractMacros` in `chip_flow.py`; `run_harden.sh` runs LibreLane through that script. Each tile's own LVS is part of its signoff.
        - With the tiles' full GDS, the top-level extraction ran for more than 2.5 hours at 8.7 GB. With abstracts it takes 75 s at 0.9 GB.
+     - `Magic.WriteLEFAbstractMacros` (also in `chip_flow.py`) writes the chip's LEF with the tiles read from their LEF. The chip LEF is abstract, so the output is the same: byte-identical on the SF16 chip, at 1 GiB in 24 s against 22 GiB in 8 min from the tiles' GDS.
      - The two supply macros are left out of the LVS device comparison (`LVS_IGNORE_CELLS`). They are empty modules in the Verilog and plain metal in the layout, so neither side has a device to match.
      - Top-level port names are not uniquified in extraction, because the padframe joins the separate shapes of each unused supply pin (vddio, vccd2, ...).
    - **Magic DRC** runs on the GDS. Abstract-view DRC would flag the tile LEF's n-well and the supply macros' obstruction.
@@ -219,5 +220,26 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
      - A net over the fanout limit only because of antenna diodes gets a buffer halfway to the real sink the diodes gather around. A long met1 branch to one small gate collected 11 to 12 diodes.
      - Because the router places the diodes, that fix restarts from the state before detailed routing, and the router re-inserts diodes on the two shorter nets.
      - To fix what an ECO left, pass the original run and then the ECO run (`eco_fix.py runs/chip_20 runs/chip_20_eco ...`). The new ECO restarts from the original run with the earlier buffers as well as the new ones.
+     - A driver's buffer is placed beside the driver. Unplaced, the ECO step puts it at the mean of the driver and its loads, and small drivers kept most of a long net. A driver whose own limit is under 0.06 pF gets a `buf_1`. In the FP16 tile's crowded corner, the only free runs within 100 µm of three `nor3_1` drivers were 3 sites wide, and a `buf_4` or `buf_2` was legalised 150 µm away.
+     - A net whose slew fails only at its loads gets a buffer halfway along its routed path to the farthest failing load, moved just outside any macro halo (a clock buffer on a clock net). One BF16 chip clock trunk ran 3.6 mm around a tile on met1 and met2.
+     - Only buffers in front of a cell input (the fanout and long-net fixes) force a restart before detailed routing; the others start from the routed state.
+
+### Signoff results
+
+Every chip below has zero setup, hold, max-slew, max-capacitance and max-fanout violations in all nine STA corners, and zero routing DRC, antenna, Magic DRC, KLayout DRC, XOR and LVS errors. LibreLane's manufacturability report passes. The 294 disconnected pins it lists are the wrapper's unused pad pins, the same on every chip.
+
+| | SF16 | FP16 | BF16 |
+|---|---|---|---|
+| Tile run | `RUN_2026-09-29_00-38-54_eco` | `fp16_10r_eco5_s` | `bf16_4_eco_s` |
+| Tile setup / hold slack, worst corner | +0.742 / +0.034 ns | +2.038 / +0.045 ns | +1.528 / +0.079 ns |
+| Tile utilisation | 0.423 | 0.561 | 0.493 |
+| Tile power, STA default activity | 75.5 mW | 138.6 mW | 132.4 mW |
+| Tile `core_reset` setup arc, max_ss | 8.13 ns | −2.55 ns | −1.58 ns |
+| Chip run | `chip_20_eco2` | `chip_fp16_1_eco_s` | `chip_bf16_2_eco4_s` |
+| Chip setup slack (max_ss) | +2.759 ns | +2.993 ns | +2.542 ns |
+| Chip hold slack (min_ff) | +0.212 ns | +0.213 ns | +0.156 ns |
+| Chip ECO passes | 2 | 1 | 4 |
+
+The FP tiles register `core_reset` (Block reset above), which is why their arc is negative. Gate-level simulation of each signed-off FP tile netlist passes `openframe_tile` and `openframe_fp` with the RTL's cycle counts.
 
 The ChipFoundry template files the chip harden depends on are vendored, unmodified, in `openframe/` (see `openframe/UPSTREAM.md`).
