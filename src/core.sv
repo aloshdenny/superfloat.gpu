@@ -11,6 +11,12 @@
 //   0 = SF16 (Q1.15 sign-magnitude), 1 = FP16, 2 = BF16. Integer ALU, LSU and
 //   addressing are the same in every format.
 // > Hierarchical design for improved physical synthesis
+// > The fetcher, scheduler and decode pipeline take `reset` directly. With
+//   RESET_STAGE the register files, execution units, systolic array and
+//   operand pipeline take it one cycle later, from a register. They are first
+//   used several cycles after the scheduler leaves IDLE, so a block runs in
+//   the same cycles either way; the register lets the reset tree across the
+//   tile start from a flip-flop instead of the core's reset input.
 
 module core #(
     parameter DATA_MEM_ADDR_BITS = 19,       // 1 MiB total data memory: 2^19 x 16-bit
@@ -21,7 +27,8 @@ module core #(
     parameter SYSTOLIC_SIZE = 8,              // 8x8 systolic array size
     parameter NUM_SYSTOLIC_ARRAYS = 1,        // One array per core
     parameter CACHE_SIZE = 2,                // Instruction cache entries (reserved)
-    parameter NUMBER_FORMAT = 0              // 0 SF16, 1 FP16, 2 BF16
+    parameter NUMBER_FORMAT = 0,             // 0 SF16, 1 FP16, 2 BF16
+    parameter RESET_STAGE = 0                // 1: register the reset of the execution units
 ) (
     input wire clk,
     input wire reset,
@@ -133,6 +140,18 @@ module core #(
     
     // For FMA: accumulator input from destination register (direct combinational read)
     wire [DATA_MEM_DATA_BITS-1:0] rd_data[THREADS_PER_BLOCK-1:0];
+
+    // Reset for the register files, execution units and operand pipeline
+    wire unit_reset;
+    generate
+        if (RESET_STAGE) begin : g_reset_reg
+            reg reset_q;
+            always @(posedge clk) reset_q <= reset;
+            assign unit_reset = reset_q;
+        end else begin : g_reset_direct
+            assign unit_reset = reset;
+        end
+    endgenerate
 
     // ============================================
     // Fetcher (connects directly to external memory)
@@ -276,7 +295,7 @@ module core #(
     reg [DATA_MEM_DATA_BITS-1:0] pipe_rd_data [THREADS_PER_BLOCK-1:0];
 
     always @(posedge clk) begin
-        if (reset) begin
+        if (unit_reset) begin
             for (integer t = 0; t < THREADS_PER_BLOCK; t = t + 1) begin
                 pipe_rs[t] <= {DATA_MEM_DATA_BITS{1'b0}};
                 pipe_rt[t] <= {DATA_MEM_DATA_BITS{1'b0}};
@@ -300,7 +319,7 @@ module core #(
                 .DATA_BITS(DATA_MEM_DATA_BITS)
             ) alu_instance (
                 .clk(clk),
-                .reset(reset),
+                .reset(unit_reset),
                 .enable(i < thread_count),
                 .core_state(core_state),
                 .decoded_alu_arithmetic_mux(pipe_alu_arithmetic_mux),
@@ -316,7 +335,7 @@ module core #(
                     .DATA_BITS(DATA_MEM_DATA_BITS)
                 ) fma_instance (
                     .clk(clk),
-                    .reset(reset),
+                    .reset(unit_reset),
                     .enable(i < thread_count),
                     .core_state(core_state),
                     .decoded_fma_enable(pipe_fma_enable),
@@ -331,7 +350,7 @@ module core #(
                     .DATA_BITS(DATA_MEM_DATA_BITS)
                 ) activation_instance (
                     .clk(clk),
-                    .reset(reset),
+                    .reset(unit_reset),
                     .enable(i < thread_count),
                     .core_state(core_state),
                     .activation_enable(pipe_act_enable),
@@ -348,7 +367,7 @@ module core #(
                     .ALIGN_STAGE(1)
                 ) fma_instance (
                     .clk(clk),
-                    .reset(reset),
+                    .reset(unit_reset),
                     .enable(i < thread_count),
                     .core_state(core_state),
                     .decoded_fma_enable(pipe_fma_enable),
@@ -364,7 +383,7 @@ module core #(
                     .ALIGN_STAGE(1)
                 ) activation_instance (
                     .clk(clk),
-                    .reset(reset),
+                    .reset(unit_reset),
                     .enable(i < thread_count),
                     .core_state(core_state),
                     .activation_enable(pipe_act_enable),
@@ -381,7 +400,7 @@ module core #(
                 .DATA_BITS(DATA_MEM_DATA_BITS)
             ) lsu_instance (
                 .clk(clk),
-                .reset(reset),
+                .reset(unit_reset),
                 .enable(i < thread_count),
                 .core_state(core_state),
                 .decoded_mem_read_enable(pipe_mem_read_enable),
@@ -407,7 +426,7 @@ module core #(
                 .DATA_BITS(DATA_MEM_DATA_BITS)
             ) register_instance (
                 .clk(clk),
-                .reset(reset),
+                .reset(unit_reset),
                 .enable(i < thread_count),
                 .block_id(block_id),
                 .core_state(core_state),
@@ -434,7 +453,7 @@ module core #(
                 .PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS)
             ) pc_instance (
                 .clk(clk),
-                .reset(reset),
+                .reset(unit_reset),
                 .enable(i < thread_count),
                 .core_state(core_state),
                 .decoded_nzp(pipe_nzp),
@@ -488,7 +507,7 @@ module core #(
     generate
         for (hold_idx = 0; hold_idx < THREADS_PER_BLOCK; hold_idx = hold_idx + 1) begin : sys_operand_hold
             always @(posedge clk) begin
-                if (reset) begin
+                if (unit_reset) begin
                     sys_a_hold[hold_idx] <= {DATA_MEM_DATA_BITS{1'b0}};
                     sys_b_hold[hold_idx] <= {DATA_MEM_DATA_BITS{1'b0}};
                 end else if (systolic_operand_update) begin
@@ -532,7 +551,7 @@ module core #(
     integer systolic_thread_idx;
     always @(posedge clk) begin
         for (systolic_thread_idx = 0; systolic_thread_idx < THREADS_PER_BLOCK; systolic_thread_idx = systolic_thread_idx + 1) begin
-            if (reset || !(pipe_systolic_idx < NUM_SYSTOLIC_ARRAYS)) begin
+            if (unit_reset || !(pipe_systolic_idx < NUM_SYSTOLIC_ARRAYS)) begin
                 systolic_sel_q[systolic_thread_idx] <= {DATA_MEM_DATA_BITS{1'b0}};
             end else begin
                 systolic_sel_q[systolic_thread_idx] <=
@@ -563,7 +582,7 @@ module core #(
                 .NUMBER_FORMAT(NUMBER_FORMAT)
             ) systolic_array_inst (
                 .clk(clk),
-                .reset(reset),
+                .reset(unit_reset),
                 .clear_acc(systolic_clear_acc),
                 .load_weights(systolic_load_weights),
                 .compute_enable(systolic_compute_enable),

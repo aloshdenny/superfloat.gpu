@@ -102,7 +102,8 @@ The SF16 row re-measures the lean PE's 20 ns layout from the table above under t
     - FP16 is denser (0.57 utilisation against 0.50). At 70% and at 62% its repairs congested global routing, with overflow left after 90 iterations at 62%. It keeps the SF16 tile's 55%, synthesises with ABC's `AREA 0` script (6% faster logic on the PE than `AREA 2`, for 0.8% more area) and repairs to 3 ns after global routing.
 - **Reset:**
   - Only the operand, accumulator, output and valid registers reset. The product, align and sum registers in the PE, FMA and activation unit have none. They run every cycle from reset-cleared operands, and only valid-qualified results reach the accumulator or a unit's output.
-  - With reset on those registers, the BF16 tile's `core_reset` input needed 12.6 ns at max_ss, against 8.1 ns on SF16. The BF16 chip then missed setup by 0.027 ns on the dispatcher's reset into a tile.
+  - This removed 4.6% of each FP tile's cells (2.0% of FP16's area, 2.3% of BF16's).
+  - It did not shorten the tile's `core_reset` path. That path's length comes from the reset buffer tree across the tile, not from its fan-out (see Block reset in `docs/openframe.md`).
 - **The first 4-stage version** had a slower adder: one shifter per operand, a shifter-based sticky bit, and a zero detect on the sum. It missed 20 ns at max_ss by 0.26 ns (BF16).
 
 ## Reproducing

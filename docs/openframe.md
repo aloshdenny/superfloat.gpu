@@ -188,6 +188,11 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
    - **Tile clocks:** each tile's `clk` pin is 0.28 pF, and CTS drives the tiles in pairs from one buffer (0.60 pF against the 0.5 pF limit), even with macro clustering of 1.
      - `Odb.InsertECOBuffers` runs right after CTS and puts a `clkbuf_16` next to each tile's `clk` pin (`INSERT_ECO_BUFFERS` in the config, via `meta.substituting_steps`).
      - Hold repair then runs on the final clock tree.
+   - **Block reset:** the dispatcher's `core_reset` reaches a tile 6.3 ns after the tile's `clk` pin, because CTS delays the dispatcher's registers to match the clock latency inside the tiles.
+     - The BF16 tile needed 13.46 ns from its `core_reset` pin at max_ss (SF16: 8.13 ns), and the first BF16 chip missed setup by 0.027 ns into tile 3.
+     - The path is a chain of about 50 buffers across the tile. The tile flow saw it as an input with a 3 ns delay and 6 ns of slack, so nothing repaired it.
+     - The FP tiles therefore set `RESET_STAGE` in `core`. The fetcher, scheduler and decode pipeline take `core_reset` directly. The register files, execution units, systolic array and operand pipeline take it from a register one cycle later.
+     - Those units are first used several cycles after the scheduler leaves IDLE, so kernels run in the same cycles as on SF16. The long reset tree becomes a register-to-register path, which the tile flow times and repairs.
    - **Pin template:** the chip starts from `openframe/pins_extended.def`, not from ChipFoundry's fixed DEF directly.
      - The fixed pins reach only 0.3 µm into the die, so the detailed router cannot place access points on them (DRT-1231).
      - `extend_pins.py` derives the copy with every signal pin extended 3 µm inward. Nothing outside the die boundary changes, and that band is what precheck compares with the empty wrapper.

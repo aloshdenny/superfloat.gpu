@@ -125,7 +125,10 @@ module core_tile #(
         .SYSTOLIC_SIZE(SYSTOLIC_SIZE),
         .NUM_SYSTOLIC_ARRAYS(NUM_SYSTOLIC_ARRAYS),
         .CACHE_SIZE(CACHE_SIZE),
-        .NUMBER_FORMAT(NUMBER_FORMAT)
+        .NUMBER_FORMAT(NUMBER_FORMAT),
+        // The FP tiles' reset tree is too slow to take core_reset straight from
+        // the pin: on the chip it arrives 6.3 ns into the cycle.
+        .RESET_STAGE(NUMBER_FORMAT != 0)
     ) core_instance (
         .clk(clk),
         .reset(core_reset),
