@@ -9,9 +9,13 @@ parameter through SYNTH_PARAMETERS. The FP datapaths are deeper than SF16's,
 and at the SF16 tile's 55% target density placement spread each FP unit
 across the tile: its align/add paths ran through ~25 repeaters and routing
 added 1.3-2.7 ns. The FP tiles therefore place at 70% target density and
-repair to a 1.5 ns setup margin. Everything else (floorplan, pins, diode
-antenna repair) stays that of the signed-off SF16 tile. Jumper-only antenna
-repair inserted no jumpers on the FP16 tile and left 629 nets; diodes fit.
+repair to a 1.5 ns setup margin. FP16 is denser (0.56 utilisation against
+0.50 for BF16): at 70% its post-route repairs congested global routing, so
+it places at 62%, and synthesises with ABC's AREA 0 script, whose logic was
+6% faster than AREA 2 on the FP16 PE for 0.8% more area. Everything else
+(floorplan, pins, diode antenna repair) stays that of the signed-off SF16
+tile. Jumper-only antenna repair inserted no jumpers on the FP16 tile and
+left 629 nets; diodes fit.
 
 Chip: points the core_tile macro at core_tile/views_fp16/ or views_bf16/.
 The chip RTL does not depend on the format, since the tiles are black
@@ -25,6 +29,7 @@ import os
 HERE = os.path.dirname(os.path.abspath(__file__))
 FP_SOURCES = ["fp_arith.sv", "fp_systolic_pe.sv", "fp_fma.sv", "fp_activation.sv"]
 VARIANTS = {"fp16": 1, "bf16": 2}
+TILE_OVERRIDES = {"fp16": {"PL_TARGET_DENSITY_PCT": 62, "SYNTH_STRATEGY": "AREA 0"}}
 
 
 def load(path):
@@ -60,6 +65,7 @@ def main():
         t["PL_TARGET_DENSITY_PCT"] = 70
         t["PL_RESIZER_SETUP_SLACK_MARGIN"] = 1.5
         t["GRT_RESIZER_SETUP_SLACK_MARGIN"] = 1.5
+        t.update(TILE_OVERRIDES.get(name, {}))
         save(f"core_tile/config_{name}.json", t)
         save(f"openframe/config_{name}.json", retarget_views(chip, f"views_{name}"))
 
