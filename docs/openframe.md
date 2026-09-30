@@ -203,7 +203,9 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
    - **Pad configuration** constants come from tie cells, not from the pads' `gpio_loopback_*` pins (see `src/openframe_project_wrapper.v`).
    - **Supply pins:**
      - vccd1 and vssd1 reach the core ring through ChipFoundry's `vccd1_connection`/`vssd1_connection` macros. Their LEF is only an obstruction, so OpenROAD's IR-drop analysis cannot see the connection and is off.
-     - Magic extracts from GDS with the tiles abstract, so LVS checks the real connection.
+     - **LVS extraction** reads the chip from GDS, so the supply macros' metal is extracted and LVS checks the real connection.
+       - The tiles are read from their LEF instead (pins and power ports only), by `Magic.SpiceExtractionAbstractMacros` in `chip_flow.py`; `run_harden.sh` runs LibreLane through that script. Each tile's own LVS is part of its signoff.
+       - With the tiles' full GDS, the top-level extraction ran for more than 2.5 hours at 8.7 GB. With abstracts it takes 75 s at 0.9 GB.
      - Top-level port names are not uniquified in extraction, because the padframe joins the separate shapes of each unused supply pin (vddio, vccd2, ...).
    - **Magic DRC** runs on the GDS. Abstract-view DRC would flag the tile LEF's n-well and the supply macros' obstruction.
    - **Post-route ECO:** `../core_tile/eco_fix.py runs/<run> --config ../openframe/config_fp16.json` handles chip runs as well.

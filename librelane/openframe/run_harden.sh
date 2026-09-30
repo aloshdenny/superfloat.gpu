@@ -5,6 +5,7 @@
 # Arguments: [config] [log] [extra librelane options...]. LibreLane is taken
 # from $LIBRELANE, else from the librelane checkout next to this repository.
 # The log is written next to this script and ends with HARDEN_EXIT <code>.
+# LibreLane runs through chip_flow.py, which adds the chip's extraction step.
 DIR=$(cd "$(dirname "$0")" && pwd)
 LIBRELANE=${LIBRELANE:-$(cd "$DIR/../../../librelane" && pwd)}
 CFG=${1:-config.json}
@@ -19,5 +20,5 @@ if ! command -v nix-shell >/dev/null 2>&1; then
   done
 fi
 cd "$LIBRELANE" || exit 1
-nix-shell --run "cd '$DIR' && python3 -m librelane --pdk-root \"\$HOME/.ciel\" $* ./$CFG" 2>&1 | tee "$DIR/$LOG"
+nix-shell --run "cd '$DIR' && python3 ./chip_flow.py --pdk-root \"\$HOME/.ciel\" $* ./$CFG" 2>&1 | tee "$DIR/$LOG"
 echo "HARDEN_EXIT ${PIPESTATUS[0]}" >> "$DIR/$LOG"

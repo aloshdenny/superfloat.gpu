@@ -3,7 +3,8 @@
         "version": 2,
         "flow": "Classic",
         "substituting_steps": {
-            "+OpenROAD.CTS": "Odb.InsertECOBuffers"
+            "+OpenROAD.CTS": "Odb.InsertECOBuffers",
+            "Magic.SpiceExtraction": "Magic.SpiceExtractionAbstractMacros"
         }
     },
     "DESIGN_NAME": "openframe_project_wrapper",

@@ -266,8 +266,13 @@ def main():
     if reroute:
         drt = next(i for i, d in enumerate(steps) if d.endswith("-openroad-detailedrouting"))
         start = [d for d in steps[:drt] if os.path.exists(os.path.join(d, "state_out.json"))][-1]
-    flow = [s for s in ECO_FLOW
+    # The ECO flow is listed step by step, so apply the config's one-for-one
+    # step substitutions (the chip's extraction step) to it.
+    subs = {k: v for k, v in ((cfg.get("meta") or {}).get("substituting_steps") or {}).items()
+            if not k.startswith(("+", "-"))}
+    flow = [subs.get(s, s) for s in ECO_FLOW
             if not (s == "OpenROAD.IRDropReport" and cfg.get("RUN_IRDROP_REPORT") is False)]
+    flow = [s for s in flow if s is not None]
     cfg["meta"] = {"version": 2, "flow": flow}
     cfg["INSERT_ECO_BUFFERS"] = inserts
     name = os.path.basename(run)
@@ -278,8 +283,9 @@ def main():
         at = f" at {b['placement']}" if b.get("placement") else ""
         print(f"  {b['buffer']} -> {b['target']}{at}")
     print(f"wrote {out}, starting from {os.path.basename(base)}/{os.path.basename(start)}")
+    runner = "./chip_flow.py" if os.path.exists(os.path.join(cfg_dir, "chip_flow.py")) else "python3 -m librelane"
     print("run from the librelane checkout's nix-shell:")
-    print(f"  python3 -m librelane --pdk-root $HOME/.ciel {out} "
+    print(f"  {runner} --pdk-root $HOME/.ciel {out} "
           f"--with-initial-state {os.path.abspath(os.path.join(start, 'state_out.json'))} "
           f"--run-tag {name}_eco")
 
