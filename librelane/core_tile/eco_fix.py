@@ -19,6 +19,12 @@ signoff sequence:
   antenna diodes                          in front of the real sink nearest
                                           the diodes (they gather where a
                                           long branch meets its gate)
+  slew on the loads of a long net whose   a --long-buffer (--clock-buffer on a
+  driver is within limits                 clock net) halfway along the
+                                          routed path to the farthest such
+                                          load, moved off any macro and its
+                                          halo (a net routed around the tiles
+                                          ran 3.6 mm on met1/met2)
 
 The detailed router places the diodes, and an ECO on the routed state keeps
 them on their net, so a fanout fix restarts from the state before detailed
@@ -27,7 +33,8 @@ shorter nets. Otherwise the ECO starts from the routed state saved before
 fill insertion.
 
 usage: ./eco_fix.py RUN [ECO_RUN] [--config config.json] [--buffer CELL]
-                                   [--clock-buffer CELL] [--reroute]
+                                   [--clock-buffer CELL] [--long-buffer CELL]
+                                   [--reroute]
 --config is the harden config the run used, relative to this directory or
 absolute (e.g. config_fp16.json, ../openframe/config.json). The ECO config
 eco_<run>.json is written next to it; the command to run it is printed.
@@ -45,6 +52,7 @@ when the config disables it.
 """
 import argparse
 import glob
+import heapq
 import json
 import os
 import re
@@ -116,12 +124,37 @@ def violations(run):
     return found
 
 
+def route_segments(text, units):
+    """[(x0, y0, x1, y1)] in um of a net's ROUTED/NEW wiring text."""
+    segs, last, layer_next = [], None, False
+    tokens = re.findall(r"\(|\)|[^\s()]+", text)
+    i = 0
+    while i < len(tokens):
+        t = tokens[i]
+        if t in ("ROUTED", "NEW", "FIXED", "COVER"):
+            last, layer_next = None, True
+        elif layer_next:
+            layer_next = False                    # the layer name
+        elif t == "(":
+            x, y = tokens[i + 1], tokens[i + 2]
+            px = last[0] if x == "*" and last else float(x) / units
+            py = last[1] if y == "*" and last else float(y) / units
+            if last:
+                segs.append((last[0], last[1], px, py))
+            last = (px, py)
+            i = tokens.index(")", i)
+        i += 1
+    return segs
+
+
 def read_def(path, wanted):
-    """Placements {instance: (master, x, y, orient, DEF name)} in um, and
-    {pin: connections of its net} for the wanted instance/pin names.
-    Instance names are unescaped; ports appear as ('PIN', port)."""
-    comps, nets = {}, {}
+    """Placements {instance: (master, x, y, orient, DEF name)} in um,
+    {pin: connections of its net}, {pin: routed segments of its net} and the
+    pins on clock nets, for the wanted instance/pin names. Instance names are unescaped; ports appear
+    as ('PIN', port)."""
+    comps, nets, routes, clock_pins = {}, {}, {}, set()
     units, section, conns = 1000, None, None
+    routing, route_pins = None, []
     for line in open(path):
         s = line.strip()
         if section is None:
@@ -142,15 +175,96 @@ def read_def(path, wanted):
             if s.startswith("- "):
                 conns = []
             if conns is None:
-                continue                          # routing of the current net
-            head, plus, _ = s.partition("+")
+                if routing is not None:           # routing of a wanted net
+                    routing.append(s)
+                    if s.endswith(";"):
+                        segs = route_segments(" ".join(routing), units)
+                        for pin in route_pins:
+                            routes[pin] = segs
+                        routing = None
+                continue
+            head, plus, rest = s.partition("+")
             conns.extend((i.replace("\\", ""), p) for i, p in CONN.findall(head))
             if plus or s.endswith(";"):
-                for i, p in conns:
-                    if f"{i}/{p}" in wanted:
-                        nets[f"{i}/{p}"] = conns
+                route_pins = [f"{i}/{p}" for i, p in conns if f"{i}/{p}" in wanted]
+                for pin in route_pins:
+                    nets[pin] = conns
+                    if "USE CLOCK" in rest:
+                        clock_pins.add(pin)
+                if route_pins and not s.endswith(";"):
+                    routing = ["+" + rest]
                 conns = None
-    return comps, nets
+    return comps, nets, routes, clock_pins
+
+
+def path_midpoint(segs, start, end):
+    """(point, length): the point halfway along the routed path from start
+    to end (um), and the path's length; None if the route does not join them."""
+    key = lambda x, y: (round(x, 3), round(y, 3))
+    # split each segment where another one ends on it (T-junctions, vias)
+    ends = {key(x, y) for x0, y0, x1, y1 in segs for x, y in ((x0, y0), (x1, y1))}
+    split = []
+    for x0, y0, x1, y1 in segs:
+        on = sorted((p for p in ends
+                     if min(x0, x1) <= p[0] <= max(x0, x1) and min(y0, y1) <= p[1] <= max(y0, y1)
+                     and (p[0] == round(x0, 3) == round(x1, 3) or p[1] == round(y0, 3) == round(y1, 3))),
+                    key=lambda p: abs(p[0] - x0) + abs(p[1] - y0))
+        pts = [key(x0, y0)] + on + [key(x1, y1)]
+        split += [(a[0], a[1], b[0], b[1]) for a, b in zip(pts, pts[1:])]
+    adj = {}
+    for x0, y0, x1, y1 in split:
+        a, b = key(x0, y0), key(x1, y1)
+        if a != b:
+            d = abs(x1 - x0) + abs(y1 - y0)
+            adj.setdefault(a, []).append((b, d))
+            adj.setdefault(b, []).append((a, d))
+    if not adj:
+        return None
+    near = lambda p, nodes: min(nodes, key=lambda n: abs(n[0] - p[0]) + abs(n[1] - p[1]))
+    src = near(start, adj)
+    dist, prev, todo = {src: 0.0}, {}, [(0.0, src)]
+    while todo:                                   # Dijkstra over the route
+        d, n = heapq.heappop(todo)
+        if d > dist[n]:
+            continue
+        for m, w in adj[n]:
+            if d + w < dist.get(m, float("inf")):
+                dist[m], prev[m] = d + w, n
+                heapq.heappush(todo, (d + w, m))
+    # a pin's own shape joins the last stretch of routing to it, so end at
+    # the reachable node nearest the load
+    dst = near(end, dist)
+    path = [dst]
+    while path[-1] != src:
+        path.append(prev[path[-1]])
+    path.reverse()
+    half, walked = dist[dst] / 2, 0.0
+    for (ax, ay), (bx, by) in zip(path, path[1:]):
+        d = abs(bx - ax) + abs(by - ay)
+        if walked + d >= half:
+            f = (half - walked) / d
+            return (ax + (bx - ax) * f, ay + (by - ay) * f), dist[dst]
+        walked += d
+    return path[-1], dist[dst]
+
+
+def free_point(pt, keepout, core):
+    """pt, or the nearest point just outside the keepout box that holds it,
+    inside the core; None if there is none."""
+    inside = lambda x, y, b: b[0] <= x <= b[2] and b[1] <= y <= b[3]
+    x, y = pt
+    boxes = [b for b in keepout if inside(x, y, b)]
+    if not boxes:
+        return [round(x, 3), round(y, 3)]
+    b = boxes[0]
+    candidates = [(b[0] - 3, y), (b[2] + 3, y), (x, b[1] - 3), (x, b[3] + 3)]
+    ok = [c for c in candidates
+          if not any(inside(*c, k) for k in keepout)
+          and core[0] <= c[0] <= core[2] and core[1] <= c[1] <= core[3]]
+    if not ok:
+        return None
+    cx, cy = min(ok, key=lambda c: abs(c[0] - x) + abs(c[1] - y))
+    return [round(cx, 3), round(cy, 3)]
 
 
 def macro_pins(lef):
@@ -190,6 +304,7 @@ def main():
     ap.add_argument("--config", default="config.json")
     ap.add_argument("--buffer", default="sky130_fd_sc_hd__buf_4")
     ap.add_argument("--clock-buffer", default="sky130_fd_sc_hd__clkbuf_8")
+    ap.add_argument("--long-buffer", default="sky130_fd_sc_hd__buf_8")
     ap.add_argument("--reroute", action="store_true",
                     help="start from the state before detailed routing")
     args = ap.parse_args()
@@ -208,7 +323,7 @@ def main():
 
     pre_fill = [d for d in step_dirs(run) if d.endswith("-checker-wirelength")]
     routed = json.load(open(os.path.join(pre_fill[-1], "state_out.json")))
-    comps, nets = read_def(routed["def"], set(drivers) | found["fanout"])
+    comps, nets, routes, clock_pins = read_def(routed["def"], set(drivers) | found["fanout"])
     macros = {}
     for name, views in (cfg.get("MACROS") or {}).items():
         lef = views["lef"][0]
@@ -224,10 +339,53 @@ def main():
         # only holds on a reroute that drops the old diodes.
         inserts = json.load(open(os.path.join(run, "resolved.json"))).get("INSERT_ECO_BUFFERS") or []
         reroute = reroute or any(b.get("placement") for b in inserts)
+    # macro and halo boxes, where a buffer cannot go
+    halo = float(cfg.get("FP_MACRO_HORIZONTAL_HALO") or 0)
+    core = cfg.get("CORE_AREA") or [-1e9, -1e9, 1e9, 1e9]
+    keepout = []
+    for inst, comp in comps.items():
+        if comp[0] in macros:
+            (w, h), _ = macros[comp[0]]
+            if comp[3] in ("E", "W", "FE", "FW"):
+                w, h = h, w
+            keepout.append((comp[1] - halo, comp[2] - halo, comp[1] + w + halo, comp[2] + h + halo))
+
+    # Slew seen only at the loads of a net: buffer halfway along its route
+    # to the farthest such load, unless its driver is fixed below anyway.
+    long_nets = {}
+    for pin in found["slew"]:
+        inst, _, name = pin.rpartition("/")
+        if name in DRIVER_PINS or inst not in comps or "__diode" in comps[inst][0]:
+            continue
+        conns = nets.get(pin, [])
+        driver = next(((i, p) for i, p in conns if p in DRIVER_PINS and i != "PIN"),
+                      next(((i, p) for i, p in conns if i == "PIN"), None))
+        if driver and f"{driver[0]}/{driver[1]}" not in drivers and findable(inst):
+            long_nets.setdefault(driver, []).append(pin)
+    for (dinst, dpin), loads in sorted(long_nets.items()):
+        start = comps[dinst][1:3] if dinst in comps else None
+        if start is None:
+            skipped.append(f"{loads[0]} (driven by port {dpin})")
+            continue
+        best = None
+        for pin in loads:
+            got = path_midpoint(routes.get(pin, []), start, comps[pin.rpartition("/")[0]][1:3])
+            if got and (best is None or got[1] > best[1]):
+                best = (got[0], got[1], pin)
+        at = free_point(best[0], keepout, core) if best else None
+        if at is None:
+            skipped.append(f"{loads[0]} (no routed path, or no free place near its midpoint)")
+            continue
+        cell = args.clock_buffer if best[2] in clock_pins else args.long_buffer
+        inserts.append({"target": best[2], "buffer": cell, "placement": at})
+        reroute = True
+        print(f"long net: {dinst}/{dpin} -> {best[2]}, {best[1]:.0f} um routed; buffer at {at}")
+
     for pin in drivers:
         inst, _, name = pin.rpartition("/")
         if inst not in comps or comps[inst][0] in macros or name not in DRIVER_PINS:
-            skipped.append(f"{pin} (not a cell driver)")
+            if not any(pin in loads for loads in long_nets.values()):
+                skipped.append(f"{pin} (not a cell driver)")
             continue
         cell = args.clock_buffer if inst.startswith(("clkbuf", "delaybuf")) else args.buffer
         macro_loads = [(i, p) for i, p in nets.get(pin, [])
