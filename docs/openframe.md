@@ -206,6 +206,7 @@ The FP16 and BF16 configs are generated from the SF16 ones by `librelane/make_va
      - **LVS extraction** reads the chip from GDS, so the supply macros' metal is extracted and LVS checks the real connection.
        - The tiles are read from their LEF instead (pins and power ports only), by `Magic.SpiceExtractionAbstractMacros` in `chip_flow.py`; `run_harden.sh` runs LibreLane through that script. Each tile's own LVS is part of its signoff.
        - With the tiles' full GDS, the top-level extraction ran for more than 2.5 hours at 8.7 GB. With abstracts it takes 75 s at 0.9 GB.
+     - The two supply macros are left out of the LVS device comparison (`LVS_IGNORE_CELLS`). They are empty modules in the Verilog and plain metal in the layout, so neither side has a device to match.
      - Top-level port names are not uniquified in extraction, because the padframe joins the separate shapes of each unused supply pin (vddio, vccd2, ...).
    - **Magic DRC** runs on the GDS. Abstract-view DRC would flag the tile LEF's n-well and the supply macros' obstruction.
    - **Post-route ECO:** `../core_tile/eco_fix.py runs/<run> --config ../openframe/config_fp16.json` handles chip runs as well.

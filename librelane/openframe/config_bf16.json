@@ -299,6 +299,10 @@
     "MAGIC_EXT_ABSTRACT_CELLS": [
         "^core_tile$"
     ],
+    "LVS_IGNORE_CELLS": [
+        "vccd1_connection",
+        "vssd1_connection"
+    ],
     "RUN_IRDROP_REPORT": false,
     "MAGIC_EXT_UNIQUE": "notopports",
     "ENDCAP_CELL": "sky130_fd_sc_hd__tapvpwrvgnd_1",
