@@ -1,0 +1,27 @@
+
+Magic 8.3 revision 677 - Compiled on Fri Jul 24 07:13:43 UTC 2026.
+Starting magic under Tcl interpreter
+Using the terminal as the console.
+WARNING: RLIMIT_NOFILE is above 1024 and Tcl_Version<9 this may cause runtime issues [rlim_cur=10240]
+Using NULL graphics device.
+Processing system .magicrc file
+Switching to WIRING tool.
+Switching to NETLIST tool.
+Switching to PICK tool.
+Switching to BOX tool.
+Sourcing design .magicrc for technology sky130A ...
+2 Magic internal units = 1 Lambda
+Input style sky130(): scaleFactor=2, multiplier=2
+The following types are not handled by extraction and will be treated as non-electrical types:
+    ubm 
+Scaled tech values by 2 / 1 to match internal grid scaling
+Loading sky130A Device Generator Menu ...
+Loading "/nix/store/nkihm22x38gfypmyvz3ya2sv72vk2pa8-python3-3.13.13-env/lib/python3.13/site-packages/librelane/scripts/magic/wrapper.tcl" from command line.
+Warning: Calma reading is not undoable!  I hope that's OK.
+Library written using GDS-II Release 6.0
+Library name: LIB
+Reading "vssd1_connection".
+%OL_METRIC_I llx 0
+%OL_METRIC_I lly 0
+%OL_METRIC_I urx 9080
+%OL_METRIC_I ury 14920
