@@ -98,6 +98,7 @@ The SF16 row re-measures the lean PE's 20 ns layout from the table above under t
   - The failing paths were not clock skew (launch and capture within 0.08 ns). They were data paths of about 21 ns through about 25 repeaters, because placement spread each unit across the tile.
   - The fix, in both FP formats:
     - `ALIGN_STAGE` in the PE, the FMA and the activation unit. The FMA's register fills its idle first EXECUTE cycle; the activation unit rounds and applies f in EXECUTE. No cycles are added.
+    - FP tiles place at 70% target density and repair to a 1.5 ns setup margin (`librelane/make_variants.py`).
 - **The first 4-stage version** had a slower adder: one shifter per operand, a shifter-based sticky bit, and a zero detect on the sum. It missed 20 ns at max_ss by 0.26 ns (BF16).
 
 ## Reproducing

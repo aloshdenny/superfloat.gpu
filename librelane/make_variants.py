@@ -5,11 +5,13 @@
   openframe/config.json -> openframe/config_fp16.json, config_bf16.json
 
 Tile: adds the floating-point sources and sets the core_tile NUMBER_FORMAT
-parameter through SYNTH_PARAMETERS. Everything else (floorplan, pins,
-closure settings, diode antenna repair) stays that of the signed-off SF16
-tile. Jumper-only antenna repair inserted no jumpers on the FP16 tile and
-left 629 nets; with the 4-stage PE the tile is at 0.49 utilisation and
-diodes fit.
+parameter through SYNTH_PARAMETERS. The FP datapaths are deeper than SF16's,
+and at the SF16 tile's 55% target density placement spread each FP unit
+across the tile: its align/add paths ran through ~25 repeaters and routing
+added 1.3-2.7 ns. The FP tiles therefore place at 70% target density and
+repair to a 1.5 ns setup margin. Everything else (floorplan, pins, diode
+antenna repair) stays that of the signed-off SF16 tile. Jumper-only antenna
+repair inserted no jumpers on the FP16 tile and left 629 nets; diodes fit.
 
 Chip: points the core_tile macro at core_tile/views_fp16/ or views_bf16/.
 The chip RTL does not depend on the format, since the tiles are black
@@ -55,6 +57,9 @@ def main():
         t = dict(tile)
         t["VERILOG_FILES"] = tile["VERILOG_FILES"] + [f"dir::../../src/{s}" for s in FP_SOURCES]
         t["SYNTH_PARAMETERS"] = [f"NUMBER_FORMAT={fmt}"]
+        t["PL_TARGET_DENSITY_PCT"] = 70
+        t["PL_RESIZER_SETUP_SLACK_MARGIN"] = 1.5
+        t["GRT_RESIZER_SETUP_SLACK_MARGIN"] = 1.5
         save(f"core_tile/config_{name}.json", t)
         save(f"openframe/config_{name}.json", retarget_views(chip, f"views_{name}"))
 
