@@ -34,6 +34,16 @@
 // its answer goes to every channel that asked: tiles running in step share
 // their reads. IN and ACK are registered at the pins.
 //
+// Shared reads (sync, SHARE_LINES > 0). The answers to data reads are kept in
+// SHARE_LINES lines of 8 words (aligned groups of 8 addresses), oldest line
+// replaced first. A data channel whose next read finds its word there is
+// answered from it instead of the pins, one channel per cycle, alongside the
+// bus: tiles that read the same words some cycles apart (activations shared
+// by every block) read them from the pins once. A channel is answered this way
+// only with none of its reads in flight, so its answers stay in order. Any
+// write empties the lines, and reads issued before it do not fill them; so
+// does `flush`, which the chip raises between launches.
+//
 // Channels. A program channel holds valid until its ready pulse and has one
 // read at a time. A data channel (tile_mem_queue) hands over a request in a
 // cycle where its ch_read_accept (reads) or ch_write_ready (writes) is high,
@@ -48,17 +58,19 @@ module openframe_bus #(
     parameter NUM_PROGRAM_CHANNELS = 1,
     parameter BUS_BITS = 16,
     parameter OUTSTANDING = 8,                 // sync mode: reads in flight (power of 2)
-    parameter STICKY = 1                       // sync mode: keep serving a channel while it has requests (tiles then take turns)
+    parameter STICKY = 1,                      // sync mode: keep serving a channel while it has requests (tiles then take turns)
+    parameter SHARE_LINES = 8                  // sync mode: lines of recent data answers (0 = none)
 ) (
     input  wire clk,
     input  wire reset,
     input  wire sync_mode,
+    input  wire flush,                         // empty the shared-read lines (memory changed)
 
     input  wire [NUM_CHANNELS-1:0]          ch_read_valid,
     input  wire [BUS_BITS*NUM_CHANNELS-1:0] ch_read_address_flat,
     output wire [NUM_CHANNELS-1:0]          ch_read_accept,
     output reg  [NUM_CHANNELS-1:0]          ch_read_ready,
-    output wire [BUS_BITS-1:0]              ch_read_data,      // shared, valid with the ready pulses
+    output wire [BUS_BITS*NUM_CHANNELS-1:0] ch_read_data_flat, // valid with the ready pulses
     input  wire [NUM_CHANNELS-1:0]          ch_write_valid,
     input  wire [BUS_BITS*NUM_CHANNELS-1:0] ch_write_address_flat,
     input  wire [BUS_BITS*NUM_CHANNELS-1:0] ch_write_data_flat,
@@ -88,7 +100,15 @@ module openframe_bus #(
     reg                ack_q1, ack_q2;
     reg [BUS_BITS-1:0] in_q;                   // IN, registered (sync mode)
     reg [BUS_BITS-1:0] rdata;
-    assign ch_read_data = rdata;
+    // Shared-read answers come on their own path (share_data, shared_q).
+    reg [NUM_CHANNELS-1:0] shared_q;
+    reg [BUS_BITS-1:0]     share_data;
+    genvar gch;
+    generate
+        for (gch = 0; gch < NUM_CHANNELS; gch = gch + 1) begin : read_data_out
+            assign ch_read_data_flat[gch*BUS_BITS +: BUS_BITS] = shared_q[gch] ? share_data : rdata;
+        end
+    endgenerate
 
     // Async completion pulses, and the sync "room" signal of each data channel.
     reg [NUM_CHANNELS-1:0] a_accept, a_wready, room;
@@ -115,6 +135,10 @@ module openframe_bus #(
     reg [Q_BITS:0]         q_count;
     reg [BUS_BITS-1:0]     last_addr;          // newest read in flight
     reg                    last_sel;
+    reg [BUS_BITS-1:0]     q_addr  [OUTSTANDING-1:0];
+    reg                    q_sel   [OUTSTANDING-1:0];
+    reg [OUTSTANDING-1:0]  q_stale;            // issued before a write: neither joined nor kept
+    reg [Q_BITS:0]         rcnt    [NUM_CHANNELS-1:0];   // each channel's reads in flight
     reg                    w_beat;             // write data beat due
     reg [BUS_BITS-1:0]     w_data;
 
@@ -153,7 +177,8 @@ module openframe_bus #(
     // channel in async mode), no read of its own in flight (program
     // channels), not the async transaction in progress, and room for a read
     // in sync mode.
-    wire [NUM_CHANNELS-1:0] eligible = r_valid & ~taken_q & ~busy & ~cur_mask &
+    wire [NUM_CHANNELS-1:0] share_hit;          // next read is in the shared lines (below)
+    wire [NUM_CHANNELS-1:0] eligible = r_valid & ~taken_q & ~busy & ~cur_mask & ~share_hit &
                                        (r_we | {NUM_CHANNELS{~(sync_mode & q_full)}});
 
     reg               found;
@@ -181,11 +206,103 @@ module openframe_bus #(
     wire [Q_BITS-1:0] q_newest = q_wr - 1'b1;
     wire joins_newest = (q_count != 0) && !(answer && q_count == 1) &&
                         (last_sel == pick_sel) && (last_addr == pick_addr) &&
-                        !q_mask[q_newest][pick];
+                        !q_mask[q_newest][pick] && !q_stale[q_newest];
 
     // Sync issue this cycle (the cycle of a write's data beat issues nothing new).
     wire s_issue = sync_mode & found & ~w_beat;
+    wire w_issue = s_issue & pick_we;           // a write's address beat: later reads must see it
     wire [CH_BITS-1:0] next_rr = (pick == CH_BITS'(NUM_CHANNELS - 1)) ? {CH_BITS{1'b0}} : pick + 1'b1;
+
+    // Shared-read lines.
+    wire [NUM_CHANNELS-1:0] share_take;         // the channel answered from the lines this cycle
+    wire [BUS_BITS-1:0]     share_word;         // its word
+    generate
+        if (SHARE_LINES > 0) begin : g_share
+            localparam LB = (SHARE_LINES > 1) ? $clog2(SHARE_LINES) : 1;
+            reg [BUS_BITS-4:0]       s_tag   [SHARE_LINES-1:0];
+            reg [SHARE_LINES-1:0]    s_lvalid;
+            reg [7:0]                s_wvalid[SHARE_LINES-1:0];
+            reg [BUS_BITS-1:0]       s_data  [8*SHARE_LINES-1:0];
+            reg [LB-1:0]             s_next;
+            reg [CH_BITS-1:0]        s_rr;
+
+            // Lookup: each data channel's next request, if a read with none in flight.
+            reg [SHARE_LINES-1:0] s_match [NUM_CHANNELS-1:0];
+            reg [NUM_CHANNELS-1:0] hit;
+            integer sc, sl;
+            always @(*) begin
+                for (sc = 0; sc < NUM_CHANNELS; sc = sc + 1) begin
+                    for (sl = 0; sl < SHARE_LINES; sl = sl + 1)
+                        s_match[sc][sl] = s_lvalid[sl] && (s_tag[sl] == b0_addr[sc][BUS_BITS-1:3]) &&
+                                          s_wvalid[sl][b0_addr[sc][2:0]];
+                    hit[sc] = sync_mode && !PROG_MASK[sc] && (b_cnt[sc] != 2'd0) && !b0_we[sc] &&
+                              (rcnt[sc] == '0) && (|s_match[sc]);
+                end
+            end
+            assign share_hit = hit;
+
+            // One answer per cycle, rotating among the channels that hit.
+            reg               s_found;
+            reg [CH_BITS-1:0] s_pick;
+            reg [BUS_BITS-1:0] s_word;
+            integer sk, sw;
+            always @(*) begin
+                s_found = 1'b0;
+                s_pick  = {CH_BITS{1'b0}};
+                for (sk = 2 * NUM_CHANNELS - 1; sk >= 0; sk = sk - 1)
+                    if (sk >= s_rr && sk < s_rr + NUM_CHANNELS && hit[sk % NUM_CHANNELS]) begin
+                        s_found = 1'b1;
+                        s_pick  = CH_BITS'(sk % NUM_CHANNELS);
+                    end
+                s_word = {BUS_BITS{1'b0}};
+                for (sw = 0; sw < SHARE_LINES; sw = sw + 1)
+                    if (s_match[s_pick][sw]) s_word = s_data[8*sw + b0_addr[s_pick][2:0]];
+            end
+            assign share_take = s_found ? (NUM_CHANNELS'(1) << s_pick) : {NUM_CHANNELS{1'b0}};
+            assign share_word = s_word;
+
+            // Fill from the answers to data reads issued since the last write.
+            wire [BUS_BITS-1:0] f_addr = q_addr[q_rd];
+            wire fill = answer && q_sel[q_rd] && !q_stale[q_rd] && !w_issue;
+            reg [SHARE_LINES-1:0] f_match;
+            integer sf, su;
+            always @(*)
+                for (sf = 0; sf < SHARE_LINES; sf = sf + 1)
+                    f_match[sf] = s_lvalid[sf] && (s_tag[sf] == f_addr[BUS_BITS-1:3]);
+
+            always @(posedge clk) begin
+                if (reset) begin
+                    s_lvalid <= {SHARE_LINES{1'b0}};
+                    s_next   <= {LB{1'b0}};
+                    s_rr     <= {CH_BITS{1'b0}};
+                end else begin
+                    if (s_found)
+                        s_rr <= (s_pick == CH_BITS'(NUM_CHANNELS - 1)) ? {CH_BITS{1'b0}} : s_pick + 1'b1;
+                    if (fill) begin
+                        if (|f_match) begin
+                            for (su = 0; su < SHARE_LINES; su = su + 1)
+                                if (f_match[su]) begin
+                                    s_wvalid[su][f_addr[2:0]]  <= 1'b1;
+                                    s_data[8*su + f_addr[2:0]] <= in_q;
+                                end
+                        end else begin
+                            s_tag[s_next]                 <= f_addr[BUS_BITS-1:3];
+                            s_lvalid[s_next]              <= 1'b1;
+                            s_wvalid[s_next]              <= 8'b1 << f_addr[2:0];
+                            s_data[8*s_next + f_addr[2:0]] <= in_q;
+                            s_next <= (s_next == LB'(SHARE_LINES - 1)) ? {LB{1'b0}} : s_next + 1'b1;
+                        end
+                    end
+                    if (flush || w_issue || !sync_mode)
+                        s_lvalid <= {SHARE_LINES{1'b0}};
+                end
+            end
+        end else begin : g_no_share
+            assign share_hit  = {NUM_CHANNELS{1'b0}};
+            assign share_take = {NUM_CHANNELS{1'b0}};
+            assign share_word = {BUS_BITS{1'b0}};
+        end
+    endgenerate
 
     // Buffer moves this cycle (sync).
     reg [NUM_CHANNELS-1:0] b_push, b_pop;
@@ -193,7 +310,7 @@ module openframe_bus #(
     always @(*) begin
         for (c = 0; c < NUM_CHANNELS; c = c + 1) begin
             b_push[c] = sync_mode && !PROG_MASK[c] && room[c] && (ch_read_valid[c] || ch_write_valid[c]);
-            b_pop[c]  = s_issue && (pick == CH_BITS'(c)) && !PROG_MASK[c];
+            b_pop[c]  = (s_issue && (pick == CH_BITS'(c)) && !PROG_MASK[c]) || share_take[c];
             b_next[c] = b_cnt[c] + {1'b0, b_push[c]} - {1'b0, b_pop[c]};
         end
     end
@@ -218,6 +335,10 @@ module openframe_bus #(
             q_count        <= {(Q_BITS+1){1'b0}};
             last_addr      <= {BUS_BITS{1'b0}};
             last_sel       <= 1'b0;
+            q_stale        <= {OUTSTANDING{1'b0}};
+            shared_q       <= {NUM_CHANNELS{1'b0}};
+            share_data     <= {BUS_BITS{1'b0}};
+            for (i = 0; i < NUM_CHANNELS; i = i + 1) rcnt[i] <= '0;
             w_beat         <= 1'b0;
             w_data         <= {BUS_BITS{1'b0}};
             ch_read_ready  <= {NUM_CHANNELS{1'b0}};
@@ -238,6 +359,7 @@ module openframe_bus #(
 
             if (!sync_mode) begin
                 // ---------------- async: one handshake at a time ----------------
+                shared_q <= {NUM_CHANNELS{1'b0}};
                 case (a_state)
                     A_IDLE: begin
                         if (found) begin
@@ -292,10 +414,12 @@ module openframe_bus #(
                 // ---------------- sync: a beat every cycle ----------------
                 bus_req <= 1'b0;
 
-                // Answers, oldest read first.
+                // Answers, oldest read first, and one from the shared lines.
+                ch_read_ready <= (answer ? q_mask[q_rd] : {NUM_CHANNELS{1'b0}}) | share_take;
+                shared_q      <= share_take;
+                share_data    <= share_word;
                 if (answer) begin
                     rdata         <= in_q;
-                    ch_read_ready <= q_mask[q_rd];
                     busy          <= busy & ~q_mask[q_rd];
                     taken_q       <= q_mask[q_rd] & PROG_MASK;    // program channels drop valid next
                     q_rd          <= q_rd + 1'b1;
@@ -310,6 +434,7 @@ module openframe_bus #(
                 end else if (found) begin
                     rr <= STICKY ? pick : next_rr;
                     if (pick_we) begin
+                        q_stale  <= {OUTSTANDING{1'b1}};
                         bus_out  <= pick_addr;
                         bus_sel  <= 1'b1;
                         bus_we   <= 1'b1;
@@ -327,6 +452,9 @@ module openframe_bus #(
                             bus_beat      <= 1'b0;
                             bus_req       <= 1'b1;
                             q_mask[q_wr]  <= NUM_CHANNELS'(1) << pick;
+                            q_addr[q_wr]  <= pick_addr;
+                            q_sel[q_wr]   <= pick_sel;
+                            q_stale[q_wr] <= 1'b0;
                             q_wr          <= q_wr + 1'b1;
                             last_addr     <= pick_addr;
                             last_sel      <= pick_sel;
@@ -340,6 +468,9 @@ module openframe_bus #(
 
                 q_count <= q_count + {{Q_BITS{1'b0}}, (s_issue && !pick_we && !joins_newest)}
                                    - {{Q_BITS{1'b0}}, answer};
+                for (i = 0; i < NUM_CHANNELS; i = i + 1)
+                    rcnt[i] <= rcnt[i] + {{Q_BITS{1'b0}}, (s_issue && !pick_we && pick == CH_BITS'(i))}
+                                       - {{Q_BITS{1'b0}}, (answer && q_mask[q_rd][i])};
 
                 // Data channel buffers: take a request where room was
                 // offered, pop the head when it issues.

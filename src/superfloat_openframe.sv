@@ -189,7 +189,7 @@ module superfloat_openframe #(
     wire [NUM_CH-1:0]          ch_read_accept;
     wire [NUM_CH-1:0]          ch_read_ready;
     wire [NUM_CH-1:0]          ch_write_ready;
-    wire [BUS_BITS-1:0]        ch_read_data;
+    wire [BUS_BITS*NUM_CH-1:0] ch_read_data_flat;
 
     genvar c;
     generate
@@ -199,7 +199,7 @@ module superfloat_openframe #(
             assign ch_write_addr_flat[c*BUS_BITS +: BUS_BITS] = {BUS_BITS{1'b0}};
             assign ch_write_data_flat[c*BUS_BITS +: BUS_BITS] = {BUS_BITS{1'b0}};
             assign prog_ready[c]              = ch_read_ready[c];
-            assign prog_data_flat[c*16 +: 16] = ch_read_data;
+            assign prog_data_flat[c*16 +: 16] = ch_read_data_flat[c*BUS_BITS +: 16];
         end
         for (c = 0; c < NUM_CORES; c = c + 1) begin : data_channel_map
             assign ch_read_addr_flat[(NUM_PROG_CH+c)*BUS_BITS +: BUS_BITS] =
@@ -210,7 +210,7 @@ module superfloat_openframe #(
                 dwrite_data_flat[c*16 +: 16];
             assign dread_accept[c]             = ch_read_accept[NUM_PROG_CH+c];
             assign dread_ready[c]              = ch_read_ready[NUM_PROG_CH+c];
-            assign dread_data_flat[c*16 +: 16] = ch_read_data;
+            assign dread_data_flat[c*16 +: 16] = ch_read_data_flat[(NUM_PROG_CH+c)*BUS_BITS +: 16];
             assign dwrite_ready[c]             = ch_write_ready[NUM_PROG_CH+c];
         end
     endgenerate
@@ -223,11 +223,12 @@ module superfloat_openframe #(
         .clk(clk),
         .reset(chip_reset),
         .sync_mode(sync_mode_q),
+        .flush(gpu_reset),
         .ch_read_valid(ch_read_valid),
         .ch_read_address_flat(ch_read_addr_flat),
         .ch_read_accept(ch_read_accept),
         .ch_read_ready(ch_read_ready),
-        .ch_read_data(ch_read_data),
+        .ch_read_data_flat(ch_read_data_flat),
         .ch_write_valid(ch_write_valid),
         .ch_write_address_flat(ch_write_addr_flat),
         .ch_write_data_flat(ch_write_data_flat),
