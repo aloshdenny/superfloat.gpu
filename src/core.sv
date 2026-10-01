@@ -276,6 +276,7 @@ module core #(
         .fetcher_state(fetcher_state),
         .core_state(core_state),
         .decoded_fma_enable(pipe_fma_enable),
+        .decoded_mem_now(decoded_mem_read_enable | decoded_mem_write_enable),
         .decoded_ret(pipe_ret),
         .decoded_branch(pipe_branch),
         .branch_taken(branch_taken),

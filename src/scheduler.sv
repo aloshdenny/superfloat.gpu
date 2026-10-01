@@ -23,6 +23,7 @@ module scheduler #(
     
     // Control Signals
     input wire decoded_fma_enable,
+    input wire decoded_mem_now,          // the instruction in DECODE is a load or store (decoder output)
     input wire decoded_ret,
     
     // Branch control (new)
@@ -144,8 +145,11 @@ module scheduler #(
                     end
                 end
                 DECODE: begin
-                    // Decode is synchronous so we move on after one cycle
-                    core_state <= REQUEST;
+                    // Only loads and stores use REQUEST/WAIT; operands are
+                    // captured at the end of DECODE, so everything else goes
+                    // straight to EXECUTE.
+                    core_state <= decoded_mem_now ? REQUEST : EXECUTE;
+                    fma_execute_second_cycle <= 1'b0;
                 end
                 REQUEST: begin 
                     // Request is synchronous so we move on after one cycle
