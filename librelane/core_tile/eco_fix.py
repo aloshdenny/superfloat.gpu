@@ -67,6 +67,7 @@ CONN = re.compile(r"\( (\S+) (\S+) \)")
 
 # Classic flow from detailed routing through signoff (LibreLane 3).
 ECO_FLOW = [
+    "Odb.SplitClockFanout",       # tile_flow.py; dropped for the chip
     "Odb.InsertECOBuffers",
     "OpenROAD.DetailedRouting",
     "Odb.RemoveRoutingObstructions",
@@ -432,9 +433,13 @@ def main():
         else:
             skipped.append(f"{pin} (instance name not found by the ECO step)")
 
+    clock_fanout = []
     for pin in sorted(found["fanout"]):
         inst, _, name = pin.rpartition("/")
         loads = [(i, p) for i, p in nets.get(pin, []) if (i, p) != (inst, name)]
+        if inst.startswith("clkbuf") and os.path.exists(os.path.join(HERE, "tile_flow.py")):
+            clock_fanout.append(pin)          # Odb.SplitClockFanout (clock_split.py)
+            continue
         diodes = [i for i, _ in loads if i in comps and "__diode" in comps[i][0]]
         real = [(i, p) for i, p in loads if i not in diodes and findable(i)]
         if not diodes or not real or not findable(inst):
@@ -448,14 +453,20 @@ def main():
 
     if skipped:
         print(f"not buffered: {' '.join(skipped)}")
-    if not inserts:
+    if clock_fanout:
+        print(f"{len(clock_fanout)} clock buffers over the fanout limit: split by Odb.SplitClockFanout")
+    if not inserts and not clock_fanout:
         sys.exit(f"{run}: no violation this script can fix")
 
     steps = step_dirs(base)
-    start = [d for d in steps if d.endswith("-checker-wirelength")][-1]
+    start_state = os.path.join([d for d in steps if d.endswith("-checker-wirelength")][-1], "state_out.json")
     if reroute:
+        # The state detailed routing started from: the step before it, or, in
+        # a run resumed at detailed routing, that step's own input state.
         drt = next(i for i, d in enumerate(steps) if d.endswith("-openroad-detailedrouting"))
-        start = [d for d in steps[:drt] if os.path.exists(os.path.join(d, "state_out.json"))][-1]
+        before = [d for d in steps[:drt] if os.path.exists(os.path.join(d, "state_out.json"))]
+        start_state = (os.path.join(before[-1], "state_out.json") if before
+                       else os.path.join(steps[drt], "state_in.json"))
     # The ECO flow is listed step by step, so apply the config's one-for-one
     # step substitutions (the chip's extraction step) to it.
     subs = {k: v for k, v in ((cfg.get("meta") or {}).get("substituting_steps") or {}).items()
@@ -463,6 +474,8 @@ def main():
     flow = [subs.get(s, s) for s in ECO_FLOW
             if not (s == "OpenROAD.IRDropReport" and cfg.get("RUN_IRDROP_REPORT") is False)]
     flow = [s for s in flow if s is not None]
+    if not os.path.exists(os.path.join(cfg_dir, "tile_flow.py")):
+        flow = [s for s in flow if s != "Odb.SplitClockFanout"]
     cfg["meta"] = {"version": 2, "flow": flow}
     cfg["INSERT_ECO_BUFFERS"] = inserts
     name = os.path.basename(run)
@@ -472,11 +485,12 @@ def main():
     for b in inserts:
         at = f" at {b['placement']}" if b.get("placement") else ""
         print(f"  {b['buffer']} -> {b['target']}{at}")
-    print(f"wrote {out}, starting from {os.path.basename(base)}/{os.path.basename(start)}")
-    runner = "./chip_flow.py" if os.path.exists(os.path.join(cfg_dir, "chip_flow.py")) else "python3 -m librelane"
+    print(f"wrote {out}, starting from {os.path.relpath(start_state, os.path.dirname(base))}")
+    runner = next((f"./{f}" for f in ("chip_flow.py", "tile_flow.py") if os.path.exists(os.path.join(cfg_dir, f))),
+                  "python3 -m librelane")
     print("run from the librelane checkout's nix-shell:")
     print(f"  {runner} --pdk-root $HOME/.ciel {out} "
-          f"--with-initial-state {os.path.abspath(os.path.join(start, 'state_out.json'))} "
+          f"--with-initial-state {os.path.abspath(start_state)} "
           f"--run-tag {name}_eco")
 
 
