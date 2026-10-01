@@ -267,8 +267,8 @@ async def test_lsu_state_machine(dut):
     
     logger.log_message(f"  States observed: {states_seen}")
     
-    # Should see: IDLE -> REQUESTING -> WAITING -> DONE
-    expected_transition = [LSU_IDLE, LSU_REQUESTING, LSU_WAITING, LSU_DONE]
+    # Should see: IDLE -> WAITING -> DONE (the request goes out in REQUEST)
+    expected_transition = [LSU_IDLE, LSU_WAITING, LSU_DONE]
     
     # Check that all expected states were seen in order
     state_idx = 0

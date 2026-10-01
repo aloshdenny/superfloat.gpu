@@ -120,7 +120,7 @@ module scheduler #(
     always @(*) begin
         any_lsu_waiting = 1'b0;
         for (i = 0; i < THREADS_PER_BLOCK; i = i + 1) begin
-            // Make sure no lsu_state = REQUESTING or WAITING
+            // An LSU still waiting for memory (2'b01 is unused)
             if (lsu_state[i] == 2'b01 || lsu_state[i] == 2'b10) begin
                 any_lsu_waiting = 1'b1;
             end

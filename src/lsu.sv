@@ -41,7 +41,8 @@ module lsu #(
     output reg [1:0] lsu_state,
     output reg [DATA_BITS-1:0] lsu_out
 );
-    localparam IDLE = 2'b00, REQUESTING = 2'b01, WAITING = 2'b10, DONE = 2'b11;
+    // 2'b01 (formerly REQUESTING) is unused: a request goes out in REQUEST.
+    localparam IDLE = 2'b00, WAITING = 2'b10, DONE = 2'b11;
 
     assign mem_read_address = ADDR_BITS'(rs);
     assign mem_write_address = ADDR_BITS'(rs);
@@ -58,14 +59,12 @@ module lsu #(
             if (decoded_mem_read_enable) begin 
                 case (lsu_state)
                     IDLE: begin
-                        // Only read when core_state = REQUEST
+                        // Request in the REQUEST cycle itself: the address
+                        // (rs) is held from DECODE.
                         if (core_state == 3'b011) begin 
-                            lsu_state <= REQUESTING;
+                            mem_read_valid <= 1;
+                            lsu_state <= WAITING;
                         end
-                    end
-                    REQUESTING: begin 
-                        mem_read_valid <= 1;
-                        lsu_state <= WAITING;
                     end
                     WAITING: begin
                         if (mem_read_ready == 1) begin
@@ -88,14 +87,11 @@ module lsu #(
             if (decoded_mem_write_enable) begin 
                 case (lsu_state)
                     IDLE: begin
-                        // Only write when core_state = REQUEST
+                        // Request in the REQUEST cycle itself (rs, rt held)
                         if (core_state == 3'b011) begin 
-                            lsu_state <= REQUESTING;
+                            mem_write_valid <= 1;
+                            lsu_state <= WAITING;
                         end
-                    end
-                    REQUESTING: begin 
-                        mem_write_valid <= 1;
-                        lsu_state <= WAITING;
                     end
                     WAITING: begin
                         if (mem_write_ready) begin
