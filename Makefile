@@ -49,6 +49,18 @@ compile_openframe:
 test_openframe_chip: compile_openframe
 	COCOTB_TEST_MODULES=test.test_openframe_chip vvp -M $$(cocotb-config --lib-dir) -m $$(cocotb-config --lib-name vpi icarus) build/openframe.vvp
 
+# GPT-2 kernel launches through the chip's pins (test/gpt2/benchmark.md). One
+# build directory per format, so the three formats can run at once.
+GPT2_BUILD = build/gpt2_$(NUMBER_FORMAT)
+test_gpt2_bench:
+	@mkdir -p $(GPT2_BUILD)
+	sv2v src/*.sv test/tb_openframe.sv -w $(GPT2_BUILD)/openframe.v
+	echo '`timescale 1ns/1ns' | cat - $(GPT2_BUILD)/openframe.v > $(GPT2_BUILD)/temp.v
+	mv $(GPT2_BUILD)/temp.v $(GPT2_BUILD)/openframe.v
+	cat src/RAM32.v >> $(GPT2_BUILD)/openframe.v
+	iverilog -o $(GPT2_BUILD)/openframe.vvp -s tb_openframe -g2012 -P tb_openframe.NUMBER_FORMAT=$(NUMBER_FORMAT) $(GPT2_BUILD)/openframe.v
+	COCOTB_RESULTS_FILE=$(GPT2_BUILD)/results.xml COCOTB_TEST_MODULES=test.test_gpt2_bench vvp -M $$(cocotb-config --lib-dir) -m $$(cocotb-config --lib-name vpi icarus) $(GPT2_BUILD)/openframe.vvp
+
 # =============================================================================
 # Unit Test Targets for Individual Modules
 # =============================================================================
