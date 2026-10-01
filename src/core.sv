@@ -277,13 +277,13 @@ module core #(
     //   - FMA, every format: the product is registered at the end of REQUEST
     //     and of WAIT (fma.sv, fp_fma.sv);
     //   - ACT, FP16/BF16: the bias add is registered there (fp_activation.sv);
-    //     the SF16 unit finishes within EXECUTE;
-    //   - SYS read, FP16/BF16: a compute reaches the accumulator five cycles
-    //     after its EXECUTE (fp_systolic_pe.sv, ALIGN_STAGE); the two cycles
-    //     keep a read that follows a compute behind it. SF16 takes three.
+    //     the SF16 unit finishes within EXECUTE.
     localparam FP_UNITS = (NUMBER_FORMAT != 0);
     wire decoded_staged = decoded_mem_read_enable | decoded_mem_write_enable | decoded_fma_enable |
-        (FP_UNITS && (decoded_act_enable || (decoded_systolic_enable && decoded_systolic_op == 2'b11)));
+        (FP_UNITS && decoded_act_enable);
+    // A SYS read right after a compute waits in DECODE (sys_read_hold, with
+    // the systolic array below).
+    wire sys_read_hold;
 
     // Scheduler
     scheduler #(
@@ -300,6 +300,7 @@ module core #(
         .core_state(core_state),
         .decoded_fma_enable(pipe_fma_enable),
         .decoded_staged(decoded_staged),
+        .decoded_hold(sys_read_hold),
         .decoded_ret(pipe_ret),
         .decoded_branch(pipe_branch),
         .branch_taken(branch_taken),
@@ -512,6 +513,20 @@ module core #(
     wire systolic_clear_acc = systolic_exec && (pipe_systolic_op == SYSTOLIC_OP_CLEAR);
     wire systolic_load_weights = systolic_exec && (pipe_systolic_op == SYSTOLIC_OP_LOAD);
     wire systolic_compute_enable = systolic_exec && (pipe_systolic_op == SYSTOLIC_OP_COMPUTE);
+
+    // SYS read interlock. A compute reaches the accumulators SYS_LAT cycles
+    // after its EXECUTE (SF16 PE: 4; FP PE with ALIGN_STAGE: 6), and a read
+    // samples them in its EXECUTE, the cycle after its DECODE. Instructions
+    // can be three cycles apart, so a read soon after a compute waits in
+    // DECODE until the cycle that lands its EXECUTE on the results.
+    localparam [2:0] SYS_LAT = FP_UNITS ? 3'd6 : 3'd4;
+    reg [2:0] sys_cnt;          // SYS_LAT - (cycles since the last compute's EXECUTE)
+    always @(posedge clk) begin
+        if (unit_reset)                   sys_cnt <= 3'd0;
+        else if (systolic_compute_enable) sys_cnt <= SYS_LAT - 3'd1;
+        else if (sys_cnt != 3'd0)         sys_cnt <= sys_cnt - 3'd1;
+    end
+    assign sys_read_hold = decoded_systolic_enable && (decoded_systolic_op == 2'b11) && (sys_cnt > 3'd1);
 
     wire [DATA_MEM_DATA_BITS*SYSTOLIC_SIZE-1:0] systolic_a_inputs_flat [NUM_SYSTOLIC_ARRAYS-1:0];
     wire [DATA_MEM_DATA_BITS*SYSTOLIC_SIZE-1:0] systolic_b_inputs_flat [NUM_SYSTOLIC_ARRAYS-1:0];

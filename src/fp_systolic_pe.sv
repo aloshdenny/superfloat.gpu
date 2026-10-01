@@ -21,8 +21,9 @@
 // The accumulator loop (align/add and round) spans two cycles, three with
 // ALIGN_STAGE, so two computes must be at least that far apart. The core
 // issues at most one SYS compute per instruction, and an instruction takes
-// at least five cycles (FETCH from the instruction buffer, DECODE, EXECUTE,
-// UPDATE).
+// at least three cycles (DECODE, EXECUTE, UPDATE, with the next instruction
+// fetched during UPDATE). A SYS read waits for the accumulators in the core
+// (sys_read_hold).
 //
 // Unlike SF16 there is no canonicalisation: negative zero is a valid operand
 // and affects the sign of a zero result. acc is the result in the same format.

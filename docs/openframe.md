@@ -45,14 +45,19 @@ FP16 and BF16 arithmetic (`src/fp_arith.sv`):
 - ACT computes `f(round(x + bias))`. ReLU maps negatives, including −0, to +0. Leaky ReLU multiplies negatives by 2⁻⁷ exactly, flushing to −0 below the smallest normal. Clipped ReLU is `min(1.0, ReLU)` and keeps NaN.
 - `test/helpers/fp16fmt.py` is the bit-exact reference for all of the above.
 
-Instruction timing is the same in all three formats except for two instructions. FP16 and BF16 `ACT` and `SYS read` take two cycles more than SF16, because their units are pipelined through the scheduler's REQUEST and WAIT states. `FMA` uses those states in every format. The FP PE's accumulator loop takes three cycles, and two SYS instructions are always at least five cycles apart, so back-to-back computes need no stall.
+Instruction timing is the same in all three formats, with two exceptions:
+- FP16 and BF16 `ACT` takes two cycles more than SF16, because the FP activation unit is pipelined through the scheduler's REQUEST and WAIT states. `FMA` uses those states in every format.
+- A `SYS read` waits in DECODE until the last `SYS compute` has reached the accumulators: 4 cycles after the compute's EXECUTE in SF16, 6 in FP16 and BF16. Only a read placed right after a compute waits.
+
+An instruction takes at least three cycles (DECODE, EXECUTE, UPDATE; the next one is fetched during UPDATE). That is also the FP PE's accumulator loop, so back-to-back computes need no stall.
 
 ### Programming notes
 
 - **Thread indices:** `%threadIdx` runs 0–7 and `%blockDim` is 8. A launch of *N* threads is split into ⌈N/8⌉ blocks, dispatched to free tiles in order. The last block may be partial; its disabled threads do not execute stores.
 - **Systolic array:** thread *i* supplies row *i* of the activation stream through R0 and column *i* of the weights through R1.
   - `SYS load` shifts the weight rows in from the top, so load rows 7, 6, …, 0. `SYS load.b` (bit 5) puts the same weights in every row at once.
-  - Each `SYS compute` accumulates `R0 × weight` into every PE of the row. Column 0 uses the current operand; columns 1–7 use the previous one. Issue one extra `SYS compute` with R0 = 0 at the end.
+  - Each `SYS compute` accumulates `activation × weight` into every PE of the row. The activation is the R0 of the latest SYS clear, load or compute, and it moves one column east per cycle: column *c* uses the activation that was current *c* cycles before the compute's EXECUTE. Column 0 therefore uses the compute's own R0.
+  - To give every column the same activation, set it with a SYS instruction at least 7 cycles before the compute, i.e. with two instructions between them, as the GPT-2 kernels do (`test/gpt2/kernels.py`). `test/test_openframe_tile.py` instead streams a new activation with each compute, at least 7 cycles apart, so columns 1–7 take the previous one; one extra `SYS compute` with R0 = 0 lines the columns up at the end.
   - `SYS read Rd` returns the cell selected by `R0[5:0]` (row × 8 + column).
   - `test/test_openframe_tile.py` contains a complete kernel and a bit-exact reference model.
 - **Scratchpad:** loads and stores to 0xFFC0–0xFFFF stay in the tile and never reach the pins. Each tile has its own copy, so the scratchpad is for data shared among the threads of one block.

@@ -29,6 +29,13 @@ test_scratchpad_private_per_tile
     same time with different values, read their own and a neighbour's slot
     back, and store both to external memory. Each tile must see only its own
     values, and external memory at 0xFFC0.. must stay untouched.
+
+test_sys_back_to_back
+    SYS load.b, two SYS computes back to back and a SYS read straight after,
+    so the read must wait for the second compute to reach the accumulators
+    (and, in FP16/BF16, the computes meet the PE's three-cycle accumulator
+    loop at its shortest). R0 is an activation whose low six bits also name
+    cell (tid, tid). Checked against the PE models, all four tiles.
 """
 
 import os
@@ -43,7 +50,7 @@ from helpers.number_format import NAMES, number_format, fp_format
 from helpers.memory import (
     read_memory_range,
     asm_mul, asm_add, asm_sub, asm_div, asm_const, asm_ldr, asm_str, asm_ret,
-    asm_sh, asm_consth,
+    asm_sh, asm_consth, asm_cmp, asm_brn,
     R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11,
     BLOCK_IDX, THREAD_IDX,
 )
@@ -323,3 +330,56 @@ async def test_sh_consth(dut):
         if have != want:
             bad.append((t, [hex(h) for h in have], [hex(w) for w in want]))
     assert not bad, f"{len(bad)} threads wrong, first (tid, got, want): {bad[:2]}"
+
+
+# ---------------------------------------------------------------------------
+# SYS instructions back to back
+# ---------------------------------------------------------------------------
+
+SYS_OUT = 96          # below 128: CONST sign-extends its immediate
+# Operands with the low six bits free: 0.5 (SF16), 1.0 (FP16, BF16); weights 0.25 / 0.5.
+B2B_ACT = {0: 0x4000, 1: 0x3C00, 2: 0x3F80}
+B2B_WEIGHT = {0: 0x2000, 1: 0x3800, 2: 0x3F00}
+
+
+def build_sys_b2b_program(fmt_id: int) -> list:
+    """Thread tid: R0 = act | tid*9 (cell tid*8 + tid), R1 = weight + tid;
+    twice (the second pass runs from the instruction buffer, at full speed):
+    clear, load.b, three ADDs while the activation crosses the row, compute,
+    compute, read. Stores the read at SYS_OUT + 8 * blockIdx + tid."""
+    a, w = B2B_ACT[fmt_id], B2B_WEIGHT[fmt_id]
+    p = [asm_const(R5, 9), asm_mul(R4, THREAD_IDX, R5),
+         asm_const(R0, a & 0xFF), asm_consth(R0, a >> 8), asm_add(R0, R0, R4),
+         asm_const(R1, w & 0xFF), asm_consth(R1, w >> 8), asm_add(R1, R1, THREAD_IDX),
+         asm_const(R3, 1), asm_const(R6, 2), asm_const(R7, 0)]
+    loop = len(p)
+    p += [sys_op(0b00), sys_op(0b01) | (1 << 5),
+          asm_add(R2, R2, R2), asm_add(R2, R2, R2), asm_add(R2, R2, R2),
+          sys_op(0b10), sys_op(0b10), sys_op(0b11, rd=R8),
+          asm_add(R7, R7, R3), asm_cmp(R7, R6)]
+    p += [asm_brn(loop - (len(p) + 1))]
+    p += [asm_const(R9, SYS_OUT), asm_const(R10, N), asm_mul(R11, BLOCK_IDX, R10),
+          asm_add(R9, R9, R11), asm_add(R9, R9, THREAD_IDX), asm_str(R9, R8),
+          asm_ret()]
+    return p
+
+
+@cocotb.test()
+async def test_sys_back_to_back(dut):
+    fmt_id = number_format(dut)
+    F = fp_format(fmt_id)
+    logger = await setup_test(dut, f"sys_b2b_{NAMES[fmt_id]}", build_sys_b2b_program(fmt_id),
+                              [0] * 16, thread_count=N * NUM_TILES, verbose=False)
+    cycles = await run_kernel(dut, logger, max_cycles=20000, trace_interval=0)
+    assert int(dut.done.value) == 1, f"kernel did not finish in {cycles} cycles"
+    got = read_memory_range(dut, SYS_OUT, N * NUM_TILES)
+    logger.close()
+    bad = []
+    for b in range(NUM_TILES):
+        for t in range(N):
+            a, w = B2B_ACT[fmt_id] + 9 * t, B2B_WEIGHT[fmt_id] + t
+            want = F.pe_accumulate([a, a], w) if F else pe_accumulate([a, a], w)
+            if got[N * b + t] != want:
+                bad.append((b, t, hex(got[N * b + t]), hex(want)))
+    dut._log.info(f"sys back to back: {N * NUM_TILES} reads, {len(bad)} wrong, {cycles} cycles")
+    assert not bad, f"{len(bad)} reads wrong, first (block, tid, got, want): {bad[:4]}"

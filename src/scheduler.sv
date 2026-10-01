@@ -25,6 +25,7 @@ module scheduler #(
     // Control Signals
     input wire decoded_fma_enable,
     input wire decoded_staged,           // the instruction in DECODE uses REQUEST/WAIT (decoder output)
+    input wire decoded_hold,             // the instruction in DECODE must wait there (a result is not ready)
     input wire decoded_ret,
     
     // Branch control (new)
@@ -160,7 +161,8 @@ module scheduler #(
                     // serve loads and stores and are pipeline stages of the
                     // longer units (see core.sv); everything else goes
                     // straight to EXECUTE.
-                    core_state <= decoded_staged ? REQUEST : EXECUTE;
+                    if (!decoded_hold)
+                        core_state <= decoded_staged ? REQUEST : EXECUTE;
                     fma_execute_second_cycle <= 1'b0;
                 end
                 REQUEST: begin 
