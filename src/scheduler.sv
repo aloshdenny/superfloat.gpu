@@ -37,6 +37,8 @@ module scheduler #(
     input wire [2:0] fetcher_state,
     input wire fetch_ahead_hit,          // UPDATE: the next instruction is already fetched (fetcher.sv)
     input wire [(2*THREADS_PER_BLOCK)-1:0] lsu_state_flat,
+    input wire [THREADS_PER_BLOCK-1:0] lsu_answer,    // each LSU's memory answer this cycle (read or write ready)
+    input wire pipe_mem_op,                           // the instruction is a load or store (EXECUTE has nothing to do)
 
     // Current & Next PC
     output reg [PROGRAM_MEM_ADDR_BITS-1:0] current_pc,
@@ -72,8 +74,10 @@ module scheduler #(
         UPDATE = 3'b110,      // Update registers, NZP, and PC
         DONE = 3'b111;        // Done executing this block
     
-    // Check if any LSU is waiting
+    // Check if any LSU is waiting, and whether every one is answered by the
+    // end of this cycle (its data is then registered for UPDATE)
     reg any_lsu_waiting;
+    reg lsus_done_next;
     integer i;
 
     // Some execution units are internally pipelined and require >1 EXECUTE cycle
@@ -119,10 +123,12 @@ module scheduler #(
 
     always @(*) begin
         any_lsu_waiting = 1'b0;
+        lsus_done_next  = 1'b1;
         for (i = 0; i < THREADS_PER_BLOCK; i = i + 1) begin
             // An LSU still waiting for memory (2'b01 is unused)
             if (lsu_state[i] == 2'b01 || lsu_state[i] == 2'b10) begin
                 any_lsu_waiting = 1'b1;
+                if (!lsu_answer[i]) lsus_done_next = 1'b0;
             end
         end
     end
@@ -162,9 +168,11 @@ module scheduler #(
                     core_state <= WAIT;
                 end
                 WAIT: begin
-                    // If no LSU is waiting for a response, move onto the next stage
-                    if (!any_lsu_waiting) begin
-                        core_state <= EXECUTE;
+                    // Leave in the cycle the last answer arrives. A load or
+                    // store has nothing to EXECUTE: its data is registered in
+                    // the LSU for UPDATE.
+                    if (lsus_done_next) begin
+                        core_state <= pipe_mem_op ? UPDATE : EXECUTE;
                         fma_execute_second_cycle <= 1'b0;
                     end
                 end

@@ -306,6 +306,8 @@ module core #(
         .branch_target(branch_target),
         .reconverge_pc(reconverge_pc),
         .lsu_state_flat(lsu_state_flat),
+        .lsu_answer(data_mem_read_ready | data_mem_write_ready),
+        .pipe_mem_op(pipe_mem_read_enable | pipe_mem_write_enable),
         .current_pc(current_pc),
         .next_pc_flat(next_pc_flat),
         .active_mask(active_mask),
