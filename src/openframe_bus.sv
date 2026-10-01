@@ -40,7 +40,8 @@
 // answered from it instead of the pins, one channel per cycle, alongside the
 // bus: tiles that read the same words some cycles apart (activations shared
 // by every block) read them from the pins once. A channel is answered this way
-// only with none of its reads in flight, so its answers stay in order. Any
+// only with none of its reads in flight, so its answers stay in order; until
+// then the read waits, off the bus, while its word is in the lines. Any
 // write empties the lines, and reads issued before it do not fill them; so
 // does `flush`, which the chip raises between launches.
 //
@@ -177,8 +178,8 @@ module openframe_bus #(
     // channel in async mode), no read of its own in flight (program
     // channels), not the async transaction in progress, and room for a read
     // in sync mode.
-    wire [NUM_CHANNELS-1:0] share_hit;          // next read is in the shared lines (below)
-    wire [NUM_CHANNELS-1:0] eligible = r_valid & ~taken_q & ~busy & ~cur_mask & ~share_hit &
+    wire [NUM_CHANNELS-1:0] share_hold;         // next read's word is in the shared lines: not for the bus (below)
+    wire [NUM_CHANNELS-1:0] eligible = r_valid & ~taken_q & ~busy & ~cur_mask & ~share_hold &
                                        (r_we | {NUM_CHANNELS{~(sync_mode & q_full)}});
 
     reg               found;
@@ -226,20 +227,23 @@ module openframe_bus #(
             reg [LB-1:0]             s_next;
             reg [CH_BITS-1:0]        s_rr;
 
-            // Lookup: each data channel's next request, if a read with none in flight.
+            // Lookup: each data channel's next request, if a read. It is held
+            // off the bus while its word is here, and answered once none of
+            // the channel's reads is in flight.
             reg [SHARE_LINES-1:0] s_match [NUM_CHANNELS-1:0];
-            reg [NUM_CHANNELS-1:0] hit;
+            reg [NUM_CHANNELS-1:0] hold, hit;
             integer sc, sl;
             always @(*) begin
                 for (sc = 0; sc < NUM_CHANNELS; sc = sc + 1) begin
                     for (sl = 0; sl < SHARE_LINES; sl = sl + 1)
                         s_match[sc][sl] = s_lvalid[sl] && (s_tag[sl] == b0_addr[sc][BUS_BITS-1:3]) &&
                                           s_wvalid[sl][b0_addr[sc][2:0]];
-                    hit[sc] = sync_mode && !PROG_MASK[sc] && (b_cnt[sc] != 2'd0) && !b0_we[sc] &&
-                              (rcnt[sc] == '0) && (|s_match[sc]);
+                    hold[sc] = sync_mode && !PROG_MASK[sc] && (b_cnt[sc] != 2'd0) && !b0_we[sc] &&
+                               (|s_match[sc]);
+                    hit[sc]  = hold[sc] && (rcnt[sc] == '0);
                 end
             end
-            assign share_hit = hit;
+            assign share_hold = hold;
 
             // One answer per cycle, rotating among the channels that hit.
             reg               s_found;
@@ -298,7 +302,7 @@ module openframe_bus #(
                 end
             end
         end else begin : g_no_share
-            assign share_hit  = {NUM_CHANNELS{1'b0}};
+            assign share_hold = {NUM_CHANNELS{1'b0}};
             assign share_take = {NUM_CHANNELS{1'b0}};
             assign share_word = {BUS_BITS{1'b0}};
         end

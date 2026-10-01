@@ -126,6 +126,8 @@ class Profile:
     def __init__(self, dut, tiles: int):
         self.cores = [getattr(dut.dut.gpu_inst, "tiles")[i].tile.core_instance for i in range(tiles)]
         self.counts = [[0] * 8 for _ in self.cores]
+        self.bus = dut.dut.bus
+        self.share_hits = 0
         self.on = False
 
     async def run(self, clk):
@@ -136,6 +138,9 @@ class Profile:
                     v = core.core_state.value
                     if v.is_resolvable:
                         c[int(v)] += 1
+                v = self.bus.shared_q.value
+                if v.is_resolvable and int(v):
+                    self.share_hits += 1
 
     def summary(self):
         tot = [sum(c[i] for c in self.counts) for i in range(8)]
@@ -217,6 +222,7 @@ async def test_gpt2_launches(dut):
         t0 = time.time()
         if prof:
             prof.counts = [[0] * 8 for _ in prof.cores]
+            prof.share_hits = 0
             prof.on = True
         cycles = await run_launch(dut, host, 8 * nb, max_cycles=20_000_000)
         if prof:
@@ -232,7 +238,9 @@ async def test_gpt2_launches(dut):
                    sim_seconds=round(wall, 1))
         if prof:
             rec["state_pct"] = prof.summary()
-            dut._log.info(f"{name}: tile scheduler states (% of tile-cycles) {rec['state_pct']}")
+            rec["share_hits"] = prof.share_hits
+            dut._log.info(f"{name}: tile scheduler states (% of tile-cycles) {rec['state_pct']}, "
+                          f"{prof.share_hits} reads answered from the shared lines")
         with open(os.path.join(rdir, f"{NAMES[fmt]}.jsonl"), "a") as f:
             f.write(json.dumps(rec) + "\n")
         dut._log.info(f"{name} ({NAMES[fmt]}): {cycles} cycles, {host.reads[1]} data reads, "
