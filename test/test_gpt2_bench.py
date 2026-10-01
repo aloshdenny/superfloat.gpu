@@ -117,6 +117,48 @@ class BenchHost:
                 pending.append((cycle + 1 + self.latency, value))
 
 
+STATE_NAMES = ["idle", "fetch", "decode", "request", "wait", "execute", "update", "done"]
+
+
+class Profile:
+    """With PROFILE=1: cycles each tile's scheduler spends in each state."""
+
+    def __init__(self, dut, tiles: int):
+        self.cores = [getattr(dut.dut.gpu_inst, "tiles")[i].tile.core_instance for i in range(tiles)]
+        self.counts = [[0] * 8 for _ in self.cores]
+        self.on = False
+
+    async def run(self, clk):
+        while True:
+            await RisingEdge(clk)
+            if self.on:
+                for c, core in zip(self.counts, self.cores):
+                    v = core.core_state.value
+                    if v.is_resolvable:
+                        c[int(v)] += 1
+
+    def summary(self):
+        tot = [sum(c[i] for c in self.counts) for i in range(8)]
+        n = sum(tot) or 1
+        return {STATE_NAMES[i]: round(100.0 * tot[i] / n, 1) for i in range(8) if tot[i]}
+
+
+async def trace_tile0(dut, out):
+    """TRACE=1 (debugging): tile 0 thread 0's register writes, one line each."""
+    core = dut.dut.gpu_inst.tiles[0].tile.core_instance
+    reg = core.threads[0].register_instance
+    cyc = 0
+    while True:
+        await RisingEdge(dut.clk)
+        cyc += 1
+        try:
+            if int(core.core_state.value) == 6 and int(core.pipe_reg_write_enable.value):
+                out.write(f"{cyc} pc={int(core.current_pc.value)} mux={int(core.pipe_reg_input_mux.value)} "
+                          f"rd={int(core.pipe_rd_address.value)} data={int(reg.write_data.value)}\n")
+        except ValueError:
+            pass
+
+
 async def run_launch(dut, host: BenchHost, thread_count: int, max_cycles: int) -> int:
     """START to DONE, in clock cycles (the thread count is on bus_in at START)."""
     host.thread_count = thread_count
@@ -157,6 +199,14 @@ async def test_gpt2_launches(dut):
     dut.rst_n.value = 1
     await ClockCycles(dut.clk, 5)
 
+    prof = None
+    if os.environ.get("PROFILE", "0") == "1":
+        prof = Profile(dut, int(os.environ.get("OPENFRAME_TILES", "4")))
+        cocotb.start_soon(prof.run(dut.clk))
+
+    if os.environ.get("TRACE"):
+        cocotb.start_soon(trace_tile0(dut, open(os.environ["TRACE"], "w", buffering=1)))
+
     for name in names:
         z = np.load(os.path.join(ldir, name + ".npz"))
         kernel, kc, nb = str(z["kernel"]), int(z["kc"]), int(z["nb"])
@@ -165,7 +215,12 @@ async def test_gpt2_launches(dut):
         host.data = dict(zip(z["addr"].tolist(), z["word"].tolist()))
         host.reads, host.writes = {0: 0, 1: 0}, 0
         t0 = time.time()
+        if prof:
+            prof.counts = [[0] * 8 for _ in prof.cores]
+            prof.on = True
         cycles = await run_launch(dut, host, 8 * nb, max_cycles=20_000_000)
+        if prof:
+            prof.on = False
         wall = time.time() - t0
 
         bad = [(a, host.data.get(a), e) for a, e in zip(z["exp_addr"].tolist(), z["exp_word"].tolist())
@@ -175,6 +230,9 @@ async def test_gpt2_launches(dut):
                    cycles=cycles, program_reads=host.reads[0], data_reads=host.reads[1],
                    writes=host.writes, outputs=len(z["exp_addr"]), mismatches=len(bad),
                    sim_seconds=round(wall, 1))
+        if prof:
+            rec["state_pct"] = prof.summary()
+            dut._log.info(f"{name}: tile scheduler states (% of tile-cycles) {rec['state_pct']}")
         with open(os.path.join(rdir, f"{NAMES[fmt]}.jsonl"), "a") as f:
             f.write(json.dumps(rec) + "\n")
         dut._log.info(f"{name} ({NAMES[fmt]}): {cycles} cycles, {host.reads[1]} data reads, "
