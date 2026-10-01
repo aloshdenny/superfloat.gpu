@@ -1,0 +1,34 @@
+{
+ "fmt": "sf16",
+ "top_w": 0.00822,
+ "tile_w": 0.0607,
+ "chip_w": 0.25101999999999997,
+ "top_groups": {
+  "sequential": 0.002,
+  "combinational": 0.000463,
+  "clock": 0.00575,
+  "macro": 0.0,
+  "pad": 0.0
+ },
+ "tile_groups": {
+  "sequential": 0.0199,
+  "combinational": 0.000675,
+  "clock": 0.0401,
+  "macro": 0.0,
+  "pad": 0.0
+ },
+ "top_annotated": [
+  17975,
+  1038
+ ],
+ "tile_annotated": [
+  475674,
+  0
+ ],
+ "dump_cycles": [
+  20000,
+  30000
+ ],
+ "corner": "nom_tt_025C_1v80",
+ "clock_mhz": 50.0
+}
