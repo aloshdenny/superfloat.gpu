@@ -35,6 +35,7 @@ ALU_ADD = 0b00
 ALU_SUB = 0b01
 ALU_MUL = 0b10
 ALU_DIV = 0b11
+ALU_SH = 0b100
 
 
 async def setup_alu_test(dut, test_name: str, clock_period_ns: int = 10) -> GPULogger:
@@ -363,7 +364,7 @@ async def test_alu_random(dut):
     for op_name, op_code, op_func in [
         ("ADD", ALU_ADD, lambda a, b: (a + b) & 0xFFFF),
         ("SUB", ALU_SUB, lambda a, b: (a - b) & 0xFFFF),
-        ("MUL", ALU_MUL, lambda a, b: ((a & 0xFF) * (b & 0xFF)) & 0xFF),
+        ("MUL", ALU_MUL, lambda a, b: ((a & 0xFF) * (b & 0xFF)) & 0xFFFF),
         ("DIV", ALU_DIV, lambda a, b: (a // b) if b != 0 else 0),
     ]:
         mismatches = 0
@@ -394,3 +395,22 @@ async def test_alu_random(dut):
     logger.close()
     
     assert passed, "ALU random test failed"
+
+
+@cocotb.test()
+async def test_alu_sh(dut):
+    """SH: logical shift by the signed amount in rt[4:0] (+ left, - right)."""
+    logger = await setup_alu_test(dut, "alu_sh")
+    rng = random.Random(0x5)
+    cases = [(0x1234, 4), (0x1234, -4), (0x8001, 15), (0x8001, -15), (0xFFFF, -16),
+             (0xFFFF, 0), (0x00FF, 8), (0xFF00, -8)]
+    cases += [(rng.randrange(1 << 16), rng.randrange(-16, 16)) for _ in range(200)]
+    bad = []
+    for rs, amt in cases:
+        rt = amt & 0xFFFF                       # as CONST sign-extends it
+        want = ((rs << amt) & 0xFFFF) if amt >= 0 else (rs >> -amt)
+        got = await execute_alu_op(dut, rs, rt, ALU_SH)
+        if got != want:
+            bad.append((hex(rs), amt, hex(got), hex(want)))
+    logger.close()
+    assert not bad, f"{len(bad)} wrong shifts, first (rs, amount, got, want): {bad[:4]}"
