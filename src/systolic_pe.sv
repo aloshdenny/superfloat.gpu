@@ -10,6 +10,9 @@
 //             b_out  <= b_in on load_weight        (stationary weight, forwarded south)
 //   Stage 1 : R3     <= (a_out.m × b_out.m)[29:15], sign = a_out.s ^ b_out.s
 //   Stage 2 : acc    <= sat16(acc ± R3)            (on valid, two's complement)
+//             The 17-bit add is a carry-select adder: the low 9 bits and both
+//             possible high 8-bit sums are computed at once, the low carry
+//             picks one, and the saturation checks are made per half.
 // Latency: an operand presented with compute_enable reaches the accumulator
 // three edges later. Throughput: one MAC per cycle.
 //
@@ -60,12 +63,19 @@ module systolic_pe #(
     // Stage 1: 15×15 unsigned product, keep the Q1.15 bits.
     wire [29:0] prod = a_out[14:0] * b_out[14:0];
 
-    // Stage 2: saturating add/subtract of the product magnitude.
-    wire signed [16:0] acc_ext = {acc_raw[15], acc_raw};
-    wire signed [16:0] prd_ext = {2'b0, r3_mant};
-    wire signed [16:0] sum     = r3_sign ? (acc_ext - prd_ext) : (acc_ext + prd_ext);
-    wire ovf  = (sum[16] != sum[15]);
-    wire negz = (sum[15:0] == 16'h8000);          // -32768 is not representable in SF16
+    // Stage 2: saturating add/subtract of the product magnitude,
+    // sum = acc + (r3_sign ? -prd : prd) = acc + (prd ^ {17{r3_sign}}) + r3_sign.
+    wire [16:0] acc_ext = {acc_raw[15], acc_raw};
+    wire [16:0] prd_op  = {2'b0, r3_mant} ^ {17{r3_sign}};
+    wire [9:0]  lo      = {1'b0, acc_ext[8:0]} + {1'b0, prd_op[8:0]} + {9'b0, r3_sign};
+    wire [7:0]  hi0     = acc_ext[16:9] + prd_op[16:9];
+    wire [7:0]  hi1     = acc_ext[16:9] + prd_op[16:9] + 8'd1;
+    wire        c9      = lo[9];
+    wire [16:0] sum     = {c9 ? hi1 : hi0, lo[8:0]};
+    // sum[16] != sum[15]: overflow; sum[15:0] == 0x8000: -32768, which SF16
+    // cannot represent. Both from each high candidate, then picked by c9.
+    wire ovf  = c9 ? (hi1[7] ^ hi1[6]) : (hi0[7] ^ hi0[6]);
+    wire negz = (lo[8:0] == 9'd0) && (c9 ? (hi1[6:0] == 7'h40) : (hi0[6:0] == 7'h40));
     wire signed [15:0] sat = (ovf || negz) ? (sum[16] ? 16'sh8001 : 16'sh7FFF) : sum[15:0];
 
     always @(posedge clk) begin

@@ -5,8 +5,9 @@
 // 2-cycle pipelined MAC matched to the core scheduler:
 // - rs/rt/rq are held by the core from DECODE; (rs * rt) >> 15 is computed in
 //   two registered stages over REQUEST and WAIT, so it is ready by EXECUTE
-// - EXECUTE cycle 0: canonicalise the registered product, latch into R3
-// - EXECUTE cycle 1: compute rq + R3 with SF16 saturation, latch to output
+// - EXECUTE cycle 0: the magnitude sum and differences of rq and the
+//   canonical product, and their comparison, latched
+// - EXECUTE cycle 1: select, saturate and canonicalise, latch to output
 //
 // SF16: x = (-1)^s · m / 2^15,  m ∈ {0, 1, ..., 2^15 - 1}
 // SF16 × SF16 = SF31 (1 sign bit + 30 mantissa bits)
@@ -36,7 +37,6 @@ module fma #(
     localparam signed [31:0] Q115_MIN_S32 = -32'sd32767;  // symmetric range (no -1.0 in SF16)
 
     // Pipeline register (R3 from diagram) and output register
-    reg [DATA_BITS-1:0] r3_weighted;      // R3: Weighted input (product, SF16)
     reg [DATA_BITS-1:0] fma_out_reg;
     assign fma_out = fma_out_reg;
 
@@ -99,8 +99,8 @@ module fma #(
     // Extract sign and magnitude from SF16 inputs
     wire S_A = rq[15];
     wire [14:0] M_A = rq[14:0];
-    wire S_B = r3_weighted[15];
-    wire [14:0] M_B = r3_weighted[14:0];
+    wire S_B = product_saturated[15];
+    wire [14:0] M_B = product_saturated[14:0];
 
     // Compute arithmetic options in parallel (single carry-propagate level)
     wire [15:0] sum_M = M_A + M_B;
@@ -111,11 +111,15 @@ module fma #(
     wire signs_equal = (S_A == S_B);
     wire A_gte_B = (M_A >= M_B);
 
+    // EXECUTE cycle 0 latches these; cycle 1 selects from them
+    reg [15:0] sum_M_q, diff_A_B_q, diff_B_A_q;
+    reg        signs_equal_q, A_gte_B_q, S_A_q, S_B_q;
+
     // Mux final sign and magnitude
-    wire res_S = signs_equal ? S_A : (A_gte_B ? S_A : S_B);
-    wire [14:0] res_M = signs_equal ? 
-                        ((sum_M > 15'd32767) ? 15'd32767 : sum_M[14:0]) : 
-                        (A_gte_B ? diff_A_B[14:0] : diff_B_A[14:0]);
+    wire res_S = signs_equal_q ? S_A_q : (A_gte_B_q ? S_A_q : S_B_q);
+    wire [14:0] res_M = signs_equal_q ?
+                        ((sum_M_q > 15'd32767) ? 15'd32767 : sum_M_q[14:0]) :
+                        (A_gte_B_q ? diff_A_B_q[14:0] : diff_B_A_q[14:0]);
 
     // Construct final sign-magnitude value and canonicalize negative zero
     wire [DATA_BITS-1:0] accumulated_saturated = (res_M == 15'b0) ? {DATA_BITS{1'b0}} : {res_S, res_M};
@@ -127,7 +131,6 @@ module fma #(
 
     always @(posedge clk) begin
         if (reset) begin
-            r3_weighted <= {DATA_BITS{1'b0}};
             fma_out_reg <= {DATA_BITS{1'b0}};
             exec_phase <= 1'b0;
         end else if (enable) begin
@@ -138,8 +141,9 @@ module fma #(
             // Execute when in EXECUTE state and FMA enabled
             if (core_state == 3'b101 && decoded_fma_enable) begin
                 if (!exec_phase) begin
-                    // EXECUTE cycle 0: multiply stage
-                    r3_weighted <= product_saturated;
+                    // EXECUTE cycle 0: sums, differences and comparison
+                    sum_M_q <= sum_M; diff_A_B_q <= diff_A_B; diff_B_A_q <= diff_B_A;
+                    signs_equal_q <= signs_equal; A_gte_B_q <= A_gte_B; S_A_q <= S_A; S_B_q <= S_B;
                     exec_phase <= 1'b1;
                 end else begin
                     // EXECUTE cycle 1: accumulate stage

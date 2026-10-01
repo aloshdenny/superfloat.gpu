@@ -97,6 +97,8 @@ async def execute_activation(dut, x: int, bias: int, func: int) -> int:
     dut.activation_func.value = func
     dut.core_state.value = STATE_REQUEST
     await RisingEdge(dut.clk)
+    dut.core_state.value = STATE_WAIT          # the add's second stage
+    await RisingEdge(dut.clk)
     
     # Execute in EXECUTE state
     dut.core_state.value = STATE_EXECUTE

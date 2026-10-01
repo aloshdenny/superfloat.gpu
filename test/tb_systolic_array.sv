@@ -38,6 +38,7 @@ module tb_systolic_array #(
         .reset(reset),
         .clear_acc(clear_acc),
         .load_weights(load_weights),
+        .load_broadcast(1'b0),
         .compute_enable(compute_enable),
         .a_inputs_flat(a_inputs_flat),
         .b_inputs_flat(b_inputs_flat),

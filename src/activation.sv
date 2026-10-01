@@ -15,9 +15,11 @@
 // - 11: Clipped ReLU (min(1, max(0, x)))
 //
 // Timing (rs/rt set at the end of DECODE and held, as for fp_activation):
-//   end of REQUEST: biased_q <= saturating sign-magnitude add of rs and rt
+//   end of REQUEST: the magnitude sum and differences, the comparison
+//   end of WAIT:    biased_q <= the saturated, canonical sign-magnitude sum
 //   EXECUTE:        activation_out <= f(biased_q)
-// The add and the function were one EXECUTE cycle, the tile's longest path.
+// Three stages, as fp_activation's: in one EXECUTE cycle the add and the
+// function were the tile's longest path.
 module activation #(
     parameter DATA_BITS = 16  // SF16 fixed-point width
 ) (
@@ -70,17 +72,24 @@ module activation #(
     wire signs_equal = (S_A == S_B);
     wire A_gte_B = (M_A >= M_B);
 
+    // Registered every cycle (datapath only), as are biased_q below: with
+    // the operands held, REQUEST and WAIT settle each stage before EXECUTE.
+    reg [15:0] sum_M_q, diff_A_B_q, diff_B_A_q;
+    reg        signs_equal_q, A_gte_B_q, S_A_q, S_B_q;
+    always @(posedge clk) begin
+        sum_M_q <= sum_M; diff_A_B_q <= diff_A_B; diff_B_A_q <= diff_B_A;
+        signs_equal_q <= signs_equal; A_gte_B_q <= A_gte_B; S_A_q <= S_A; S_B_q <= S_B;
+    end
+
     // Mux final sign and magnitude
-    wire res_S = signs_equal ? S_A : (A_gte_B ? S_A : S_B);
-    wire [14:0] res_M = signs_equal ? 
-                        ((sum_M > 15'd32767) ? 15'd32767 : sum_M[14:0]) : 
-                        (A_gte_B ? diff_A_B[14:0] : diff_B_A[14:0]);
+    wire res_S = signs_equal_q ? S_A_q : (A_gte_B_q ? S_A_q : S_B_q);
+    wire [14:0] res_M = signs_equal_q ?
+                        ((sum_M_q > 15'd32767) ? 15'd32767 : sum_M_q[14:0]) :
+                        (A_gte_B_q ? diff_A_B_q[14:0] : diff_B_A_q[14:0]);
 
     // Construct final sign-magnitude value and canonicalize negative zero
     wire [DATA_BITS-1:0] biased_sum = (res_M == 15'b0) ? {DATA_BITS{1'b0}} : {res_S, res_M};
 
-    // Registered every cycle (datapath only); EXECUTE reads it after REQUEST
-    // and WAIT have passed with the operands held.
     reg [DATA_BITS-1:0] biased_q;
     always @(posedge clk) biased_q <= biased_sum;
     wire [DATA_BITS-1:0] biased_activation = biased_q;
