@@ -107,6 +107,7 @@ module tb_gpu #(
         
         .data_mem_read_valid(data_mem_read_valid),
         .data_mem_read_address_flat(data_mem_read_address_flat),
+        .data_mem_read_accept({DATA_MEM_NUM_CHANNELS{1'b1}}),   // takes a read every cycle, answers the next
         .data_mem_read_ready(data_mem_read_ready),
         .data_mem_read_data_flat(data_mem_read_data_flat),
         .data_mem_write_valid(data_mem_write_valid),
@@ -187,7 +188,8 @@ module tb_gpu #(
             
             assign data_mem_read_ready[d] = read_ready_reg;
             assign data_mem_read_data[d] = read_data_reg;
-            assign data_mem_write_ready[d] = write_ready_reg;
+            // A write is taken (and performed) the cycle it is presented.
+            assign data_mem_write_ready[d] = data_mem_write_valid[d];
         end
     endgenerate
 

@@ -46,6 +46,7 @@ module gpu #(
     // Data Memory (flattened for synthesis)
     output wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_read_valid,
     output wire [DATA_MEM_ADDR_BITS*DATA_MEM_NUM_CHANNELS-1:0] data_mem_read_address_flat,
+    input wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_read_accept,   // read taken (= ready for one-at-a-time memories)
     input wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_read_ready,
     input wire [DATA_MEM_DATA_BITS*DATA_MEM_NUM_CHANNELS-1:0] data_mem_read_data_flat,
     output wire [DATA_MEM_NUM_CHANNELS-1:0] data_mem_write_valid,
@@ -86,6 +87,7 @@ module gpu #(
 
     wire [NUM_CORES-1:0]                    tile_data_read_valid;
     wire [DATA_MEM_ADDR_BITS*NUM_CORES-1:0] tile_data_read_address_flat;
+    wire [NUM_CORES-1:0]                    tile_data_read_accept;
     wire [NUM_CORES-1:0]                    tile_data_read_ready;
     wire [DATA_MEM_DATA_BITS*NUM_CORES-1:0] tile_data_read_data_flat;
     wire [NUM_CORES-1:0]                    tile_data_write_valid;
@@ -108,34 +110,51 @@ module gpu #(
         .thread_count(thread_count)
     );
 
-    // Data Memory Controller: tiles -> external data channels
-    controller #(
-        .ADDR_BITS(DATA_MEM_ADDR_BITS),
-        .DATA_BITS(DATA_MEM_DATA_BITS),
-        .NUM_CONSUMERS(NUM_CORES),
-        .NUM_CHANNELS(DATA_MEM_NUM_CHANNELS)
-    ) data_mem_controller (
-        .clk(clk),
-        .reset(reset_pipe2),
+    // Data channels. With one per tile they are wired straight through, so a
+    // memory can take a tile's reads ahead of answering them (tile_mem_queue).
+    // With fewer, the shared controller serves one request at a time.
+    generate
+        if (DATA_MEM_NUM_CHANNELS == NUM_CORES) begin : data_direct
+            assign data_mem_read_valid          = tile_data_read_valid;
+            assign data_mem_read_address_flat   = tile_data_read_address_flat;
+            assign tile_data_read_accept        = data_mem_read_accept;
+            assign tile_data_read_ready         = data_mem_read_ready;
+            assign tile_data_read_data_flat     = data_mem_read_data_flat;
+            assign data_mem_write_valid         = tile_data_write_valid;
+            assign data_mem_write_address_flat  = tile_data_write_address_flat;
+            assign data_mem_write_data_flat     = tile_data_write_data_flat;
+            assign tile_data_write_ready        = data_mem_write_ready;
+        end else begin : data_shared
+            controller #(
+                .ADDR_BITS(DATA_MEM_ADDR_BITS),
+                .DATA_BITS(DATA_MEM_DATA_BITS),
+                .NUM_CONSUMERS(NUM_CORES),
+                .NUM_CHANNELS(DATA_MEM_NUM_CHANNELS)
+            ) data_mem_controller (
+                .clk(clk),
+                .reset(reset_pipe2),
 
-        .consumer_read_valid(tile_data_read_valid),
-        .consumer_read_address_flat(tile_data_read_address_flat),
-        .consumer_read_ready(tile_data_read_ready),
-        .consumer_read_data_flat(tile_data_read_data_flat),
-        .consumer_write_valid(tile_data_write_valid),
-        .consumer_write_address_flat(tile_data_write_address_flat),
-        .consumer_write_data_flat(tile_data_write_data_flat),
-        .consumer_write_ready(tile_data_write_ready),
+                .consumer_read_valid(tile_data_read_valid),
+                .consumer_read_address_flat(tile_data_read_address_flat),
+                .consumer_read_ready(tile_data_read_ready),
+                .consumer_read_data_flat(tile_data_read_data_flat),
+                .consumer_write_valid(tile_data_write_valid),
+                .consumer_write_address_flat(tile_data_write_address_flat),
+                .consumer_write_data_flat(tile_data_write_data_flat),
+                .consumer_write_ready(tile_data_write_ready),
 
-        .mem_read_valid(data_mem_read_valid),
-        .mem_read_address_flat(data_mem_read_address_flat),
-        .mem_read_ready(data_mem_read_ready),
-        .mem_read_data_flat(data_mem_read_data_flat),
-        .mem_write_valid(data_mem_write_valid),
-        .mem_write_address_flat(data_mem_write_address_flat),
-        .mem_write_data_flat(data_mem_write_data_flat),
-        .mem_write_ready(data_mem_write_ready)
-    );
+                .mem_read_valid(data_mem_read_valid),
+                .mem_read_address_flat(data_mem_read_address_flat),
+                .mem_read_ready(data_mem_read_ready),
+                .mem_read_data_flat(data_mem_read_data_flat),
+                .mem_write_valid(data_mem_write_valid),
+                .mem_write_address_flat(data_mem_write_address_flat),
+                .mem_write_data_flat(data_mem_write_data_flat),
+                .mem_write_ready(data_mem_write_ready)
+            );
+            assign tile_data_read_accept = tile_data_read_ready;    // one at a time
+        end
+    endgenerate
 
     // Program memory: a shared instruction cache in front of one channel, or
     // (PROGRAM_CACHE_ENTRIES = 0) a plain controller with a channel per tile.
@@ -247,6 +266,7 @@ module gpu #(
 
                 .data_mem_read_valid(tile_data_read_valid[i]),
                 .data_mem_read_address(tile_data_read_address_flat[i*DATA_MEM_ADDR_BITS +: DATA_MEM_ADDR_BITS]),
+                .data_mem_read_accept(tile_data_read_accept[i]),
                 .data_mem_read_ready(tile_data_read_ready[i]),
                 .data_mem_read_data(tile_data_read_data_flat[i*DATA_MEM_DATA_BITS +: DATA_MEM_DATA_BITS]),
                 .data_mem_write_valid(tile_data_write_valid[i]),

@@ -42,12 +42,13 @@ module core_tile #(
     // Data memory channel
     output wire                          data_mem_read_valid,
     output wire [DATA_MEM_ADDR_BITS-1:0] data_mem_read_address,
-    input  wire                          data_mem_read_ready,
+    input  wire                          data_mem_read_accept,   // read taken; answers follow in order
+    input  wire                          data_mem_read_ready,    // answer, with data_mem_read_data
     input  wire [DATA_MEM_DATA_BITS-1:0] data_mem_read_data,
     output wire                          data_mem_write_valid,
     output wire [DATA_MEM_ADDR_BITS-1:0] data_mem_write_address,
     output wire [DATA_MEM_DATA_BITS-1:0] data_mem_write_data,
-    input  wire                          data_mem_write_ready
+    input  wire                          data_mem_write_ready    // write taken (posted: complete)
 );
     // ============================================
     // Instruction decode
@@ -237,14 +238,14 @@ module core_tile #(
     );
 
     // ============================================
-    // Miss arbiter: THREADS_PER_BLOCK LSUs -> one data channel
+    // Miss queue: THREADS_PER_BLOCK LSUs -> one data channel, with reads
+    // taken ahead of their answers when the channel allows it
     // ============================================
-    controller #(
+    tile_mem_queue #(
         .ADDR_BITS(DATA_MEM_ADDR_BITS),
         .DATA_BITS(DATA_MEM_DATA_BITS),
-        .NUM_CONSUMERS(THREADS_PER_BLOCK),
-        .NUM_CHANNELS(1)
-    ) data_mem_arbiter (
+        .NUM_CONSUMERS(THREADS_PER_BLOCK)
+    ) data_mem_queue (
         .clk(clk),
         .reset(reset),
 
@@ -258,12 +259,13 @@ module core_tile #(
         .consumer_write_ready(miss_write_ready),
 
         .mem_read_valid(data_mem_read_valid),
-        .mem_read_address_flat(data_mem_read_address),
+        .mem_read_address(data_mem_read_address),
+        .mem_read_accept(data_mem_read_accept),
         .mem_read_ready(data_mem_read_ready),
-        .mem_read_data_flat(data_mem_read_data),
+        .mem_read_data(data_mem_read_data),
         .mem_write_valid(data_mem_write_valid),
-        .mem_write_address_flat(data_mem_write_address),
-        .mem_write_data_flat(data_mem_write_data),
-        .mem_write_ready(data_mem_write_ready)
+        .mem_write_address(data_mem_write_address),
+        .mem_write_data(data_mem_write_data),
+        .mem_write_accept(data_mem_write_ready)
     );
 endmodule

@@ -63,6 +63,7 @@ module superfloat_openframe #(
     // ============================================
     reg start_q1, start_q2;
     reg [7:0] thread_count_q;
+    reg       sync_mode_q;                 // pin bus mode for this launch (bus_in[8] at START)
     always @(posedge clk) begin
         if (chip_reset) begin
             start_q1 <= 1'b0;
@@ -86,6 +87,7 @@ module superfloat_openframe #(
             launch_state   <= L_IDLE;
             launch_count   <= 3'd0;
             thread_count_q <= 8'd0;
+            sync_mode_q    <= 1'b0;
         end else if (!start_q2) begin
             launch_state <= L_IDLE;
         end else begin
@@ -93,6 +95,7 @@ module superfloat_openframe #(
                 L_IDLE: begin
                     // bus_in is quiet between kernels: the host set it before START.
                     thread_count_q <= bus_in[7:0];
+                    sync_mode_q    <= bus_in[8];
                     launch_count   <= 3'd0;
                     launch_state   <= L_RESET;
                 end
@@ -129,6 +132,7 @@ module superfloat_openframe #(
 
     wire [NUM_CORES-1:0]                    dread_valid;
     wire [DATA_MEM_ADDR_BITS*NUM_CORES-1:0] dread_addr_flat;
+    wire [NUM_CORES-1:0]                    dread_accept;
     wire [NUM_CORES-1:0]                    dread_ready;
     wire [16*NUM_CORES-1:0]                 dread_data_flat;
     wire [NUM_CORES-1:0]                    dwrite_valid;
@@ -163,6 +167,7 @@ module superfloat_openframe #(
 
         .data_mem_read_valid(dread_valid),
         .data_mem_read_address_flat(dread_addr_flat),
+        .data_mem_read_accept(dread_accept),
         .data_mem_read_ready(dread_ready),
         .data_mem_read_data_flat(dread_data_flat),
         .data_mem_write_valid(dwrite_valid),
@@ -181,6 +186,7 @@ module superfloat_openframe #(
     wire [BUS_BITS*NUM_CH-1:0] ch_read_addr_flat;
     wire [BUS_BITS*NUM_CH-1:0] ch_write_addr_flat;
     wire [BUS_BITS*NUM_CH-1:0] ch_write_data_flat;
+    wire [NUM_CH-1:0]          ch_read_accept;
     wire [NUM_CH-1:0]          ch_read_ready;
     wire [NUM_CH-1:0]          ch_write_ready;
     wire [BUS_BITS-1:0]        ch_read_data;
@@ -202,6 +208,7 @@ module superfloat_openframe #(
                 dwrite_addr_flat[c*DATA_MEM_ADDR_BITS +: BUS_BITS];
             assign ch_write_data_flat[(NUM_PROG_CH+c)*BUS_BITS +: BUS_BITS] =
                 dwrite_data_flat[c*16 +: 16];
+            assign dread_accept[c]             = ch_read_accept[NUM_PROG_CH+c];
             assign dread_ready[c]              = ch_read_ready[NUM_PROG_CH+c];
             assign dread_data_flat[c*16 +: 16] = ch_read_data;
             assign dwrite_ready[c]             = ch_write_ready[NUM_PROG_CH+c];
@@ -215,8 +222,10 @@ module superfloat_openframe #(
     ) bus (
         .clk(clk),
         .reset(chip_reset),
+        .sync_mode(sync_mode_q),
         .ch_read_valid(ch_read_valid),
         .ch_read_address_flat(ch_read_addr_flat),
+        .ch_read_accept(ch_read_accept),
         .ch_read_ready(ch_read_ready),
         .ch_read_data(ch_read_data),
         .ch_write_valid(ch_write_valid),
