@@ -35,10 +35,12 @@ module scheduler #(
 
     // Memory Access State
     input wire [2:0] fetcher_state,
+    input wire fetch_ahead_hit,          // UPDATE: the next instruction is already fetched (fetcher.sv)
     input wire [(2*THREADS_PER_BLOCK)-1:0] lsu_state_flat,
 
     // Current & Next PC
     output reg [PROGRAM_MEM_ADDR_BITS-1:0] current_pc,
+    output wire [PROGRAM_MEM_ADDR_BITS-1:0] update_pc,   // the PC UPDATE moves to
     input wire [PROGRAM_MEM_ADDR_BITS*THREADS_PER_BLOCK-1:0] next_pc_flat,
     
     // Active thread mask (from divergence unit)
@@ -113,6 +115,8 @@ module scheduler #(
         end
     endgenerate
     
+    assign update_pc = diverged ? diverge_next_pc : next_pc[0];
+
     always @(*) begin
         any_lsu_waiting = 1'b0;
         for (i = 0; i < THREADS_PER_BLOCK; i = i + 1) begin
@@ -186,10 +190,11 @@ module scheduler #(
                         // Use divergence-aware next PC. Without divergence all active
                         // threads agree; thread 0 is active in every dispatched block,
                         // including a partial last block where high threads are disabled.
-                        current_pc <= diverged ? diverge_next_pc : next_pc[0];
+                        current_pc <= update_pc;
 
-                        // Update is synchronous so we move on after one cycle
-                        core_state <= FETCH;
+                        // Straight to DECODE when the fetcher already has the
+                        // next instruction, else fetch it.
+                        core_state <= fetch_ahead_hit ? DECODE : FETCH;
                     end
                 end
                 DONE: begin 

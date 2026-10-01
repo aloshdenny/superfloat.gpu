@@ -117,6 +117,8 @@ module core #(
     // Intermediate Signals (16-bit SF16)
     // Program counter uses full program memory address width
     reg [PROGRAM_MEM_ADDR_BITS-1:0] current_pc;
+    wire [PROGRAM_MEM_ADDR_BITS-1:0] update_pc;       // the PC UPDATE moves to (scheduler)
+    wire fetch_ahead_hit;                              // the fetcher has it already
     wire [PROGRAM_MEM_ADDR_BITS-1:0] next_pc[THREADS_PER_BLOCK-1:0];
     wire [DATA_MEM_DATA_BITS-1:0] rs[THREADS_PER_BLOCK-1:0];
     wire [DATA_MEM_DATA_BITS-1:0] rt[THREADS_PER_BLOCK-1:0];
@@ -164,6 +166,8 @@ module core #(
         .reset(reset),
         .core_state(core_state),
         .current_pc(current_pc),
+        .next_pc(update_pc),
+        .ahead_hit(fetch_ahead_hit),
         .mem_read_valid(program_mem_read_valid),
         .mem_read_address(program_mem_read_address),
         .mem_read_ready(program_mem_read_ready),
@@ -291,6 +295,8 @@ module core #(
         .reset(reset),
         .start(start),
         .fetcher_state(fetcher_state),
+        .fetch_ahead_hit(fetch_ahead_hit),
+        .update_pc(update_pc),
         .core_state(core_state),
         .decoded_fma_enable(pipe_fma_enable),
         .decoded_staged(decoded_staged),

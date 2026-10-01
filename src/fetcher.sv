@@ -9,6 +9,10 @@
 // served stale). A hit completes the fetch in one cycle without a request to
 // the shared instruction cache; a kernel loop that fits the buffer runs from
 // it after its first pass.
+// Fetch ahead: during UPDATE the buffer is looked up at next_pc, the PC UPDATE
+// moves to. On a hit the instruction is taken at the end of UPDATE and the
+// scheduler goes straight to DECODE (ahead_hit), skipping FETCH. The buffer
+// has one read port: UPDATE looks up next_pc, FETCH looks up current_pc.
 module fetcher #(
     parameter PROGRAM_MEM_ADDR_BITS = 8,
     parameter PROGRAM_MEM_DATA_BITS = 16,
@@ -18,6 +22,8 @@ module fetcher #(
     input wire reset,
     input wire [2:0] core_state,
     input wire [PROGRAM_MEM_ADDR_BITS-1:0] current_pc,
+    input wire [PROGRAM_MEM_ADDR_BITS-1:0] next_pc,     // the PC UPDATE moves to
+    output wire ahead_hit,                              // UPDATE: next_pc is in the buffer
     output reg mem_read_valid,
     output reg [PROGRAM_MEM_ADDR_BITS-1:0] mem_read_address,
     input wire mem_read_ready,
@@ -39,9 +45,10 @@ module fetcher #(
             reg [PROGRAM_MEM_DATA_BITS-1:0] l0_data [L0_ENTRIES-1:0];
             reg [TAG_BITS-1:0]              l0_tag  [L0_ENTRIES-1:0];
             reg [L0_ENTRIES-1:0]            l0_valid;
-            wire [IDX_BITS-1:0] idx  = current_pc[IDX_BITS-1:0];
+            wire [PROGRAM_MEM_ADDR_BITS-1:0] lpc = (core_state == 3'b110) ? next_pc : current_pc;
+            wire [IDX_BITS-1:0] idx  = lpc[IDX_BITS-1:0];
             wire [IDX_BITS-1:0] fidx = mem_read_address[IDX_BITS-1:0];
-            assign l0_hit  = l0_valid[idx] && (l0_tag[idx] == current_pc[PROGRAM_MEM_ADDR_BITS-1:IDX_BITS]);
+            assign l0_hit  = l0_valid[idx] && (l0_tag[idx] == lpc[PROGRAM_MEM_ADDR_BITS-1:IDX_BITS]);
             assign l0_word = l0_data[idx];
             always @(posedge clk) begin
                 if (reset) begin
@@ -57,6 +64,7 @@ module fetcher #(
             assign l0_word = {PROGRAM_MEM_DATA_BITS{1'b0}};
         end
     endgenerate
+    assign ahead_hit = (core_state == 3'b110) && (fetcher_state == IDLE) && l0_hit;
 
     always @(posedge clk) begin
         if (reset) begin
@@ -67,7 +75,10 @@ module fetcher #(
         end else begin
             case (fetcher_state)
                 IDLE: begin
-                    if (core_state == 3'b001) begin
+                    if (ahead_hit) begin
+                        instruction   <= l0_word;
+                        fetcher_state <= FETCHED;
+                    end else if (core_state == 3'b001) begin
                         if (l0_hit) begin
                             instruction   <= l0_word;
                             fetcher_state <= FETCHED;
