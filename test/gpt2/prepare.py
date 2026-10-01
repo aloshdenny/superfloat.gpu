@@ -13,6 +13,7 @@ bit-exact outputs the kernel must store. One .npz per launch and format:
 test_gpt2_bench.py runs them through the chip's pins.
 
   python3 prepare.py [name ...]      (default: every launch below)
+  FORMATS=sf16 python3 prepare.py shape_gemv_64_24   (any kernel_kc_nb shape)
 """
 import os
 import sys
@@ -155,18 +156,37 @@ def specs(model, rec):
     return s
 
 
+def shape_spec(model, rec, name):
+    """A launch of a given shape for cycle measurement: 'shape_<kernel>_<kc>_<nb>'.
+    Operands are real (layer 0's FC1 weights and its input), cut or repeated
+    to kc; every block shares one x/A. Cycles do not depend on the values."""
+    _, kernel, kc, nb = name.split("_")
+    kc, nb = int(kc), int(nb)
+    Wf = model.W("h.0.mlp.c_fc.weight")
+    W = np.resize(Wf[:, :8 * nb].T, (8 * nb, kc)).T             # kc x 8nb
+    if kernel == "gemv":
+        x = np.resize(rec[(0, "c_fc")][-1], kc)
+        return kernel, kc, [(x, W[:, 8 * b:8 * b + 8]) for b in range(nb)]
+    A = np.resize(rec[(0, "c_fc")][:8], (8, kc))
+    return kernel, kc, [(A, W[:, 8 * b:8 * b + 8]) for b in range(nb)]
+
+
 def main():
     want = set(sys.argv[1:])
+    fmts = [f for f, n in NAMES.items() if n in os.environ.get("FORMATS", "sf16,fp16,bf16").split(",")]
     t0 = time.time()
     model = GPT2()
     ids = tokenizer().encode(PROMPT).ids
     rec = {}
     model.forward(ids, new_cache(), record=rec)
     print(f"GPT-2 forward on {len(ids)} prompt tokens: {time.time() - t0:.1f} s")
-    for name, (kernel, kc, blocks) in specs(model, rec).items():
+    todo = specs(model, rec)
+    for name in sorted(n for n in want if n.startswith("shape_")):
+        todo[name] = shape_spec(model, rec, name)
+    for name, (kernel, kc, blocks) in todo.items():
         if want and name not in want:
             continue
-        for fmt in NAMES:
+        for fmt in fmts:
             t = time.time()
             win, exp = (gemv_launch if kernel == "gemv" else gemm_launch)(fmt, blocks, kc)
             save(fmt, name, kernel, kc, win, exp)
