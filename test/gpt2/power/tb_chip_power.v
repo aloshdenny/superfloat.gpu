@@ -3,9 +3,12 @@
 // The chip netlist (openframe_project_wrapper) and its tiles' netlists run on
 // the sky130 cell models (-DFUNCTIONAL -DUNIT_DELAY=#1). This bench is the
 // host: it holds the program and the launch's data window ($readmemh), answers
-// every pin-bus beat as test_gpt2_bench.py does with HOST_LATENCY=0 (writes
-// on the falling edge after REQ moves, reads one falling edge later), and
-// launches the kernel as a board would. Activity is dumped from DUMP_START to
+// every pin-bus beat as test_gpt2_bench.py does with HOST_LATENCY=0, and
+// launches the kernel as a board would. SYNC selects the bus mode, as
+// BUS_SYNC does there: 0, the async handshake (writes on the falling edge
+// after REQ moves, reads one falling edge later); 1, the sync bus (a beat on
+// each falling edge with REQ high, each read answered in order on the next
+// falling edge with ACK high; bus_in[8] set at START). Activity is dumped from DUMP_START to
 // DUMP_END cycles after START, for the chip's top level and tile 0
 // (dump_scopes.vh, written by run_power.sh), and the launch's cycle count is
 // printed. With STOP_AT_DUMP_END the run ends with the dump window.
@@ -22,6 +25,7 @@ module tb_chip_power;
     parameter integer DUMP_END    = 32'h7fffffff;
     parameter integer MAX_CYCLES  = 4000000;
     parameter integer STOP_AT_DUMP_END = 0;   // 1: finish at DUMP_END (outputs not checked)
+    parameter integer SYNC        = 0;        // 1: sync pin bus
 
     reg clk = 1'b0;
     always #10 clk = ~clk;                    // 50 MHz, the signoff clock
@@ -78,7 +82,7 @@ module tb_chip_power;
     reg        req_seen = 1'b0;
     reg [15:0] waddr = 16'd0;
     integer    reads = 0, writes = 0;
-    always @(negedge clk) begin
+    always @(negedge clk) if (!SYNC) begin
         if (idle)
             bus_in_r <= THREADS[15:0];
         if (ack_pending) begin
@@ -94,6 +98,36 @@ module tb_chip_power;
                 reads       = reads + 1;
                 req_seen    <= bus_req;
                 ack_pending <= 1'b1;
+            end
+        end
+    end
+
+    // Sync host: reads answered in order, one falling edge later.
+    reg [15:0] pend_word [0:15];
+    integer    pend_due  [0:15];
+    integer    ph = 0, pt = 0, ncyc = 0;
+    always @(negedge clk) if (SYNC) begin
+        ncyc = ncyc + 1;
+        if (idle) begin
+            bus_in_r <= THREADS[15:0] | 16'h0100;
+            ack_r    <= 1'b0;
+        end else begin
+            if (ph != pt && pend_due[ph % 16] <= ncyc) begin
+                bus_in_r <= pend_word[ph % 16];
+                ack_r    <= 1'b1;
+                ph = ph + 1;
+            end else
+                ack_r <= 1'b0;
+            if (rst_b && bus_req === 1'b1) begin
+                if (bus_we) begin
+                    if (!bus_beat) waddr <= bus_out;
+                    else begin mem[waddr] <= bus_out; writes = writes + 1; end
+                end else begin
+                    pend_word[pt % 16] = bus_sel ? mem[bus_out] : prog[bus_out[8:0]];
+                    pend_due[pt % 16]  = ncyc + 1;
+                    pt = pt + 1;
+                    reads = reads + 1;
+                end
             end
         end
     end

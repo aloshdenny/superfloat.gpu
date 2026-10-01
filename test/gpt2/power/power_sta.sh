@@ -17,11 +17,14 @@ IMG=$(cd "$2" && pwd)
 HERE=$(cd "$(dirname "$0")" && pwd)
 LL=${LL:-$HOME/alosh/superfloat.gpu/librelane}
 case $FMT in
-  sf16) TILE=$LL/core_tile/runs/RUN_2026-09-29_00-38-54_eco; CHIP=$LL/openframe/runs/chip_20_eco2 ;;
-  fp16) TILE=$LL/core_tile/runs/fp16_10r_eco5_s; CHIP=$LL/openframe/runs/chip_fp16_1_eco_s ;;
-  bf16) TILE=$LL/core_tile/runs/bf16_4_eco_s; CHIP=$LL/openframe/runs/chip_bf16_2_eco4_s ;;
+  sf16) T1=RUN_2026-09-29_00-38-54_eco; C1=chip_20_eco2 ;;
+  fp16) T1=fp16_10r_eco5_s; C1=chip_fp16_1_eco_s ;;
+  bf16) T1=bf16_4_eco_s; C1=chip_bf16_2_eco4_s ;;
   *) echo "format must be sf16, fp16 or bf16" >&2; exit 1 ;;
 esac
+# TILE and CHIP name the signed-off runs (run_power.sh passes them on).
+TILE=${TILE:-$LL/core_tile/runs/$T1}
+CHIP=${CHIP:-$LL/openframe/runs/$C1}
 PDK=${PDK:-$HOME/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A}
 TT=$PDK/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
 STA=${STA:-sta}

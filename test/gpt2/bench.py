@@ -4,12 +4,12 @@ GPT-2 small on the three signed-off OpenFrame chips: latency, cycles, clock
 and energy, from measured inputs only (docs/gpt2_benchmark.md):
 
   cycles   results/<fmt>.jsonl: launches simulated through the chip's pins
-           (test_gpt2_bench.py). Shapes not simulated exactly come from a
-           per-kernel fit cycles = a + b * bus beats over the simulated ones;
-           its worst residual is printed.
+           (test_gpt2_bench.py), each launch shape at least on SF16; cycle
+           counts proved identical across formats (Cycles, format_check).
+           A fit covers any shape never simulated; its use is counted.
   clock    peak clock = 1 / (20 ns - worst setup slack) over the chip and its
            tile, from the signoff metrics (signoff/<fmt>/{chip,tile}).
-  power    power/<fmt>_<kernel>.json: OpenSTA on gate-level activity of the
+  power    power/results/<fmt>_<kernel>.json: OpenSTA on gate-level activity of the
            signed-off netlists (power/run_power.sh), at 50 MHz.
   host     LayerNorm, softmax, GELU, bias and residual adds, embedding and
            argmax in numpy on this machine (gpt2.py), timed per step.
@@ -37,50 +37,68 @@ POWER_CLOCK_MHZ = 50.0
 
 # ---------------------------------------------------------------- cycles
 
-def beats(kernel, kc, nb, program_reads):
+def data_beats(kernel, kc, nb):
+    """Bus beats a launch's data needs: reads, plus two beats per write."""
     if kernel == "gemv":
         reads, writes = nb * (kc // 8 * 72 + 24), nb * 8
     else:
         reads, writes = nb * (kc * 16 + 24), nb * 64
-    return reads + program_reads + 2 * writes
+    return reads + 2 * writes
+
+
+def _measured(fmt):
+    out = {}
+    for line in open(os.path.join(HERE, "results", f"{fmt}.jsonl")):
+        r = json.loads(line)
+        if r["mismatches"] or r["host_latency"] != 0 or "check" in r["name"]:
+            continue
+        assert r["data_reads"] + 2 * r["writes"] == data_beats(r["kernel"], r["kc"], r["nb"]), r
+        out[(r["kernel"], r["kc"], r["nb"])] = r["cycles"]
+    return out
 
 
 class Cycles:
-    """Cycles of a launch: measured if simulated, else the per-kernel fit."""
+    """Cycles of a launch, from simulation through the pins:
+      1. measured in this format;
+      2. else measured on SF16. Cycle counts do not depend on the format:
+         every shape simulated in all three formats matched exactly
+         (format_check() lists them);
+      3. else the per-kernel fit cycles = a + b * data beats + c * blocks,
+         as a last resort; its use is counted."""
 
     def __init__(self, fmt):
-        self.meas = {}
-        prog = {}
-        for line in open(os.path.join(HERE, "results", f"{fmt}.jsonl")):
-            r = json.loads(line)
-            if r["mismatches"] or r["host_latency"] != 0:
-                continue
-            key = (r["kernel"], r["kc"], r["nb"])
-            self.meas[key] = r["cycles"]
-            prog.setdefault(r["kernel"], []).append(r["program_reads"])
-            b = r["data_reads"] + r["program_reads"] + 2 * r["writes"]
-            assert b == beats(r["kernel"], r["kc"], r["nb"], r["program_reads"]), (r, b)
-        self.prog = {k: float(np.mean(v)) for k, v in prog.items()}
-        self.fit, self.resid = {}, {}
+        self.own = _measured(fmt)
+        self.sf16 = _measured("sf16")
+        meas = {**self.sf16, **self.own}
+        self.fit = {}
         for kernel in ("gemv", "gemm"):
-            pts = [(beats(k, kc, nb, self.prog[k]), c) for (k, kc, nb), c in self.meas.items() if k == kernel]
-            x, y = np.array([p[0] for p in pts]), np.array([p[1] for p in pts])
-            A = np.vstack([np.ones_like(x), x]).T
-            a, b = np.linalg.lstsq(A, y, rcond=None)[0]
-            self.fit[kernel] = (a, b)
-            self.resid[kernel] = float(np.max(np.abs((a + b * x) - y) / y)) if len(y) else 0.0
-        self.used_fit = 0
+            pts = [(data_beats(k, kc, nb), nb, c) for (k, kc, nb), c in meas.items() if k == kernel]
+            A = np.array([[1.0, b, n] for b, n, _ in pts])
+            y = np.array([c for _, _, c in pts], dtype=float)
+            self.fit[kernel] = np.linalg.lstsq(A, y, rcond=None)[0]
+        self.count = {"own": 0, "sf16": 0, "fit": 0}
 
     def __call__(self, kernel, kc, nb):
         key = (kernel, kc, nb)
-        if key in self.meas:
-            return self.meas[key]
-        self.used_fit += 1
-        a, b = self.fit[kernel]
-        return a + b * beats(kernel, kc, nb, self.prog[kernel])
+        if key in self.own:
+            self.count["own"] += 1
+            return self.own[key]
+        if key in self.sf16:
+            self.count["sf16"] += 1
+            return self.sf16[key]
+        self.count["fit"] += 1
+        a, b, c = self.fit[kernel]
+        return a + b * data_beats(kernel, kc, nb) + c * nb
 
     def total(self, launches):
         return sum(self(*l) + LAUNCH_GAP for l in launches)
+
+
+def format_check():
+    """Shapes simulated in all three formats, and whether their cycles match."""
+    m = {f: _measured(f) for f in FORMATS}
+    common = set.intersection(*(set(v) for v in m.values()))
+    return len(common), all(len({m[f][k] for f in FORMATS}) == 1 for k in common)
 
 
 # ---------------------------------------------------------------- clock
@@ -133,14 +151,16 @@ def main():
     G = args.generate
 
     host = {P: host_times(P, G) for P in prompts}
-    out = {"generate": G, "prompts": prompts, "formats": {}}
+    n_common, same = format_check()
+    out = {"generate": G, "prompts": prompts, "formats": {},
+           "format_independence": {"shapes_in_all_formats": n_common, "identical": same}}
     for fmt in FORMATS:
         cyc = Cycles(fmt)
         f_ss, lim_ss = peak_clock(fmt, "max_ss_100C_1v60")
         f_tt, lim_tt = peak_clock(fmt, "nom_tt_025C_1v80")
         p_dec, pd = power(fmt, "gemv")
         p_pre, pp = power(fmt, "gemm")
-        r = {"fit_resid": cyc.resid, "fit_launches": 0,
+        r = {
              "fmax_ss_mhz": f_ss, "fmax_ss_limit": lim_ss, "fmax_tt_mhz": f_tt, "fmax_tt_limit": lim_tt,
              "power_decode_w": p_dec, "power_prefill_w": p_pre, "power_detail": {"gemv": pd, "gemm": pp},
              "scenarios": {}}
@@ -164,7 +184,7 @@ def main():
                            "energy_prefill_j": e_pre, "energy_decode_j": e_dec,
                            "energy_total_j": e_pre + sum(e_dec)}
             r["scenarios"][P] = sc
-        r["fit_launches"] = cyc.used_fit
+        r["launch_sources"] = dict(cyc.count)
         out["formats"][fmt] = r
     os.makedirs(os.path.dirname(args.json), exist_ok=True)
     json.dump(out, open(args.json, "w"), indent=1)
@@ -176,8 +196,7 @@ def report(out):
     for fmt, r in out["formats"].items():
         print(f"\n{fmt}: peak clock {r['fmax_ss_mhz']:.1f} MHz (ss, {r['fmax_ss_limit']}), "
               f"{r['fmax_tt_mhz']:.1f} MHz (tt, {r['fmax_tt_limit']}); power decode {r['power_decode_w'] * 1e3:.1f} mW, "
-              f"prefill {r['power_prefill_w'] * 1e3:.1f} mW at 50 MHz; fit residual {r['fit_resid']}, "
-              f"{r['fit_launches']} launch lookups from the fit")
+              f"prefill {r['power_prefill_w'] * 1e3:.1f} mW at 50 MHz; launch cycles from {r['launch_sources']}")
         for P, sc in r["scenarios"].items():
             s = sc["ss"]
             print(f"  prompt {P}: prefill {sc['prefill_cycles'] / 1e6:.1f} M cycles, TTFT {s['ttft_s']:.1f} s, "

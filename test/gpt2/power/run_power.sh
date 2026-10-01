@@ -3,6 +3,8 @@
 #
 #   run_power.sh <sf16|fp16|bf16> <image dir> [dump start] [dump end]
 #
+# SYNC=1 runs the sync pin bus. TILE and CHIP name the signed-off runs (their
+# final/ views); the defaults are v1's.
 # Given a dump window, the run stops at its end; the full launch (no window)
 # is also checked against expected.txt.
 # The image dir holds prog.hex, data.hex, launch.env and expected.txt
@@ -24,11 +26,14 @@ STOP=$([ -n "${4:-}" ] && echo 1 || echo 0)
 HERE=$(cd "$(dirname "$0")" && pwd)
 LL=${LL:-$HOME/alosh/superfloat.gpu/librelane}
 case $FMT in
-  sf16) TILE=$LL/core_tile/runs/RUN_2026-09-29_00-38-54_eco; CHIP=$LL/openframe/runs/chip_20_eco2 ;;
-  fp16) TILE=$LL/core_tile/runs/fp16_10r_eco5_s; CHIP=$LL/openframe/runs/chip_fp16_1_eco_s ;;
-  bf16) TILE=$LL/core_tile/runs/bf16_4_eco_s; CHIP=$LL/openframe/runs/chip_bf16_2_eco4_s ;;
+  sf16) T1=RUN_2026-09-29_00-38-54_eco; C1=chip_20_eco2 ;;
+  fp16) T1=fp16_10r_eco5_s; C1=chip_fp16_1_eco_s ;;
+  bf16) T1=bf16_4_eco_s; C1=chip_bf16_2_eco4_s ;;
   *) echo "format must be sf16, fp16 or bf16" >&2; exit 1 ;;
 esac
+TILE=${TILE:-$LL/core_tile/runs/$T1}
+CHIP=${CHIP:-$LL/openframe/runs/$C1}
+SYNC=${SYNC:-0}
 PDK=${PDK:-$HOME/.ciel/ciel/sky130/versions/1689ac3f2dc763876eaf967227c7dfe831b031ae/sky130A}
 SC=$PDK/libs.ref/sky130_fd_sc_hd
 STA=${STA:-sta}
@@ -50,7 +55,7 @@ printf '$dumpvars(1, tb_chip_power.dut);\n$dumpvars(0, %s);\n' "$TILE0" > dump_s
 
 echo "[run_power] $FMT $KERNEL kc=$KC nb=$NB: compiling"
 iverilog -g2012 -DFUNCTIONAL -DUNIT_DELAY=#1 -o sim.vvp -s tb_chip_power -I . \
-  -P tb_chip_power.THREADS="$THREADS" -P tb_chip_power.DUMP_START="$DS" -P tb_chip_power.DUMP_END="$DE" -P tb_chip_power.STOP_AT_DUMP_END="$STOP" \
+  -P tb_chip_power.THREADS="$THREADS" -P tb_chip_power.DUMP_START="$DS" -P tb_chip_power.DUMP_END="$DE" -P tb_chip_power.STOP_AT_DUMP_END="$STOP" -P tb_chip_power.SYNC="$SYNC" \
   "$SC/verilog/primitives.v" "$SC/verilog/sky130_fd_sc_hd.v" stubs.v chip.nl.v tile.nl.v "$HERE/tb_chip_power.v"
 echo "[run_power] simulating"
 /usr/bin/time -v vvp -n sim.vvp > sim.log 2> sim.time || true
@@ -65,6 +70,6 @@ print(f"[run_power] outputs: {len(exp) - len(bad)}/{len(exp)} match" + (f", firs
 PY
 
 echo "[run_power] power"
-"$HERE/power_sta.sh" "$FMT" "$IMG"
+TILE=$TILE CHIP=$CHIP "$HERE/power_sta.sh" "$FMT" "$IMG"
 # The dump is ~110 KB per cycle; keep it only on request (KEEP_VCD=1).
 [ "${KEEP_VCD:-0}" = 1 ] || rm -f power.vcd power_pins.vcd sim.vvp chip.nl.v tile.nl.v
