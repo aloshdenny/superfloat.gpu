@@ -336,7 +336,9 @@ Each thread owns its own independent register file with 16 registers:
 | `1001` | **CONST**| `CONST Rd, imm8`| Load 8-bit sign-extended immediate `imm8` into `Rd`. |
 | `1010` | **FMA** | `FMA Rd, Rs, Rt` | Q1.15 Fused Multiply-Accumulate: `Rd = (Rs * Rt) + Rd`. (Uses `Rd` as accumulator input). |
 | `1011` | **ACT** | `ACT Rd, Rs, Rt` | Applies activation function `Rd = act(Rs + Rt)` where `Rt` is bias. Act function in `instruction[9:8]`. <br> • `00` = Passthrough <br> • `01` = ReLU <br> • `10` = Leaky ReLU <br> • `11` = Clipped ReLU. |
-| `1100` | **SYS** | `SYS op, idx` | Systolic Array control interface instruction. <br> • `op=00` = Clear accumulators <br> • `op=01` = Load weights <br> • `op=10` = Compute step <br> • `op=11` = Read result from array `idx` into destination register. |
+| `1100` | **SYS** | `SYS op, idx` | Systolic Array control interface instruction. <br> • `op=00` = Clear accumulators <br> • `op=01` = Load weights; with bit 5 set (`SYS load.b`), every row takes this load's weights at once <br> • `op=10` = Compute step <br> • `op=11` = Read result from array `idx` into destination register. |
+| `1101` | **SH** | `SH Rd, Rs, Rt` | Logical shift of `Rs` by the signed amount in `Rt[4:0]`: 0 to 15 shifts left, −1 to −16 shifts right (−16 clears). |
+| `1110` | **CONSTH**| `CONSTH Rd, imm8`| Load the high byte: `Rd[15:8] = imm8`, `Rd[7:0]` kept. `CONST` then `CONSTH` loads any 16-bit constant. |
 | `1111` | **RET** | `RET` | Return from kernel. Finishes current thread execution block. |
 
 

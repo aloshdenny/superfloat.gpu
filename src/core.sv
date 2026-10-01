@@ -63,6 +63,7 @@ module core #(
     input wire decoded_systolic_enable,
     input wire [1:0] decoded_systolic_op,
     input wire decoded_systolic_idx,
+    input wire decoded_systolic_bcast,
     input wire decoded_branch,
     input wire decoded_ret,
 
@@ -191,6 +192,7 @@ module core #(
     reg        pipe_systolic_enable;
     reg [1:0]  pipe_systolic_op;
     reg        pipe_systolic_idx;
+    reg        pipe_systolic_bcast;
     reg        pipe_ret;
     reg        pipe_branch;
 
@@ -215,6 +217,7 @@ module core #(
             pipe_systolic_enable   <= 1'b0;
             pipe_systolic_op       <= 2'b0;
             pipe_systolic_idx      <= 1'b0;
+            pipe_systolic_bcast    <= 1'b0;
             pipe_ret               <= 1'b0;
             pipe_branch            <= 1'b0;
         end else begin
@@ -237,6 +240,7 @@ module core #(
             pipe_systolic_enable   <= decoded_systolic_enable;
             pipe_systolic_op       <= decoded_systolic_op;
             pipe_systolic_idx      <= decoded_systolic_idx;
+            pipe_systolic_bcast    <= decoded_systolic_bcast;
             pipe_ret               <= decoded_ret;
             pipe_branch            <= decoded_branch;
         end
@@ -600,6 +604,7 @@ module core #(
                 .reset(unit_reset),
                 .clear_acc(systolic_clear_acc),
                 .load_weights(systolic_load_weights),
+                .load_broadcast(pipe_systolic_bcast),
                 .compute_enable(systolic_compute_enable),
                 .a_inputs_flat(systolic_a_inputs_flat[k]),
                 .b_inputs_flat(systolic_b_inputs_flat[k]),

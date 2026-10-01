@@ -18,14 +18,15 @@ gemv: one token (decode). Row r of the array holds weight row k0+r and
   64 weight words. After the K loop, thread j sums column j over the 8 rows
   (SYS read, ACT add) and stores y[j]. Bus reads per weight: 1.125.
 
-gemm: 8 tokens (prefill). Every row holds weight row k (8 SYS loads of the
-  same word per thread) and thread i drives token i's x[k], so the array is
-  an outer product per k. Thread i stores token i's 8 outputs. Bus reads per
-  MAC: 0.25.
+gemm: 8 tokens (prefill). Every row holds weight row k (one broadcast SYS
+  load) and thread i drives token i's x[k], so the array is an outer product
+  per k. Thread i stores token i's 8 outputs. Bus reads per MAC: 0.25.
 
-SYS load also takes the activation operand (R0), so loading x before the
-weights settles every column before the compute: no flush is needed (see
-the SYS operand hold in src/core.sv).
+SYS load also takes the activation operand (R0), and an activation reaches
+column c c + 1 cycles after it changes. gemv loads x with the first of eight
+weight rows; gemm puts the pointer updates between its load and compute.
+Either way every column has settled before the compute: no flush is needed
+(see the SYS operand hold in src/core.sv).
 """
 import os
 import sys
@@ -54,9 +55,10 @@ TABLE_WORDS = 3 * MAX_BLOCKS + 3
 WINDOW_WORDS = 1 << 16
 
 
-def sys_op(op: int, rd: int = 0) -> int:
-    """SYS op (00 clear, 01 load, 10 compute, 11 read into rd); array 0."""
-    return (0xC << 12) | (rd << 8) | (op << 6)
+def sys_op(op: int, rd: int = 0, bcast: bool = False) -> int:
+    """SYS op (00 clear, 01 load, 10 compute, 11 read into rd); array 0.
+    bcast (load only, bit 5): every row takes this load's weights."""
+    return (0xC << 12) | (rd << 8) | (op << 6) | (int(bcast) << 5)
 
 
 SYS_CLEAR, SYS_LOAD, SYS_COMPUTE, SYS_READ = 0b00, 0b01, 0b10, 0b11
@@ -111,11 +113,11 @@ def gemm_program(kc: int) -> list:
     assert kc % 2 == 0 and kc >= 2
     p = _prologue() + _loop_bound(N * kc)
     loop = len(p)
-    for _ in range(2):
-        p += [asm_ldr(R0, R2), asm_add(R2, R2, R5),          # A[tid][k]
-              asm_ldr(R1, R3), asm_add(R3, R3, R5)]          # W[k][tid]
-        p += [sys_op(SYS_LOAD)] * N                            # every row = W[k]
-        p += [sys_op(SYS_COMPUTE)]
+    for _ in range(4 if kc % 4 == 0 else 2):
+        p += [asm_ldr(R0, R2), asm_ldr(R1, R3),              # A[tid][k], W[k][tid]
+              sys_op(SYS_LOAD, bcast=True),                    # every row = W[k]
+              asm_add(R2, R2, R5), asm_add(R3, R3, R5),        # (x settles meanwhile)
+              sys_op(SYS_COMPUTE)]
     p += [asm_cmp(R2, R10)]
     p += [asm_brn(loop - (len(p) + 1))]
     assert len(p) - loop <= 32, "loop must fit the 32-entry instruction cache"

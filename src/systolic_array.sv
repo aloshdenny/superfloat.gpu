@@ -6,7 +6,8 @@
 // > NUMBER_FORMAT: 0 = SF16 (systolic_pe), 1 = FP16, 2 = BF16 (fp_systolic_pe).
 // > SF16 only: negative zero is canonicalised once at the array edges;
 //   interior PEs only see values already cleaned by their neighbours.
-// > Weights shift down one row per load_weights pulse (load rows N-1 .. 0).
+// > Weights shift down one row per load_weights pulse (load rows N-1 .. 0),
+//   or, with load_broadcast, every row takes the same weights in one pulse.
 // > Activations and the MAC pipeline run freely; accumulators move only on
 //   compute (valid) or clear.
 // > SF16: results_flat carries raw two's-complement accumulators; the reader
@@ -25,6 +26,7 @@ module systolic_array #(
     input  wire reset,
     input  wire clear_acc,
     input  wire load_weights,
+    input  wire load_broadcast,     // with load_weights: every row takes the top row's inputs
     input  wire compute_enable,
     input  wire signed [DATA_BITS*ARRAY_SIZE-1:0] a_inputs_flat,
     input  wire signed [DATA_BITS*ARRAY_SIZE-1:0] b_inputs_flat,
@@ -49,6 +51,7 @@ module systolic_array #(
     reg [ARRAY_SIZE-1:0] ce_row;
     reg [ARRAY_SIZE-1:0] ca_row;
     reg [ARRAY_SIZE-1:0] lw_row;
+    reg [ARRAY_SIZE-1:0] bc_row;    // this load is a broadcast
 
     integer i;
     always @(posedge clk) begin
@@ -58,6 +61,7 @@ module systolic_array #(
             ce_row <= '0;
             ca_row <= '0;
             lw_row <= '0;
+            bc_row <= '0;
         end else begin
             for (i = 0; i < ARRAY_SIZE; i = i + 1) begin
                 a_reg[i*DATA_BITS +: DATA_BITS] <= canon(a_inputs_flat[i*DATA_BITS +: DATA_BITS]);
@@ -68,6 +72,7 @@ module systolic_array #(
                 ce_row[i] <= compute_enable;
                 ca_row[i] <= clear_acc;
                 lw_row[i] <= load_weights;
+                bc_row[i] <= load_weights & load_broadcast;
             end
         end
     end
@@ -120,7 +125,7 @@ module systolic_array #(
                         .load_weight    (lw_row[row]),
                         .compute_enable (ce_row[row]),
                         .a_in           (a_wire[row][col]),
-                        .b_in           (b_wire[row][col]),
+                        .b_in           (bc_row[row] ? b_wire[0][col] : b_wire[row][col]),
                         .a_out          (a_pe_out),
                         .b_out          (b_pe_out),
                         .acc_raw        (results[row][col])
@@ -137,7 +142,7 @@ module systolic_array #(
                         .load_weight    (lw_row[row]),
                         .compute_enable (ce_row[row]),
                         .a_in           (a_wire[row][col]),
-                        .b_in           (b_wire[row][col]),
+                        .b_in           (bc_row[row] ? b_wire[0][col] : b_wire[row][col]),
                         .a_out          (a_pe_out),
                         .b_out          (b_pe_out),
                         .acc            (results[row][col])

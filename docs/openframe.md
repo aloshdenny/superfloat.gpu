@@ -45,13 +45,13 @@ FP16 and BF16 arithmetic (`src/fp_arith.sv`):
 - ACT computes `f(round(x + bias))`. ReLU maps negatives, including −0, to +0. Leaky ReLU multiplies negatives by 2⁻⁷ exactly, flushing to −0 below the smallest normal. Clipped ReLU is `min(1.0, ReLU)` and keeps NaN.
 - `test/helpers/fp16fmt.py` is the bit-exact reference for all of the above.
 
-Every kernel runs in the same number of cycles in all three formats. The FP PE's accumulator loop takes three cycles, and the extra pipeline depth is hidden, since two SYS instructions are always at least six cycles apart.
+Instruction timing is the same in all three formats except for two instructions. FP16 and BF16 `ACT` and `SYS read` take two cycles more than SF16, because their units are pipelined through the scheduler's REQUEST and WAIT states. `FMA` uses those states in every format. The FP PE's accumulator loop takes three cycles, and two SYS instructions are always at least five cycles apart, so back-to-back computes need no stall.
 
 ### Programming notes
 
 - **Thread indices:** `%threadIdx` runs 0–7 and `%blockDim` is 8. A launch of *N* threads is split into ⌈N/8⌉ blocks, dispatched to free tiles in order. The last block may be partial; its disabled threads do not execute stores.
 - **Systolic array:** thread *i* supplies row *i* of the activation stream through R0 and column *i* of the weights through R1.
-  - `SYS load` shifts the weight rows in from the top, so load rows 7, 6, …, 0.
+  - `SYS load` shifts the weight rows in from the top, so load rows 7, 6, …, 0. `SYS load.b` (bit 5) puts the same weights in every row at once.
   - Each `SYS compute` accumulates `R0 × weight` into every PE of the row. Column 0 uses the current operand; columns 1–7 use the previous one. Issue one extra `SYS compute` with R0 = 0 at the end.
   - `SYS read Rd` returns the cell selected by `R0[5:0]` (row × 8 + column).
   - `test/test_openframe_tile.py` contains a complete kernel and a bit-exact reference model.

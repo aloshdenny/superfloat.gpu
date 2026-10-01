@@ -74,6 +74,7 @@ module core_tile #(
     wire decoded_systolic_enable;
     wire [1:0] decoded_systolic_op;
     wire decoded_systolic_idx;
+    wire decoded_systolic_bcast;
     wire decoded_branch;
     wire decoded_ret;
 
@@ -101,6 +102,7 @@ module core_tile #(
         .decoded_systolic_enable(decoded_systolic_enable),
         .decoded_systolic_op(decoded_systolic_op),
         .decoded_systolic_idx(decoded_systolic_idx),
+        .decoded_systolic_bcast(decoded_systolic_bcast),
         .decoded_branch(decoded_branch),
         .decoded_ret(decoded_ret)
     );
@@ -159,6 +161,7 @@ module core_tile #(
         .decoded_systolic_enable(decoded_systolic_enable),
         .decoded_systolic_op(decoded_systolic_op),
         .decoded_systolic_idx(decoded_systolic_idx),
+        .decoded_systolic_bcast(decoded_systolic_bcast),
         .decoded_branch(decoded_branch),
         .decoded_ret(decoded_ret),
 

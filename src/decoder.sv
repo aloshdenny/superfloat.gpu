@@ -34,6 +34,7 @@ module decoder (
     output reg decoded_systolic_enable,            // Enable systolic array control instruction
     output reg [1:0] decoded_systolic_op,          // 00=clear, 01=load weights, 10=compute, 11=read result
     output reg decoded_systolic_idx,               // Selected systolic array index to read
+    output reg decoded_systolic_bcast,             // SYS load: the row goes into every row at once
 
     // Branch instruction flag
     output reg decoded_branch,
@@ -84,6 +85,7 @@ module decoder (
         decoded_systolic_enable   = 0;
         decoded_systolic_op       = 0;
         decoded_systolic_idx      = 0;
+        decoded_systolic_bcast    = 0;
         decoded_ret               = 0;
         decoded_branch            = 0;
 
@@ -161,6 +163,7 @@ module decoder (
                     decoded_systolic_enable = 1;
                     decoded_systolic_op = instruction[7:6];
                     decoded_systolic_idx = instruction[0];
+                    decoded_systolic_bcast = (instruction[7:6] == 2'b01) & instruction[5];
                     if (instruction[7:6] == 2'b11) begin
                         decoded_reg_write_enable = 1;
                         decoded_reg_input_mux = 3'b101;
