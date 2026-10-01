@@ -1,39 +1,60 @@
 #!/usr/bin/env python3
-"""Write the FP16 and BF16 harden configs from the SF16 ones.
+"""Write the SF16, FP16 and BF16 harden configs from the base ones.
 
-  core_tile/config.json -> core_tile/config_fp16.json, config_bf16.json
-  openframe/config.json -> openframe/config_fp16.json, config_bf16.json
+  core_tile/config.json -> core_tile/config_{sf16,fp16,bf16}.json
+  openframe/config.json -> openframe/config_{sf16,fp16,bf16}.json
 
-Tile: adds the floating-point sources and sets the core_tile NUMBER_FORMAT
-parameter through SYNTH_PARAMETERS. The FP datapaths are deeper than SF16's,
-and at the SF16 tile's 55% target density placement spread each FP unit
-across the tile: its align/add paths ran through ~25 repeaters and routing
-added 1.3-2.7 ns. The FP tiles therefore place at 70% target density and
-repair to a 1.5 ns setup margin. FP16 is denser (0.57 utilisation against
-0.50 for BF16), and at 70% or 62% its repairs congested global routing
-(overflow left after 90 iterations at 62%), so it keeps the SF16 tile's 55%.
-It synthesises with ABC's AREA 0 script instead, whose logic was 6% faster
-than AREA 2 on the FP16 PE for 0.8% more area. Routing has cost the FP
-tiles 1.1-2.6 ns of setup, and FP16 enters routing with the least slack, so
-its post-global-route repair aims for 3 ns. Everything else
-(floorplan, pins, diode antenna repair) stays that of the signed-off SF16
-tile. Jumper-only antenna repair inserted no jumpers on the FP16 tile and
-left 629 nets; diodes fit.
+Every format gets the same flow settings (COMMON): the union of what any v1
+tile needed to close. In v1 the FP tiles had their own: ABC's AREA 0 script
+(6% faster logic than AREA 2 on the FP16 PE for 0.8% more area), a 1.5 ns
+placement repair margin, and for FP16 a 3 ns post-global-route margin,
+because routing cost the FP tiles 1.1-2.6 ns of setup. SF16 ran at 0.3 ns.
+Giving them to one format only biases its peak clock, so all three take them.
 
-Chip: points the core_tile macro at core_tile/views_fp16/ or views_bf16/.
-The chip RTL does not depend on the format, since the tiles are black
-boxes there.
+Each tile is sized by one rule: the same cell utilization for all three
+formats. FP16, the largest tile, sets it, in the largest macro the
+floorplan has room for (1500 x 2250 um). The others are as wide and only as
+tall as that utilization needs. Tiles 0 and 1 end at the centre strip
+(y = STRIP_BOTTOM) and tiles 2 and 3 start at its top, so a shorter tile
+moves tiles 0 and 1 up and keeps every tile's pin edge on the strip. Global
+placement targets the same density for every tile (DENSITY_PCT).
 
-Rerun after editing either SF16 config: ./make_variants.py
+The tile heights come from synthesis (SYNTH_AREA_UM2, from each format's
+Yosys run) times the synthesis-to-signoff growth v1 measured (GROWTH).
+
+The chip RTL does not depend on the format; each chip config points the
+core_tile macro at core_tile/views_<fmt>/.
+
+Rerun after editing either base config: ./make_variants.py
 """
 import json
+import math
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FP_SOURCES = ["fp_arith.sv", "fp_systolic_pe.sv", "fp_fma.sv", "fp_activation.sv"]
-VARIANTS = {"fp16": 1, "bf16": 2}
-TILE_OVERRIDES = {"fp16": {"PL_TARGET_DENSITY_PCT": 55, "SYNTH_STRATEGY": "AREA 0",
-                            "GRT_RESIZER_SETUP_SLACK_MARGIN": 3.0}}
+FORMATS = {"sf16": 0, "fp16": 1, "bf16": 2}
+
+TILE_WIDTH = 1500.0
+MAX_TILE_HEIGHT = 2250.0
+STRIP_BOTTOM = 2320.0             # top edge of tiles 0 and 1
+HEIGHT_STEP = 10.0                # tile heights round up to 10 um
+
+# Yosys cell area per format (um2, v2 RTL with COMMON, server toolchain), and
+# v1's signoff / synthesis cell-area ratio (repair buffers, diodes, taps and
+# decaps): SF16 1,401,520 / 926,001; FP16 1,861,440 / 1,238,878;
+# BF16 1,633,720 / 1,057,015. None: not measured, keep the largest macro.
+SYNTH_AREA_UM2 = {"sf16": 996111.6, "fp16": 1305134.2, "bf16": 1123080.9}
+GROWTH = {"sf16": 1.5135, "fp16": 1.5025, "bf16": 1.5456}
+# Global placement target, the same for every tile: FP16 routed at 55% in v1
+# and congested at 62%.
+DENSITY_PCT = 55
+
+COMMON = {
+    "SYNTH_STRATEGY": "AREA 0",
+    "PL_RESIZER_SETUP_SLACK_MARGIN": 1.5,
+    "GRT_RESIZER_SETUP_SLACK_MARGIN": 3.0,
+}
 
 
 def load(path):
@@ -59,19 +80,51 @@ def retarget_views(node, views):
     return node
 
 
+def signoff_area(fmt):
+    a = SYNTH_AREA_UM2[fmt]
+    return None if a is None else a * GROWTH[fmt]
+
+
+def utilization():
+    """FP16's utilization in the largest macro: the target for every tile."""
+    a = signoff_area("fp16")
+    return None if a is None else a / (TILE_WIDTH * MAX_TILE_HEIGHT)
+
+
+def tile_height(fmt):
+    u = utilization()
+    a = signoff_area(fmt)
+    if u is None or a is None:
+        return MAX_TILE_HEIGHT
+    h = math.ceil(a / u / TILE_WIDTH / HEIGHT_STEP) * HEIGHT_STEP
+    return min(round(h, 2), MAX_TILE_HEIGHT)
+
+
 def main():
     tile = load("core_tile/config.json")
     chip = load("openframe/config.json")
-    for name, fmt in VARIANTS.items():
+    density = DENSITY_PCT
+    u = utilization()
+    if u is not None:
+        print(f"target utilization (FP16 in the largest macro): {u:.3f}")
+    for name, fmt in FORMATS.items():
+        h = tile_height(name)
         t = dict(tile)
-        t["VERILOG_FILES"] = tile["VERILOG_FILES"] + [f"dir::../../src/{s}" for s in FP_SOURCES]
+        if fmt:
+            t["VERILOG_FILES"] = tile["VERILOG_FILES"] + [f"dir::../../src/{s}" for s in FP_SOURCES]
         t["SYNTH_PARAMETERS"] = [f"NUMBER_FORMAT={fmt}"]
-        t["PL_TARGET_DENSITY_PCT"] = 70
-        t["PL_RESIZER_SETUP_SLACK_MARGIN"] = 1.5
-        t["GRT_RESIZER_SETUP_SLACK_MARGIN"] = 1.5
-        t.update(TILE_OVERRIDES.get(name, {}))
+        t.update(COMMON)
+        t["PL_TARGET_DENSITY_PCT"] = density
+        t["DIE_AREA"] = [0.0, 0.0, TILE_WIDTH, h]
         save(f"core_tile/config_{name}.json", t)
-        save(f"openframe/config_{name}.json", retarget_views(chip, f"views_{name}"))
+
+        c = retarget_views(chip, f"views_{name}")
+        inst = c["MACROS"]["core_tile"]["instances"]
+        for i in (0, 1):
+            key = f"chip.gpu_inst.tiles[{i}].tile"
+            inst[key]["location"] = [inst[key]["location"][0], round(STRIP_BOTTOM - h, 2)]
+        save(f"openframe/config_{name}.json", c)
+        print(f"  {name}: tile 1500 x {h} um, density {density}%")
 
 
 if __name__ == "__main__":

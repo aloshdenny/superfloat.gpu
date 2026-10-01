@@ -16,7 +16,7 @@
         "dir::../../src/systolic_array.sv",
         "dir::../../src/systolic_pe.sv",
         "dir::../../src/scratchpad.sv",
-        "dir::../../src/controller.sv",
+        "dir::../../src/tile_mem_queue.sv",
         "dir::../../src/RAM32.v",
         "dir::../../src/fp_arith.sv",
         "dir::../../src/fp_systolic_pe.sv",
