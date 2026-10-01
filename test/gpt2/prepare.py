@@ -121,7 +121,7 @@ def specs(model, rec):
     Wf = W("h.0.mlp.c_fc.weight")
     for nb in (10, 8, 6, 4, 3):
         s[f"gemv_768_{nb}"] = ("gemv", 768, [(xf, Wf[:, 8 * b:8 * b + 8]) for b in range(nb)])
-    for nb in (9, 6, 4):
+    for nb in (9, 8, 6, 4):
         s[f"gemm_768_{nb}"] = ("gemm", 768, [(A0, Wf[:, 8 * b:8 * b + 8]) for b in range(nb)])
 
     # Attention. Decode: scores are a gemv per head with x = q (64) and W =

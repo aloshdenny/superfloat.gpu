@@ -2,15 +2,17 @@
 Every chip launch GPT-2 small needs, as (kernel, kc, nb) tuples.
 
 The host splits each matrix multiply into launches that fit the chip's 64K
-data window and its 31-block launch limit (kernels.py):
+data window and its 31-block launch limit (kernels.py). Launch sizes are
+multiples of the 4 tiles, so no round of a launch leaves tiles idle (a 9-block
+launch runs 4 + 4 + 1 and costs 29% more per block than an 8-block one):
 
-  decode (one token, gemv): up to 10 blocks of K = 768 per launch
-    (x + 10 x 6,144 weight words); FC2's K = 3,072 runs as four K = 768
+  decode (one token, gemv): up to 8 blocks of K = 768 per launch
+    (x + 8 x 6,144 weight words); FC2's K = 3,072 runs as four K = 768
     launches whose partial sums the host adds, so all four tiles stay busy.
-  prefill (8 tokens per group, gemm): up to 9 blocks of K = 768 per launch
-    (A + 9 x 6,144 weight words), the same K split for FC2.
+  prefill (8 tokens per group, gemm): up to 8 blocks of K = 768 per launch
+    (A + 8 x 6,144 weight words), the same K split for FC2.
   attention: scores are K = 64 blocks of 8 positions per head, attention x V
-    is K = context (rounded up to 8) with 8 blocks per head; up to 31 blocks
+    is K = context (rounded up to 8) with 8 blocks per head; up to 28 blocks
     per launch, heads mixed freely.
 
 The LM head is a gemv over the 50,257-word vocabulary (6,283 blocks) for the
@@ -18,7 +20,7 @@ last token only, in prefill and in decode.
 """
 D, HEADS, LAYERS, VOCAB, FFN = 768, 12, 12, 50257, 3072
 N = 8
-GEMV_NB, GEMM_NB, ATT_NB = 10, 9, 31
+GEMV_NB, GEMM_NB, ATT_NB = 8, 8, 28
 
 
 def ceil8(n: int) -> int:
