@@ -264,6 +264,19 @@ module core #(
     assign branch_target = {{(PROGRAM_MEM_ADDR_BITS-8){1'b0}}, pipe_immediate};  // Zero-extend 8-bit to 12-bit
     assign reconverge_pc = current_pc + 2;  // Simple reconvergence at fall-through + 1
 
+    // Instructions that pass through REQUEST and WAIT; the rest skip them.
+    //   - loads and stores: the LSU requests and waits there;
+    //   - FMA, every format: the product is registered at the end of REQUEST
+    //     and of WAIT (fma.sv, fp_fma.sv);
+    //   - ACT, FP16/BF16: the bias add is registered there (fp_activation.sv);
+    //     the SF16 unit finishes within EXECUTE;
+    //   - SYS read, FP16/BF16: a compute reaches the accumulator five cycles
+    //     after its EXECUTE (fp_systolic_pe.sv, ALIGN_STAGE); the two cycles
+    //     keep a read that follows a compute behind it. SF16 takes three.
+    localparam FP_UNITS = (NUMBER_FORMAT != 0);
+    wire decoded_staged = decoded_mem_read_enable | decoded_mem_write_enable | decoded_fma_enable |
+        (FP_UNITS && (decoded_act_enable || (decoded_systolic_enable && decoded_systolic_op == 2'b11)));
+
     // Scheduler
     scheduler #(
         .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
@@ -276,7 +289,7 @@ module core #(
         .fetcher_state(fetcher_state),
         .core_state(core_state),
         .decoded_fma_enable(pipe_fma_enable),
-        .decoded_mem_now(decoded_mem_read_enable | decoded_mem_write_enable),
+        .decoded_staged(decoded_staged),
         .decoded_ret(pipe_ret),
         .decoded_branch(pipe_branch),
         .branch_taken(branch_taken),
@@ -543,9 +556,10 @@ module core #(
     // The gather spans the whole array, so it is split in two:
     //   1. every cycle, the cell named by pipe_rs is captured in systolic_sel_q;
     //   2. at UPDATE the register file takes it (SF16: converted to sign-magnitude).
-    // pipe_rs is set at DECODE and the write happens at UPDATE, at least three
-    // cycles later, so the captured cell is always the requested one. The
-    // accumulator saturates at -32767, so its negation fits in 15 bits.
+    // pipe_rs is set at the end of DECODE and the write happens at UPDATE,
+    // after at least one EXECUTE cycle, so the captured cell is always the
+    // requested one. The accumulator saturates at -32767, so its negation
+    // fits in 15 bits.
     // An indexed part-select gives a balanced mux tree; a per-cell if-chain
     // synthesises as a SYSTOLIC_SIZE^2-deep priority chain, too slow at 8x8.
     reg [DATA_MEM_DATA_BITS-1:0] systolic_sel_q [THREADS_PER_BLOCK-1:0];

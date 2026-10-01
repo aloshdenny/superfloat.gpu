@@ -1,20 +1,25 @@
 """
-FP16 / BF16 arithmetic through the ISA (tb_gpu compiled with NUMBER_FORMAT 1 or 2)
+FMA and ACT through the ISA in every format, and FP16 / BF16 special values
+(tb_gpu compiled with NUMBER_FORMAT 0, 1 or 2)
 
 test_fp_fma_act
     32 threads (4 tiles) each run K iterations of
         FMA R11, x, w        R11 = round(x * w + acc)
         ACT R4..R7, x, bias  f(round(x + bias)), f = none / ReLU / leaky / clipped
-    on operands mixing ordinary values, signed zeros, infinities, NaN, values
-    near overflow and near the smallest normal, and near-cancelling addends.
-    Every result is compared bit-exactly with helpers/fp16fmt.py.
+    FP16/BF16: operands mixing ordinary values, signed zeros, infinities, NaN,
+    values near overflow and near the smallest normal, and near-cancelling
+    addends, compared bit-exactly with helpers/fp16fmt.py.
+    SF16: random words, negative zero, full scale and near-cancelling addends,
+    compared bit-exactly with helpers/q115.py (fma.sv, activation.sv).
+    Both units are pipelined through the scheduler's REQUEST and WAIT states,
+    so this also checks that FMA and ACT are given them.
 
 test_fp_systolic8_special_values
     The systolic8 kernel of test_openframe_tile.py on operands that include
     signed zeros, infinities, NaN, overflowing products and results below the
     smallest normal, checked against the fp_systolic_pe model.
 
-Both tests are skipped for SF16 (NUMBER_FORMAT 0).
+test_fp_systolic8_special_values is skipped for SF16 (NUMBER_FORMAT 0).
 """
 
 import os
@@ -32,6 +37,7 @@ from helpers.memory import (
     BLOCK_IDX, THREAD_IDX,
 )
 from helpers.number_format import NAMES, number_format, fp_format
+from helpers.q115 import q115_add, q115_fma
 from helpers.setup import setup_test, run_kernel
 from test_openframe_tile import (
     N, NUM_TILES, BLOCK_STRIDE, A_OFF, B_OFF, C_OFF,
@@ -91,6 +97,40 @@ def make_vectors(rng, F):
     return vecs
 
 
+class SF16Units:
+    """The SF16 FMA and ACT units as the RTL computes them."""
+    width = 16
+
+    @staticmethod
+    def fma(x, w, acc):
+        return q115_fma(acc, x, w)
+
+    @staticmethod
+    def act(x, bias, f):
+        y = q115_add(x, bias)                     # canonical: -0 becomes +0
+        neg = y >> 15
+        if f in (1, 3):                           # ReLU; clipped ReLU (SF16 is below 1)
+            return 0 if neg else y
+        if f == 2 and neg:                        # leaky: magnitude >> 7
+            m = (y & 0x7FFF) >> 7
+            return 0x8000 | m if m else 0
+        return y
+
+
+def make_sf16_vectors(rng):
+    specials = [0, 0x8000, 0x7FFF, 0xFFFF, 1, 0x8001, 0x4000, 0xC000, 0x0080, 0x807F]
+    vecs = []
+    for i in range(THREADS * K):
+        x, w, acc, bias = (rng.choice(specials) if rng.random() < 0.2 else rng.getrandbits(16)
+                           for _ in range(4))
+        if i % 4 == 1:                                    # acc ~ -(x * w): cancellation
+            acc = SF16Units.fma(x, w, 0) ^ 0x8000
+        if i % 4 == 2:                                    # bias ~ -x
+            bias = x ^ 0x8000
+        vecs.append((x, w, acc, bias))
+    return vecs
+
+
 def build_fma_act_program() -> list:
     """
     R1 = 1, R0 = K, R9 = k
@@ -123,11 +163,12 @@ def build_fma_act_program() -> list:
 async def test_fp_fma_act(dut):
     fmt_id = number_format(dut)
     F = fp_format(fmt_id)
-    if F is None:
-        dut._log.info("SF16 build: FP test skipped")
-        return
     dut._log.info(f"number format: {NAMES[fmt_id]}")
-    vecs = make_vectors(random.Random(0xF16 + fmt_id), F)
+    if F is None:
+        F = SF16Units
+        vecs = make_sf16_vectors(random.Random(0x5F16))
+    else:
+        vecs = make_vectors(random.Random(0xF16 + fmt_id), F)
     data = [0] * (THREADS * K * IN_WORDS)
     for i, v in enumerate(vecs):
         data[i * IN_WORDS:(i + 1) * IN_WORDS] = v
@@ -149,7 +190,7 @@ async def test_fp_fma_act(dut):
             if g != want[j]:
                 bad.append(f"{names[j]}(x={x:04X} w={w:04X} acc={acc:04X} bias={bias:04X}) "
                            f"got {g:04X} want {want[j]:04X}")
-    dut._log.info(f"fp fma/act: {len(vecs)} vectors x {OUT_WORDS} results, "
+    dut._log.info(f"fma/act: {len(vecs)} vectors x {OUT_WORDS} results, "
                   f"{len(bad)} mismatches, {cycles} cycles")
     assert not bad, f"{len(bad)} mismatches, first: " + "; ".join(bad[:6])
 

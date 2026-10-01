@@ -7,6 +7,7 @@
 // 2. DECODE - Decode the instruction into the relevant control signals
 // 3. REQUEST - If we have an instruction that accesses memory, trigger the async memory requests from LSUs
 // 4. WAIT - Wait for all async memory requests to resolve (if applicable)
+//    REQUEST and WAIT are skipped by instructions that need neither (decoded_staged)
 // 5. EXECUTE - Execute computations on retrieved data from registers / memory
 // 6. UPDATE - Update register values (including NZP register) and program counter
 // > Each core has it's own scheduler where multiple threads can be processed with
@@ -23,7 +24,7 @@ module scheduler #(
     
     // Control Signals
     input wire decoded_fma_enable,
-    input wire decoded_mem_now,          // the instruction in DECODE is a load or store (decoder output)
+    input wire decoded_staged,           // the instruction in DECODE uses REQUEST/WAIT (decoder output)
     input wire decoded_ret,
     
     // Branch control (new)
@@ -145,10 +146,11 @@ module scheduler #(
                     end
                 end
                 DECODE: begin
-                    // Only loads and stores use REQUEST/WAIT; operands are
-                    // captured at the end of DECODE, so everything else goes
+                    // Operands are captured at the end of DECODE. REQUEST/WAIT
+                    // serve loads and stores and are pipeline stages of the
+                    // longer units (see core.sv); everything else goes
                     // straight to EXECUTE.
-                    core_state <= decoded_mem_now ? REQUEST : EXECUTE;
+                    core_state <= decoded_staged ? REQUEST : EXECUTE;
                     fma_execute_second_cycle <= 1'b0;
                 end
                 REQUEST: begin 
