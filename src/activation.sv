@@ -13,6 +13,11 @@
 // - 01: ReLU (max(0, x))
 // - 10: Leaky ReLU (x if x > 0, else 0.01*x)
 // - 11: Clipped ReLU (min(1, max(0, x)))
+//
+// Timing (rs/rt set at the end of DECODE and held, as for fp_activation):
+//   end of REQUEST: biased_q <= saturating sign-magnitude add of rs and rt
+//   EXECUTE:        activation_out <= f(biased_q)
+// The add and the function were one EXECUTE cycle, the tile's longest path.
 module activation #(
     parameter DATA_BITS = 16  // SF16 fixed-point width
 ) (
@@ -72,7 +77,13 @@ module activation #(
                         (A_gte_B ? diff_A_B[14:0] : diff_B_A[14:0]);
 
     // Construct final sign-magnitude value and canonicalize negative zero
-    wire [DATA_BITS-1:0] biased_activation = (res_M == 15'b0) ? {DATA_BITS{1'b0}} : {res_S, res_M};
+    wire [DATA_BITS-1:0] biased_sum = (res_M == 15'b0) ? {DATA_BITS{1'b0}} : {res_S, res_M};
+
+    // Registered every cycle (datapath only); EXECUTE reads it after REQUEST
+    // and WAIT have passed with the operands held.
+    reg [DATA_BITS-1:0] biased_q;
+    always @(posedge clk) biased_q <= biased_sum;
+    wire [DATA_BITS-1:0] biased_activation = biased_q;
 
     // ============================================
     // Stage 2: Activation Function

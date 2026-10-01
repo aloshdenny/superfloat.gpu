@@ -282,11 +282,11 @@ module core #(
     //   - loads and stores: the LSU requests and waits there;
     //   - FMA, every format: the product is registered at the end of REQUEST
     //     and of WAIT (fma.sv, fp_fma.sv);
-    //   - ACT, FP16/BF16: the bias add is registered there (fp_activation.sv);
-    //     the SF16 unit finishes within EXECUTE.
+    //   - ACT, every format: the bias add is registered at the end of REQUEST
+    //     (activation.sv, fp_activation.sv).
     localparam FP_UNITS = (NUMBER_FORMAT != 0);
     wire decoded_staged = decoded_mem_read_enable | decoded_mem_write_enable | decoded_fma_enable |
-        (FP_UNITS && decoded_act_enable);
+        decoded_act_enable;
     // A SYS read right after a compute waits in DECODE (sys_read_hold, with
     // the systolic array below).
     wire sys_read_hold;

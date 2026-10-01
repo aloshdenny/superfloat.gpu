@@ -90,15 +90,16 @@ async def execute_activation(dut, x: int, bias: int, func: int) -> int:
     Returns:
         Activation result (Q1.15)
     """
-    # Load bias in REQUEST state
-    dut.core_state.value = STATE_REQUEST
+    # Operands are held from DECODE, as the core holds rs/rt; the bias add
+    # is registered at the end of REQUEST.
+    dut.unbiased_activation.value = x
     dut.bias.value = bias
+    dut.activation_func.value = func
+    dut.core_state.value = STATE_REQUEST
     await RisingEdge(dut.clk)
     
     # Execute in EXECUTE state
     dut.core_state.value = STATE_EXECUTE
-    dut.unbiased_activation.value = x
-    dut.activation_func.value = func
     dut.activation_enable.value = 1
     await RisingEdge(dut.clk)
     
