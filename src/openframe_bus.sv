@@ -499,6 +499,15 @@ module openframe_bus #(
                         end
                         b_cnt[i] <= b_next[i];
                         room[i]  <= (b_next[i] <= 2'd1);
+                    end else begin
+                        // Program channels bypass the buffers; hold them at
+                        // zero so every reference to them has a driver.
+                        b0_we[i]   <= 1'b0;
+                        b1_we[i]   <= 1'b0;
+                        b0_addr[i] <= {BUS_BITS{1'b0}};
+                        b1_addr[i] <= {BUS_BITS{1'b0}};
+                        b0_data[i] <= {BUS_BITS{1'b0}};
+                        b1_data[i] <= {BUS_BITS{1'b0}};
                     end
                 end
             end
