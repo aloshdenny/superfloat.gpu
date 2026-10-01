@@ -15,7 +15,7 @@ module alu #(
 
     input reg [2:0] core_state,
 
-    input reg [1:0] decoded_alu_arithmetic_mux,
+    input reg [2:0] decoded_alu_arithmetic_mux,
     input reg decoded_alu_output_mux,
 
     input reg [DATA_BITS-1:0] rs,
@@ -23,10 +23,11 @@ module alu #(
     output wire [DATA_BITS-1:0] alu_out
 );
     // Integer operation codes
-    localparam ADD = 2'b00,
-        SUB = 2'b01,
-        MUL = 2'b10,
-        DIV = 2'b11;
+    localparam ADD = 3'b000,
+        SUB = 3'b001,
+        MUL = 3'b010,
+        DIV = 3'b011,
+        SH  = 3'b100;
 
     reg [DATA_BITS-1:0] alu_out_reg;
     assign alu_out = alu_out_reg;
@@ -78,6 +79,12 @@ module alu #(
                                 default: alu_out_reg <= {DATA_BITS{1'b0}};
                             endcase
                         end
+                        SH: begin
+                            // Logical shift by the signed amount in rt[4:0]:
+                            // 0..15 shifts left, -1..-16 shifts right (-16 clears).
+                            alu_out_reg <= rt[4] ? (rs >> (5'd0 - rt[4:0])) : (rs << rt[3:0]);
+                        end
+                        default: alu_out_reg <= {DATA_BITS{1'b0}};
                     endcase
                 end
             end

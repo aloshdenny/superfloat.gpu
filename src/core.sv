@@ -54,7 +54,7 @@ module core #(
     input wire decoded_mem_write_enable,
     input wire decoded_nzp_write_enable,
     input wire [2:0] decoded_reg_input_mux,
-    input wire [1:0] decoded_alu_arithmetic_mux,
+    input wire [2:0] decoded_alu_arithmetic_mux,
     input wire decoded_alu_output_mux,
     input wire decoded_pc_mux,
     input wire decoded_fma_enable,
@@ -182,7 +182,7 @@ module core #(
     reg        pipe_mem_write_enable;
     reg        pipe_nzp_write_enable;
     reg [2:0]  pipe_reg_input_mux;
-    reg [1:0]  pipe_alu_arithmetic_mux;
+    reg [2:0]  pipe_alu_arithmetic_mux;
     reg        pipe_alu_output_mux;
     reg        pipe_pc_mux;
     reg        pipe_fma_enable;
@@ -206,7 +206,7 @@ module core #(
             pipe_mem_write_enable  <= 1'b0;
             pipe_nzp_write_enable  <= 1'b0;
             pipe_reg_input_mux     <= 3'b0;
-            pipe_alu_arithmetic_mux<= 2'b0;
+            pipe_alu_arithmetic_mux<= 3'b0;
             pipe_alu_output_mux    <= 1'b0;
             pipe_pc_mux            <= 1'b0;
             pipe_fma_enable        <= 1'b0;

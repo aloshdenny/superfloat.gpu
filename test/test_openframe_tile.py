@@ -43,6 +43,7 @@ from helpers.number_format import NAMES, number_format, fp_format
 from helpers.memory import (
     read_memory_range,
     asm_mul, asm_add, asm_sub, asm_div, asm_const, asm_ldr, asm_str, asm_ret,
+    asm_sh, asm_consth,
     R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11,
     BLOCK_IDX, THREAD_IDX,
 )
@@ -281,3 +282,44 @@ async def test_scratchpad_private_per_tile(dut):
     logger.close()
     assert not failures, f"scratchpad mismatch: {failures}"
     assert all(v == 0 for v in ext_scratch), "scratchpad traffic leaked to external memory"
+
+
+# ---------------------------------------------------------------------------
+# SH and CONSTH (ISA v2)
+# ---------------------------------------------------------------------------
+
+SHIFT_OUT = 64
+
+
+def build_sh_consth_program() -> list:
+    """Each thread stores five words at SHIFT_OUT + 8 * tid:
+    0x1234 (CONST + CONSTH), 0x1234 >> 8, 0x1234 << 3, 0x7F80 (CONSTH over a
+    sign-extended low byte) and 0x1234 << tid."""
+    p = [asm_const(R1, 0x34), asm_consth(R1, 0x12),
+         asm_const(R2, -8 & 0xFF), asm_sh(R3, R1, R2),
+         asm_const(R4, 3), asm_sh(R5, R1, R4),
+         asm_const(R6, 0x80), asm_consth(R6, 0x7F),
+         asm_sh(R7, R1, THREAD_IDX),
+         asm_sh(R8, THREAD_IDX, R4),                     # tid * 8
+         asm_const(R9, SHIFT_OUT), asm_add(R9, R9, R8),
+         asm_const(R10, 1)]
+    for r in (R1, R3, R5, R6, R7):
+        p += [asm_str(R9, r), asm_add(R9, R9, R10)]
+    return p + [asm_ret()]
+
+
+@cocotb.test()
+async def test_sh_consth(dut):
+    logger = await setup_test(dut, "sh_consth", build_sh_consth_program(), [0] * 16,
+                              thread_count=N, verbose=False)
+    cycles = await run_kernel(dut, logger, max_cycles=20000, trace_interval=0)
+    assert int(dut.done.value) == 1, f"kernel did not finish in {cycles} cycles"
+    got = read_memory_range(dut, SHIFT_OUT, 8 * N)
+    logger.close()
+    bad = []
+    for t in range(N):
+        want = [0x1234, 0x0012, 0x91A0, 0x7F80, (0x1234 << t) & 0xFFFF]
+        have = [got[8 * t + k] for k in range(5)]
+        if have != want:
+            bad.append((t, [hex(h) for h in have], [hex(w) for w in want]))
+    assert not bad, f"{len(bad)} threads wrong, first (tid, got, want): {bad[:2]}"

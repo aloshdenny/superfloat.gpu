@@ -64,7 +64,7 @@ module core_tile #(
     wire decoded_mem_write_enable;
     wire decoded_nzp_write_enable;
     wire [2:0] decoded_reg_input_mux;
-    wire [1:0] decoded_alu_arithmetic_mux;
+    wire [2:0] decoded_alu_arithmetic_mux;
     wire decoded_alu_output_mux;
     wire decoded_pc_mux;
     wire decoded_fma_enable;

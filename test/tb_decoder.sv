@@ -24,7 +24,7 @@ module tb_decoder (
     output wire decoded_mem_write_enable,
     output wire decoded_nzp_write_enable,
     output wire [2:0] decoded_reg_input_mux,
-    output wire [1:0] decoded_alu_arithmetic_mux,
+    output wire [2:0] decoded_alu_arithmetic_mux,
     output wire decoded_alu_output_mux,
     output wire decoded_pc_mux,
     output wire decoded_fma_enable,

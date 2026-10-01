@@ -106,6 +106,18 @@ def asm_nop() -> int:
     return 0x0000
 
 
+def asm_sh(rd: int, rs: int, rt: int) -> int:
+    """SH Rd, Rs, Rt - Logical shift of Rs by the signed amount in Rt[4:0]:
+    0..15 shifts left, -1..-16 shifts right (-16 clears)."""
+    return (0xD << 12) | (rd << 8) | (rs << 4) | rt
+
+
+def asm_consth(rd: int, imm: int) -> int:
+    """CONSTH Rd, #imm - Load the high byte: Rd[15:8] = imm, Rd[7:0] kept.
+    CONST then CONSTH loads any 16-bit constant."""
+    return (0xE << 12) | (rd << 8) | (imm & 0xFF)
+
+
 def asm_ret() -> int:
     """RET instruction."""
     return 0xF000

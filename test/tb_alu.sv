@@ -12,7 +12,7 @@ module tb_alu #(
     
     // Control inputs
     input wire [2:0] core_state,
-    input wire [1:0] alu_arithmetic_mux,  // ADD=00, SUB=01, MUL=10, DIV=11
+    input wire [2:0] alu_arithmetic_mux,  // ADD=000, SUB=001, MUL=010, DIV=011, SH=100
     input wire alu_output_mux,            // 0=arithmetic, 1=compare (NZP)
     
     // Data inputs

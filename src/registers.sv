@@ -28,7 +28,7 @@ module registers #(
 
     // Control Signals
     input reg decoded_reg_write_enable,
-    input reg [2:0] decoded_reg_input_mux,  // 3-bit mux: 000=ALU, 001=MEM, 010=CONST, 011=FMA, 100=ACT, 101=SYS
+    input reg [2:0] decoded_reg_input_mux,  // 3-bit mux: 000=ALU, 001=MEM, 010=CONST, 011=FMA, 100=ACT, 101=SYS, 110=CONSTH
     input reg [7:0] decoded_immediate,      // 8-bit immediate from instruction
 
     // Thread Unit Outputs
@@ -49,7 +49,8 @@ module registers #(
                      MUX_CONSTANT = 3'b010,  // Immediate constant (CONST)
                      MUX_FMA = 3'b011,       // FMA output (FMA instruction)
                      MUX_ACT = 3'b100,       // Activation output (ACT instruction)
-                     MUX_SYSTOLIC = 3'b101;  // Systolic array result (SYS.READ)
+                     MUX_SYSTOLIC = 3'b101,  // Systolic array result (SYS.READ)
+                     MUX_CONST_HIGH = 3'b110; // High byte from the immediate (CONSTH)
 
     // 13 free registers (R0-R12). Read-only registers (R13-R15) are bypassed.
     // All registers are 16-bit for SF16 fixed-point
@@ -116,7 +117,12 @@ module registers #(
             if (core_state == 3'b110) begin 
                 // Only allow writing to R0 - R12
                 if (decoded_reg_write_enable && write_rd_address < 13) begin
-                    registers[write_rd_address] <= write_data;
+                    // CONSTH writes the high byte alone: CONST then CONSTH
+                    // loads any 16-bit constant.
+                    if (decoded_reg_input_mux == MUX_CONST_HIGH)
+                        registers[write_rd_address][DATA_BITS-1:8] <= decoded_immediate;
+                    else
+                        registers[write_rd_address] <= write_data;
                 end
             end
         end

@@ -48,6 +48,8 @@ OP_CONST = 0x9
 OP_FMA = 0xA
 OP_ACT = 0xB
 OP_SYS = 0xC
+OP_SH = 0xD
+OP_CONSTH = 0xE
 OP_RET = 0xF
 
 # Register input mux values
@@ -63,13 +65,15 @@ ALU_ADD = 0b00
 ALU_SUB = 0b01
 ALU_MUL = 0b10
 ALU_DIV = 0b11
+ALU_SH = 0b100
+REG_MUX_CONST_HIGH = 0b110
 
 
 def encode_instruction(opcode: int, rd: int = 0, rs: int = 0, rt: int = 0, 
                        imm: int = 0, nzp: int = 0) -> int:
     """Encode an instruction."""
-    if opcode == OP_CONST:
-        # CONST: opcode[15:12] | rd[11:8] | immediate[7:0]
+    if opcode in (OP_CONST, OP_CONSTH):
+        # CONST / CONSTH: opcode[15:12] | rd[11:8] | immediate[7:0]
         return (opcode << 12) | (rd << 8) | (imm & 0xFF)
     elif opcode == OP_BR:
         # BR: opcode[15:12] | nzp[11:9] | offset[8:0]
@@ -379,6 +383,39 @@ async def test_decoder_const(dut):
     logger.close()
     
     assert passed, "Decoder CONST test failed"
+
+
+@cocotb.test()
+async def test_decoder_sh(dut):
+    """SH decodes to the ALU's shift with a register write."""
+    logger = await setup_decoder_test(dut, "decoder_sh")
+    instr = encode_instruction(OP_SH, rd=3, rs=4, rt=5)
+    decoded = await decode_instruction(dut, instr)
+    passed = check_signals(decoded, {
+        'rd': 3, 'rs': 4, 'rt': 5,
+        'reg_write_enable': 1,
+        'reg_input_mux': REG_MUX_ALU,
+        'alu_arithmetic_mux': ALU_SH,
+    }, logger)
+    logger.close()
+    assert passed, "Decoder SH test failed"
+
+
+@cocotb.test()
+async def test_decoder_consth(dut):
+    """CONSTH writes the immediate into the high byte."""
+    logger = await setup_decoder_test(dut, "decoder_consth")
+    passed = True
+    for imm in (0, 0x12, 0x80, 0xFF):
+        decoded = await decode_instruction(dut, encode_instruction(OP_CONSTH, rd=7, imm=imm))
+        passed &= check_signals(decoded, {
+            'rd': 7,
+            'immediate': imm,
+            'reg_write_enable': 1,
+            'reg_input_mux': REG_MUX_CONST_HIGH,
+        }, logger)
+    logger.close()
+    assert passed, "Decoder CONSTH test failed"
 
 
 @cocotb.test()

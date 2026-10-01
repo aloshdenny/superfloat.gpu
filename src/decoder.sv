@@ -24,8 +24,8 @@ module decoder (
     output reg decoded_mem_read_enable,            // Enable reading from memory
     output reg decoded_mem_write_enable,           // Enable writing to memory
     output reg decoded_nzp_write_enable,           // Enable writing to NZP register
-    output reg [2:0] decoded_reg_input_mux,        // Select input to register (000=ALU, 001=MEM, 010=CONST, 011=FMA, 100=ACT)
-    output reg [1:0] decoded_alu_arithmetic_mux,   // Select arithmetic operation
+    output reg [2:0] decoded_reg_input_mux,        // Select input to register (000=ALU, 001=MEM, 010=CONST, 011=FMA, 100=ACT, 101=SYS, 110=CONSTH)
+    output reg [2:0] decoded_alu_arithmetic_mux,   // Select arithmetic operation (000 ADD, 001 SUB, 010 MUL, 011 DIV, 100 SH)
     output reg decoded_alu_output_mux,             // Select operation in ALU
     output reg decoded_pc_mux,                     // Select source of next PC
     output reg decoded_fma_enable,                 // Enable FMA operation
@@ -56,6 +56,8 @@ module decoder (
         FMA          = 4'b1010,  // Q1.15 Fused multiply-add: Rd = (Rs * Rt) + Rd (for matmul)
         ACT          = 4'b1011,  // Activation: Rd = act_func(Rs + Rt) where Rt is bias
         SYS          = 4'b1100,  // Systolic array: op=instruction[7:6], inputs from R0/R1
+        SH           = 4'b1101,  // Logical shift: Rd = Rs shifted by the signed amount in Rt[4:0] (+ left, - right)
+        CONSTH       = 4'b1110,  // Load the high byte: Rd[15:8] = imm8, Rd[7:0] kept
         RET          = 4'b1111;  // Return (end thread execution)
 
     // Combinational decode — purely stateless. Reset is handled upstream
@@ -101,22 +103,31 @@ module decoder (
                 ADD: begin
                     decoded_reg_write_enable = 1;
                     decoded_reg_input_mux = 3'b000;
-                    decoded_alu_arithmetic_mux = 2'b00;
+                    decoded_alu_arithmetic_mux = 3'b000;
                 end
                 SUB: begin
                     decoded_reg_write_enable = 1;
                     decoded_reg_input_mux = 3'b000;
-                    decoded_alu_arithmetic_mux = 2'b01;
+                    decoded_alu_arithmetic_mux = 3'b001;
                 end
                 MUL: begin
                     decoded_reg_write_enable = 1;
                     decoded_reg_input_mux = 3'b000;
-                    decoded_alu_arithmetic_mux = 2'b10;
+                    decoded_alu_arithmetic_mux = 3'b010;
                 end
                 DIV: begin
                     decoded_reg_write_enable = 1;
                     decoded_reg_input_mux = 3'b000;
-                    decoded_alu_arithmetic_mux = 2'b11;
+                    decoded_alu_arithmetic_mux = 3'b011;
+                end
+                SH: begin
+                    decoded_reg_write_enable = 1;
+                    decoded_reg_input_mux = 3'b000;
+                    decoded_alu_arithmetic_mux = 3'b100;
+                end
+                CONSTH: begin
+                    decoded_reg_write_enable = 1;
+                    decoded_reg_input_mux = 3'b110;
                 end
                 LDR: begin
                     decoded_reg_write_enable = 1;
