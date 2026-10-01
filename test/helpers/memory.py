@@ -153,6 +153,13 @@ def asm_ldr(rd: int, rs: int) -> int:
     return (0x7 << 12) | (rd << 8) | (rs << 4)
 
 
+def asm_ldr2(rd: int, rs: int, rt: int) -> int:
+    """LDR Rd, Rs, Rt - Rd = memory[Rs] and R(d+1) = memory[Rt], both loads
+    in flight together (Rt != R0, Rd < R12)."""
+    assert rt != 0 and rd < 12
+    return (0x7 << 12) | (rd << 8) | (rs << 4) | rt
+
+
 def asm_str(rd: int, rs: int) -> int:
     """STR Rd, Rs - Store Rs to memory[Rd]."""
     return (0x8 << 12) | (rd << 8) | (rs << 4)

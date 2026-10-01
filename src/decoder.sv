@@ -22,6 +22,7 @@ module decoder (
     // Control Signals
     output reg decoded_reg_write_enable,           // Enable writing to a register
     output reg decoded_mem_read_enable,            // Enable reading from memory
+    output reg decoded_mem_pair,                   // LDR Rd, Rs, Rt (Rt != R0): R(d+1) also loads from [Rt]
     output reg decoded_mem_write_enable,           // Enable writing to memory
     output reg decoded_nzp_write_enable,           // Enable writing to NZP register
     output reg [2:0] decoded_reg_input_mux,        // Select input to register (000=ALU, 001=MEM, 010=CONST, 011=FMA, 100=ACT, 101=SYS, 110=CONSTH)
@@ -73,6 +74,7 @@ module decoder (
         // Default all controls to inactive
         decoded_reg_write_enable  = 0;
         decoded_mem_read_enable   = 0;
+        decoded_mem_pair          = 0;
         decoded_mem_write_enable  = 0;
         decoded_nzp_write_enable  = 0;
         decoded_reg_input_mux     = 0;
@@ -132,9 +134,12 @@ module decoder (
                     decoded_reg_input_mux = 3'b110;
                 end
                 LDR: begin
+                    // LDR Rd, Rs: Rd = memory[Rs]. With Rt != R0 the pair form
+                    // also loads R(d+1) = memory[Rt] (a second LSU per thread).
                     decoded_reg_write_enable = 1;
                     decoded_reg_input_mux = 3'b001;
                     decoded_mem_read_enable = 1;
+                    decoded_mem_pair = (instruction[3:0] != 4'd0);
                 end
                 STR: begin
                     // STR Rd, Rs => memory[Rd] = Rs.

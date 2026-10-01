@@ -30,10 +30,12 @@ module registers #(
     input reg decoded_reg_write_enable,
     input reg [2:0] decoded_reg_input_mux,  // 3-bit mux: 000=ALU, 001=MEM, 010=CONST, 011=FMA, 100=ACT, 101=SYS, 110=CONSTH
     input reg [7:0] decoded_immediate,      // 8-bit immediate from instruction
+    input wire pair_write,                  // LDR pair: R(d+1) takes lsu_pair_out in EXECUTE
 
     // Thread Unit Outputs
     input reg [DATA_BITS-1:0] alu_out,
     input reg [DATA_BITS-1:0] lsu_out,
+    input wire [DATA_BITS-1:0] lsu_pair_out,
     input reg [DATA_BITS-1:0] fma_out,      // FMA unit output
     input reg [DATA_BITS-1:0] act_out,      // Activation unit output
     input reg [DATA_BITS-1:0] systolic_out, // Systolic array result output
@@ -94,6 +96,11 @@ module registers #(
         endcase
     end
 
+    wire                 pair_now  = (core_state == 3'b101) && pair_write && (write_rd_address < 12);
+    wire                 port_we   = pair_now || ((core_state == 3'b110) && decoded_reg_write_enable);
+    wire [3:0]           port_addr = pair_now ? write_rd_address + 4'd1 : write_rd_address;
+    wire [DATA_BITS-1:0] port_data = pair_now ? lsu_pair_out : write_data;
+
     always @(posedge clk) begin
         if (reset) begin
             // Initialize all free registers to zero
@@ -113,17 +120,15 @@ module registers #(
             // registers[13], [14], and [15] are read-only and bypassed combinationally
         end else if (enable) begin 
 
-            // Store rd when core_state = UPDATE
-            if (core_state == 3'b110) begin 
-                // Only allow writing to R0 - R12
-                if (decoded_reg_write_enable && write_rd_address < 13) begin
-                    // CONSTH writes the high byte alone: CONST then CONSTH
-                    // loads any 16-bit constant.
-                    if (decoded_reg_input_mux == MUX_CONST_HIGH)
-                        registers[write_rd_address][DATA_BITS-1:8] <= decoded_immediate;
-                    else
-                        registers[write_rd_address] <= write_data;
-                end
+            // One write port: rd in UPDATE, or R(d+1) of an LDR pair in
+            // EXECUTE. Only R0 - R12 are written.
+            if (port_we && port_addr < 13) begin
+                // CONSTH writes the high byte alone: CONST then CONSTH
+                // loads any 16-bit constant.
+                if (!pair_now && decoded_reg_input_mux == MUX_CONST_HIGH)
+                    registers[port_addr][DATA_BITS-1:8] <= decoded_immediate;
+                else
+                    registers[port_addr] <= port_data;
             end
         end
     end

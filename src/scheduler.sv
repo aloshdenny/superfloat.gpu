@@ -15,6 +15,7 @@
 // > Branch divergence handled by branch_diverge unit
 module scheduler #(
     parameter THREADS_PER_BLOCK = 4,
+    parameter NUM_LSUS = THREADS_PER_BLOCK,     // LSUs whose states gate WAIT
     parameter PROGRAM_MEM_ADDR_BITS = 8,
     parameter ENABLE_BRANCH_DIVERGE = 0  // Set 1 to synthesize divergence stack
 ) (
@@ -37,9 +38,10 @@ module scheduler #(
     // Memory Access State
     input wire [2:0] fetcher_state,
     input wire fetch_ahead_hit,          // UPDATE: the next instruction is already fetched (fetcher.sv)
-    input wire [(2*THREADS_PER_BLOCK)-1:0] lsu_state_flat,
-    input wire [THREADS_PER_BLOCK-1:0] lsu_answer,    // each LSU's memory answer this cycle (read or write ready)
+    input wire [(2*NUM_LSUS)-1:0] lsu_state_flat,
+    input wire [NUM_LSUS-1:0] lsu_answer,             // each LSU's memory answer this cycle (read or write ready)
     input wire pipe_mem_op,                           // the instruction is a load or store (EXECUTE has nothing to do)
+    input wire pipe_mem_pair,                         // an LDR pair: EXECUTE writes the second register
 
     // Current & Next PC
     output reg [PROGRAM_MEM_ADDR_BITS-1:0] current_pc,
@@ -55,13 +57,15 @@ module scheduler #(
     output reg done
 );
     // Unflatten inputs
-    wire [1:0] lsu_state [THREADS_PER_BLOCK-1:0];
+    wire [1:0] lsu_state [NUM_LSUS-1:0];
     wire [PROGRAM_MEM_ADDR_BITS-1:0] next_pc [THREADS_PER_BLOCK-1:0];
 
     genvar sch_idx;
     generate
-        for (sch_idx = 0; sch_idx < THREADS_PER_BLOCK; sch_idx = sch_idx + 1) begin : unflatten_sch
+        for (sch_idx = 0; sch_idx < NUM_LSUS; sch_idx = sch_idx + 1) begin : unflatten_lsu
             assign lsu_state[sch_idx] = lsu_state_flat[(sch_idx+1)*2-1 : sch_idx*2];
+        end
+        for (sch_idx = 0; sch_idx < THREADS_PER_BLOCK; sch_idx = sch_idx + 1) begin : unflatten_sch
             assign next_pc[sch_idx] = next_pc_flat[(sch_idx+1)*PROGRAM_MEM_ADDR_BITS-1 : sch_idx*PROGRAM_MEM_ADDR_BITS];
         end
     endgenerate
@@ -125,7 +129,7 @@ module scheduler #(
     always @(*) begin
         any_lsu_waiting = 1'b0;
         lsus_done_next  = 1'b1;
-        for (i = 0; i < THREADS_PER_BLOCK; i = i + 1) begin
+        for (i = 0; i < NUM_LSUS; i = i + 1) begin
             // An LSU still waiting for memory (2'b01 is unused)
             if (lsu_state[i] == 2'b01 || lsu_state[i] == 2'b10) begin
                 any_lsu_waiting = 1'b1;
@@ -172,9 +176,10 @@ module scheduler #(
                 WAIT: begin
                     // Leave in the cycle the last answer arrives. A load or
                     // store has nothing to EXECUTE: its data is registered in
-                    // the LSU for UPDATE.
+                    // the LSU for UPDATE. An LDR pair writes its second
+                    // register in EXECUTE.
                     if (lsus_done_next) begin
-                        core_state <= pipe_mem_op ? UPDATE : EXECUTE;
+                        core_state <= (pipe_mem_op && !pipe_mem_pair) ? UPDATE : EXECUTE;
                         fma_execute_second_cycle <= 1'b0;
                     end
                 end

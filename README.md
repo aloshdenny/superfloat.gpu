@@ -331,7 +331,7 @@ Each thread owns its own independent register file with 16 registers:
 | `0100` | **SUB** | `SUB Rd, Rs, Rt` | Integer subtraction: `Rd = Rs - Rt`. |
 | `0101` | **MUL** | `MUL Rd, Rs, Rt` | Integer multiplication: `Rd = Rs[7:0] * Rt[7:0]` (16-bit zero-extended result). |
 | `0110` | **DIV** | `DIV Rd, Rs, Rt` | Integer division: `Rd = Rs / Rt`. Fast hardware reciprocal division for common constants. |
-| `0111` | **LDR** | `LDR Rd, Rs` | Load 16-bit value from Data Memory at address `Rs` into `Rd`. |
+| `0111` | **LDR** | `LDR Rd, Rs` | Load 16-bit value from Data Memory at address `Rs` into `Rd`. <br> `LDR Rd, Rs, Rt` (`Rt` ≠ R0, `Rd` ≤ R11): also loads `R(d+1)` from address `Rt`; both loads are in flight together. |
 | `1000` | **STR** | `STR Rd, Rs` | Store 16-bit value from `Rs` into Data Memory at address `Rd`. |
 | `1001` | **CONST**| `CONST Rd, imm8`| Load 8-bit sign-extended immediate `imm8` into `Rd`. |
 | `1010` | **FMA** | `FMA Rd, Rs, Rt` | Q1.15 Fused Multiply-Accumulate: `Rd = (Rs * Rt) + Rd`. (Uses `Rd` as accumulator input). |

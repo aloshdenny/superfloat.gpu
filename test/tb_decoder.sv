@@ -21,6 +21,7 @@ module tb_decoder (
     // Control signals
     output wire decoded_reg_write_enable,
     output wire decoded_mem_read_enable,
+    output wire decoded_mem_pair,
     output wire decoded_mem_write_enable,
     output wire decoded_nzp_write_enable,
     output wire [2:0] decoded_reg_input_mux,
@@ -49,6 +50,7 @@ module tb_decoder (
         .decoded_immediate(decoded_immediate),
         .decoded_reg_write_enable(decoded_reg_write_enable),
         .decoded_mem_read_enable(decoded_mem_read_enable),
+        .decoded_mem_pair(decoded_mem_pair),
         .decoded_mem_write_enable(decoded_mem_write_enable),
         .decoded_nzp_write_enable(decoded_nzp_write_enable),
         .decoded_reg_input_mux(decoded_reg_input_mux),

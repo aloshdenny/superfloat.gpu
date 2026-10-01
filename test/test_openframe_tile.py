@@ -30,6 +30,11 @@ test_scratchpad_private_per_tile
     back, and store both to external memory. Each tile must see only its own
     values, and external memory at 0xFFC0.. must stay untouched.
 
+test_ldr_pair
+    The pair form of LDR (Rd and R(d+1) from two addresses, both in flight
+    together) from external memory, from the tile's scratchpad and one of
+    each, on all 32 threads. Every loaded word is stored back and checked.
+
 test_sys_back_to_back
     SYS load.b, two SYS computes back to back and a SYS read straight after,
     so the read must wait for the second compute to reach the accumulators
@@ -50,8 +55,8 @@ from helpers.number_format import NAMES, number_format, fp_format
 from helpers.memory import (
     read_memory_range,
     asm_mul, asm_add, asm_sub, asm_div, asm_const, asm_ldr, asm_str, asm_ret,
-    asm_sh, asm_consth, asm_cmp, asm_brn,
-    R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11,
+    asm_sh, asm_consth, asm_cmp, asm_brn, asm_ldr2,
+    R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12,
     BLOCK_IDX, THREAD_IDX,
 )
 from helpers.setup import setup_test, run_kernel
@@ -383,3 +388,57 @@ async def test_sys_back_to_back(dut):
                 bad.append((b, t, hex(got[N * b + t]), hex(want)))
     dut._log.info(f"sys back to back: {N * NUM_TILES} reads, {len(bad)} wrong, {cycles} cycles")
     assert not bad, f"{len(bad)} reads wrong, first (block, tid, got, want): {bad[:4]}"
+
+
+# ---------------------------------------------------------------------------
+# LDR pair form
+# ---------------------------------------------------------------------------
+
+PAIR_OUT = 64         # 6 words per thread from here (CONST reaches 127)
+PAIR_THREADS = N * NUM_TILES
+
+
+def pair_words(g: int):
+    return 0x1000 + 3 * g + 1, 0x2000 + 5 * g + 7
+
+
+def build_ldr_pair_program() -> list:
+    """Thread g = blockIdx*8 + tid, a[g] at g, b[g] at 32 + g:
+    LDR R0,R2,R3 (a, b); STR b to the scratchpad slot 0xFFC0 + tid;
+    LDR R4,R6,R7 (a, scratchpad b); LDR R10,R3,R2 (b, a). Stores R0, R1, R4,
+    R5, R10, R11 at PAIR_OUT + 6g."""
+    return [asm_const(R9, N), asm_mul(R8, BLOCK_IDX, R9), asm_add(R8, R8, THREAD_IDX),   # g
+            asm_add(R2, R8, R8), asm_sub(R2, R2, R8),                                    # R2 = g
+            asm_const(R9, PAIR_THREADS), asm_add(R3, R2, R9),                            # R3 = 32 + g
+            asm_ldr2(R0, R2, R3),
+            asm_const(R7, 0xC0), asm_add(R7, R7, THREAD_IDX),                            # 0xFFC0 + tid
+            asm_str(R7, R1),
+            asm_add(R6, R2, R2), asm_sub(R6, R6, R2),                                    # R6 = g
+            asm_ldr2(R4, R6, R7),
+            asm_ldr2(R10, R3, R2),
+            asm_const(R9, 6), asm_mul(R12, R8, R9), asm_const(R9, PAIR_OUT), asm_add(R12, R12, R9),
+            asm_const(R9, 1),
+            asm_str(R12, R0), asm_add(R12, R12, R9), asm_str(R12, R1), asm_add(R12, R12, R9),
+            asm_str(R12, R4), asm_add(R12, R12, R9), asm_str(R12, R5), asm_add(R12, R12, R9),
+            asm_str(R12, R10), asm_add(R12, R12, R9), asm_str(R12, R11),
+            asm_ret()]
+
+
+@cocotb.test()
+async def test_ldr_pair(dut):
+    data = [pair_words(g)[0] for g in range(PAIR_THREADS)] + [pair_words(g)[1] for g in range(PAIR_THREADS)]
+    logger = await setup_test(dut, "ldr_pair", build_ldr_pair_program(), data,
+                              thread_count=PAIR_THREADS, verbose=False)
+    cycles = await run_kernel(dut, logger, max_cycles=20000, trace_interval=0)
+    assert int(dut.done.value) == 1, f"kernel did not finish in {cycles} cycles"
+    got = read_memory_range(dut, PAIR_OUT, 6 * PAIR_THREADS)
+    logger.close()
+    bad = []
+    for g in range(PAIR_THREADS):
+        a, b = pair_words(g)
+        want = [a, b, a, b, b, a]
+        have = got[6 * g:6 * g + 6]
+        if have != want:
+            bad.append((g, [hex(h) for h in have], [hex(w) for w in want]))
+    dut._log.info(f"ldr pair: {PAIR_THREADS} threads x 3 pairs, {len(bad)} wrong, {cycles} cycles")
+    assert not bad, f"{len(bad)} threads wrong, first (g, got, want): {bad[:2]}"

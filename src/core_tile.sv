@@ -62,6 +62,7 @@ module core_tile #(
     wire [7:0] decoded_immediate;
     wire decoded_reg_write_enable;
     wire decoded_mem_read_enable;
+    wire decoded_mem_pair;
     wire decoded_mem_write_enable;
     wire decoded_nzp_write_enable;
     wire [2:0] decoded_reg_input_mux;
@@ -90,6 +91,7 @@ module core_tile #(
         .decoded_immediate(decoded_immediate),
         .decoded_reg_write_enable(decoded_reg_write_enable),
         .decoded_mem_read_enable(decoded_mem_read_enable),
+        .decoded_mem_pair(decoded_mem_pair),
         .decoded_mem_write_enable(decoded_mem_write_enable),
         .decoded_nzp_write_enable(decoded_nzp_write_enable),
         .decoded_reg_input_mux(decoded_reg_input_mux),
@@ -110,14 +112,15 @@ module core_tile #(
     // ============================================
     // Compute core
     // ============================================
-    wire [THREADS_PER_BLOCK-1:0]                    lsu_read_valid;
-    wire [DATA_MEM_ADDR_BITS*THREADS_PER_BLOCK-1:0] lsu_read_address_flat;
-    wire [THREADS_PER_BLOCK-1:0]                    lsu_read_ready;
-    wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] lsu_read_data_flat;
-    wire [THREADS_PER_BLOCK-1:0]                    lsu_write_valid;
-    wire [DATA_MEM_ADDR_BITS*THREADS_PER_BLOCK-1:0] lsu_write_address_flat;
-    wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] lsu_write_data_flat;
-    wire [THREADS_PER_BLOCK-1:0]                    lsu_write_ready;
+    localparam LSUS = 2 * THREADS_PER_BLOCK;     // two LSUs per thread (LDR pair form)
+    wire [LSUS-1:0]                    lsu_read_valid;
+    wire [DATA_MEM_ADDR_BITS*LSUS-1:0] lsu_read_address_flat;
+    wire [LSUS-1:0]                    lsu_read_ready;
+    wire [DATA_MEM_DATA_BITS*LSUS-1:0] lsu_read_data_flat;
+    wire [LSUS-1:0]                    lsu_write_valid;
+    wire [DATA_MEM_ADDR_BITS*LSUS-1:0] lsu_write_address_flat;
+    wire [DATA_MEM_DATA_BITS*LSUS-1:0] lsu_write_data_flat;
+    wire [LSUS-1:0]                    lsu_write_ready;
 
     core #(
         .DATA_MEM_ADDR_BITS(DATA_MEM_ADDR_BITS),
@@ -149,6 +152,7 @@ module core_tile #(
         .decoded_immediate(decoded_immediate),
         .decoded_reg_write_enable(decoded_reg_write_enable),
         .decoded_mem_read_enable(decoded_mem_read_enable),
+        .decoded_mem_pair(decoded_mem_pair),
         .decoded_mem_write_enable(decoded_mem_write_enable),
         .decoded_nzp_write_enable(decoded_nzp_write_enable),
         .decoded_reg_input_mux(decoded_reg_input_mux),
@@ -183,14 +187,14 @@ module core_tile #(
     // ============================================
     // Per-core scratchpad: hits stay in the tile, misses go to the arbiter
     // ============================================
-    wire [THREADS_PER_BLOCK-1:0]                    miss_read_valid;
-    wire [DATA_MEM_ADDR_BITS*THREADS_PER_BLOCK-1:0] miss_read_address_flat;
-    wire [THREADS_PER_BLOCK-1:0]                    miss_read_ready;
-    wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] miss_read_data_flat;
-    wire [THREADS_PER_BLOCK-1:0]                    miss_write_valid;
-    wire [DATA_MEM_ADDR_BITS*THREADS_PER_BLOCK-1:0] miss_write_address_flat;
-    wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] miss_write_data_flat;
-    wire [THREADS_PER_BLOCK-1:0]                    miss_write_ready;
+    wire [LSUS-1:0]                    miss_read_valid;
+    wire [DATA_MEM_ADDR_BITS*LSUS-1:0] miss_read_address_flat;
+    wire [LSUS-1:0]                    miss_read_ready;
+    wire [DATA_MEM_DATA_BITS*LSUS-1:0] miss_read_data_flat;
+    wire [LSUS-1:0]                    miss_write_valid;
+    wire [DATA_MEM_ADDR_BITS*LSUS-1:0] miss_write_address_flat;
+    wire [DATA_MEM_DATA_BITS*LSUS-1:0] miss_write_data_flat;
+    wire [LSUS-1:0]                    miss_write_ready;
 
     wire        scratch_ram_en;
     wire [3:0]  scratch_ram_we;
@@ -201,7 +205,7 @@ module core_tile #(
     scratchpad #(
         .ADDR_BITS(DATA_MEM_ADDR_BITS),
         .DATA_BITS(DATA_MEM_DATA_BITS),
-        .NUM_PORTS(THREADS_PER_BLOCK)
+        .NUM_PORTS(LSUS)
     ) data_scratchpad (
         .clk(clk),
         .reset(reset),
@@ -241,13 +245,13 @@ module core_tile #(
     );
 
     // ============================================
-    // Miss queue: THREADS_PER_BLOCK LSUs -> one data channel, with reads
+    // Miss queue: the LSUs (two per thread) -> one data channel, with reads
     // taken ahead of their answers when the channel allows it
     // ============================================
     tile_mem_queue #(
         .ADDR_BITS(DATA_MEM_ADDR_BITS),
         .DATA_BITS(DATA_MEM_DATA_BITS),
-        .NUM_CONSUMERS(THREADS_PER_BLOCK)
+        .NUM_CONSUMERS(LSUS)
     ) data_mem_queue (
         .clk(clk),
         .reset(reset),

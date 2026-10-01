@@ -51,6 +51,7 @@ module core #(
     input wire [7:0] decoded_immediate,
     input wire decoded_reg_write_enable,
     input wire decoded_mem_read_enable,
+    input wire decoded_mem_pair,
     input wire decoded_mem_write_enable,
     input wire decoded_nzp_write_enable,
     input wire [2:0] decoded_reg_input_mux,
@@ -73,26 +74,28 @@ module core #(
     input wire program_mem_read_ready,
     input wire [PROGRAM_MEM_DATA_BITS-1:0] program_mem_read_data,
 
-    // Data Memory (16-bit SF16) - Flattened for synthesis
-    output wire [THREADS_PER_BLOCK-1:0] data_mem_read_valid,
-    output wire [DATA_MEM_ADDR_BITS*THREADS_PER_BLOCK-1:0] data_mem_read_address_flat,
-    input wire [THREADS_PER_BLOCK-1:0] data_mem_read_ready,
-    input wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] data_mem_read_data_flat,
-    output wire [THREADS_PER_BLOCK-1:0] data_mem_write_valid,
-    output wire [DATA_MEM_ADDR_BITS*THREADS_PER_BLOCK-1:0] data_mem_write_address_flat,
-    output wire [DATA_MEM_DATA_BITS*THREADS_PER_BLOCK-1:0] data_mem_write_data_flat,
-    input wire [THREADS_PER_BLOCK-1:0] data_mem_write_ready
+    // Data Memory (16-bit), flattened: two LSUs per thread, LSU a of thread i
+    // at port i, LSU b (the second word of an LDR pair) at port THREADS_PER_BLOCK + i
+    output wire [2*THREADS_PER_BLOCK-1:0] data_mem_read_valid,
+    output wire [DATA_MEM_ADDR_BITS*2*THREADS_PER_BLOCK-1:0] data_mem_read_address_flat,
+    input wire [2*THREADS_PER_BLOCK-1:0] data_mem_read_ready,
+    input wire [DATA_MEM_DATA_BITS*2*THREADS_PER_BLOCK-1:0] data_mem_read_data_flat,
+    output wire [2*THREADS_PER_BLOCK-1:0] data_mem_write_valid,
+    output wire [DATA_MEM_ADDR_BITS*2*THREADS_PER_BLOCK-1:0] data_mem_write_address_flat,
+    output wire [DATA_MEM_DATA_BITS*2*THREADS_PER_BLOCK-1:0] data_mem_write_data_flat,
+    input wire [2*THREADS_PER_BLOCK-1:0] data_mem_write_ready
 );
+    localparam LSUS = 2 * THREADS_PER_BLOCK;
     // Internal memory interface signals (unpacked for per-thread use)
-    wire [DATA_MEM_ADDR_BITS-1:0] data_mem_read_address [THREADS_PER_BLOCK-1:0];
-    wire [DATA_MEM_DATA_BITS-1:0] data_mem_read_data [THREADS_PER_BLOCK-1:0];
-    wire [DATA_MEM_ADDR_BITS-1:0] data_mem_write_address [THREADS_PER_BLOCK-1:0];
-    wire [DATA_MEM_DATA_BITS-1:0] data_mem_write_data [THREADS_PER_BLOCK-1:0];
+    wire [DATA_MEM_ADDR_BITS-1:0] data_mem_read_address [LSUS-1:0];
+    wire [DATA_MEM_DATA_BITS-1:0] data_mem_read_data [LSUS-1:0];
+    wire [DATA_MEM_ADDR_BITS-1:0] data_mem_write_address [LSUS-1:0];
+    wire [DATA_MEM_DATA_BITS-1:0] data_mem_write_data [LSUS-1:0];
 
     // Unflatten input data from flat bus to per-thread
     genvar flat_idx;
     generate
-        for (flat_idx = 0; flat_idx < THREADS_PER_BLOCK; flat_idx = flat_idx + 1) begin : unflatten_mem
+        for (flat_idx = 0; flat_idx < LSUS; flat_idx = flat_idx + 1) begin : unflatten_mem
             assign data_mem_read_data[flat_idx] = data_mem_read_data_flat[(flat_idx+1)*DATA_MEM_DATA_BITS-1 : flat_idx*DATA_MEM_DATA_BITS];
         end
     endgenerate
@@ -100,7 +103,7 @@ module core #(
     // Flatten output buses using generate (parameterized)
     genvar out_idx;
     generate
-        for (out_idx = 0; out_idx < THREADS_PER_BLOCK; out_idx = out_idx + 1) begin : flatten_out
+        for (out_idx = 0; out_idx < LSUS; out_idx = out_idx + 1) begin : flatten_out
             assign data_mem_read_address_flat[(out_idx+1)*DATA_MEM_ADDR_BITS-1 : out_idx*DATA_MEM_ADDR_BITS] = data_mem_read_address[out_idx];
             assign data_mem_write_address_flat[(out_idx+1)*DATA_MEM_ADDR_BITS-1 : out_idx*DATA_MEM_ADDR_BITS] = data_mem_write_address[out_idx];
             assign data_mem_write_data_flat[(out_idx+1)*DATA_MEM_DATA_BITS-1 : out_idx*DATA_MEM_DATA_BITS] = data_mem_write_data[out_idx];
@@ -122,23 +125,23 @@ module core #(
     wire [PROGRAM_MEM_ADDR_BITS-1:0] next_pc[THREADS_PER_BLOCK-1:0];
     wire [DATA_MEM_DATA_BITS-1:0] rs[THREADS_PER_BLOCK-1:0];
     wire [DATA_MEM_DATA_BITS-1:0] rt[THREADS_PER_BLOCK-1:0];
-    wire [1:0] lsu_state[THREADS_PER_BLOCK-1:0];
-    wire [DATA_MEM_DATA_BITS-1:0] lsu_out[THREADS_PER_BLOCK-1:0];
+    wire [1:0] lsu_state[LSUS-1:0];
+    wire [DATA_MEM_DATA_BITS-1:0] lsu_out[LSUS-1:0];
     wire [DATA_MEM_DATA_BITS-1:0] alu_out[THREADS_PER_BLOCK-1:0];
     wire [DATA_MEM_DATA_BITS-1:0] fma_out[THREADS_PER_BLOCK-1:0];
     wire [DATA_MEM_DATA_BITS-1:0] act_out[THREADS_PER_BLOCK-1:0];
     reg [DATA_MEM_DATA_BITS-1:0] systolic_out[THREADS_PER_BLOCK-1:0];
     
     // Flatten signals for scheduler (parameterized)
-    reg [(2*THREADS_PER_BLOCK)-1:0] lsu_state_flat;
+    reg [(2*LSUS)-1:0] lsu_state_flat;
     reg [PROGRAM_MEM_ADDR_BITS*THREADS_PER_BLOCK-1:0] next_pc_flat;
     
     integer lsu_idx;
     always @(*) begin
-        for (lsu_idx = 0; lsu_idx < THREADS_PER_BLOCK; lsu_idx = lsu_idx + 1) begin
+        for (lsu_idx = 0; lsu_idx < LSUS; lsu_idx = lsu_idx + 1)
             lsu_state_flat[lsu_idx*2 +: 2] = lsu_state[lsu_idx];
+        for (lsu_idx = 0; lsu_idx < THREADS_PER_BLOCK; lsu_idx = lsu_idx + 1)
             next_pc_flat[lsu_idx*PROGRAM_MEM_ADDR_BITS +: PROGRAM_MEM_ADDR_BITS] = next_pc[lsu_idx];
-        end
     end
     
     // For FMA: accumulator input from destination register (direct combinational read)
@@ -184,6 +187,7 @@ module core #(
     reg [7:0]  pipe_immediate;
     reg        pipe_reg_write_enable;
     reg        pipe_mem_read_enable;
+    reg        pipe_mem_pair;
     reg        pipe_mem_write_enable;
     reg        pipe_nzp_write_enable;
     reg [2:0]  pipe_reg_input_mux;
@@ -209,6 +213,7 @@ module core #(
             pipe_immediate         <= 8'b0;
             pipe_reg_write_enable  <= 1'b0;
             pipe_mem_read_enable   <= 1'b0;
+            pipe_mem_pair          <= 1'b0;
             pipe_mem_write_enable  <= 1'b0;
             pipe_nzp_write_enable  <= 1'b0;
             pipe_reg_input_mux     <= 3'b0;
@@ -232,6 +237,7 @@ module core #(
             pipe_immediate         <= decoded_immediate;
             pipe_reg_write_enable  <= decoded_reg_write_enable;
             pipe_mem_read_enable   <= decoded_mem_read_enable;
+            pipe_mem_pair          <= decoded_mem_pair;
             pipe_mem_write_enable  <= decoded_mem_write_enable;
             pipe_nzp_write_enable  <= decoded_nzp_write_enable;
             pipe_reg_input_mux     <= decoded_reg_input_mux;
@@ -288,6 +294,7 @@ module core #(
     // Scheduler
     scheduler #(
         .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
+        .NUM_LSUS(LSUS),
         .PROGRAM_MEM_ADDR_BITS(PROGRAM_MEM_ADDR_BITS),
         .ENABLE_BRANCH_DIVERGE(0)   // Disabled: saves ~300 cells; re-enable for divergent kernels
     ) scheduler_instance (
@@ -309,6 +316,7 @@ module core #(
         .lsu_state_flat(lsu_state_flat),
         .lsu_answer(data_mem_read_ready | data_mem_write_ready),
         .pipe_mem_op(pipe_mem_read_enable | pipe_mem_write_enable),
+        .pipe_mem_pair(pipe_mem_pair),
         .current_pc(current_pc),
         .next_pc_flat(next_pc_flat),
         .active_mask(active_mask),
@@ -446,6 +454,31 @@ module core #(
                 .lsu_out(lsu_out[i])
             );
 
+            // Second LSU: the pair form of LDR also loads R(d+1) from [Rt]
+            lsu #(
+                .ADDR_BITS(DATA_MEM_ADDR_BITS),
+                .DATA_BITS(DATA_MEM_DATA_BITS)
+            ) lsu_b_instance (
+                .clk(clk),
+                .reset(unit_reset),
+                .enable(i < thread_count),
+                .core_state(core_state),
+                .decoded_mem_read_enable(pipe_mem_read_enable & pipe_mem_pair),
+                .decoded_mem_write_enable(1'b0),
+                .rs(pipe_rt[i]),
+                .rt({DATA_MEM_DATA_BITS{1'b0}}),
+                .mem_read_valid(data_mem_read_valid[THREADS_PER_BLOCK + i]),
+                .mem_read_address(data_mem_read_address[THREADS_PER_BLOCK + i]),
+                .mem_read_ready(data_mem_read_ready[THREADS_PER_BLOCK + i]),
+                .mem_read_data(data_mem_read_data[THREADS_PER_BLOCK + i]),
+                .mem_write_valid(data_mem_write_valid[THREADS_PER_BLOCK + i]),
+                .mem_write_address(data_mem_write_address[THREADS_PER_BLOCK + i]),
+                .mem_write_data(data_mem_write_data[THREADS_PER_BLOCK + i]),
+                .mem_write_ready(data_mem_write_ready[THREADS_PER_BLOCK + i]),
+                .lsu_state(lsu_state[THREADS_PER_BLOCK + i]),
+                .lsu_out(lsu_out[THREADS_PER_BLOCK + i])
+            );
+
             // Register File (16-bit)
             registers #(
                 .THREADS_PER_BLOCK(THREADS_PER_BLOCK),
@@ -466,6 +499,8 @@ module core #(
                 .decoded_immediate(pipe_immediate),
                 .alu_out(alu_out[i]),
                 .lsu_out(lsu_out[i]),
+                .pair_write(pipe_mem_pair),
+                .lsu_pair_out(lsu_out[THREADS_PER_BLOCK + i]),
                 .fma_out(fma_out[i]),
                 .act_out(act_out[i]),
                 .systolic_out(systolic_out[i]),

@@ -20,7 +20,8 @@ gemv: one token (decode). Row r of the array holds weight row k0+r and
 
 gemm: 8 tokens (prefill). Every row holds weight row k (one broadcast SYS
   load) and thread i drives token i's x[k], so the array is an outer product
-  per k. Thread i stores token i's 8 outputs. Bus reads per MAC: 0.25.
+  per k. One paired LDR brings both words per thread. Thread i stores token
+  i's 8 outputs. Bus reads per MAC: 0.25.
 
 SYS load also takes the activation operand (R0), and an activation reaches
 column c c + 1 cycles after it changes. gemv loads x with the first of eight
@@ -43,7 +44,7 @@ except ImportError:
     _pkg.__path__ = [os.path.join(_TEST_DIR, "helpers")]
     sys.modules.setdefault("helpers", _pkg)
 from helpers.memory import (                      # noqa: E402
-    asm_const, asm_add, asm_ldr, asm_str, asm_act, asm_cmp, asm_brn, asm_ret,
+    asm_const, asm_add, asm_ldr, asm_ldr2, asm_str, asm_act, asm_cmp, asm_brn, asm_ret,
     R0, R1, R2, R3, R4, R5, R6, R7, R9, R10, BLOCK_IDX, THREAD_IDX,
 )
 from helpers.addr import build_large_const          # noqa: E402
@@ -114,7 +115,7 @@ def gemm_program(kc: int) -> list:
     p = _prologue() + _loop_bound(N * kc)
     loop = len(p)
     for _ in range(4 if kc % 4 == 0 else 2):
-        p += [asm_ldr(R0, R2), asm_ldr(R1, R3),              # A[tid][k], W[k][tid]
+        p += [asm_ldr2(R0, R2, R3),                            # A[tid][k], W[k][tid]
               sys_op(SYS_LOAD, bcast=True),                    # every row = W[k]
               asm_add(R2, R2, R5), asm_add(R3, R3, R5),        # (x settles meanwhile)
               sys_op(SYS_COMPUTE)]

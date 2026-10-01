@@ -132,6 +132,7 @@ async def decode_instruction(dut, instruction: int) -> dict:
         'immediate': int(dut.decoded_immediate.value),
         'reg_write_enable': int(dut.decoded_reg_write_enable.value),
         'mem_read_enable': int(dut.decoded_mem_read_enable.value),
+        'mem_pair': int(dut.decoded_mem_pair.value),
         'mem_write_enable': int(dut.decoded_mem_write_enable.value),
         'nzp_write_enable': int(dut.decoded_nzp_write_enable.value),
         'reg_input_mux': int(dut.decoded_reg_input_mux.value),
@@ -399,6 +400,27 @@ async def test_decoder_sh(dut):
     }, logger)
     logger.close()
     assert passed, "Decoder SH test failed"
+
+
+@cocotb.test()
+async def test_decoder_ldr_pair(dut):
+    """LDR Rd, Rs, Rt with Rt != R0 is the pair form; Rt = R0 is a plain LDR."""
+    logger = await setup_decoder_test(dut, "decoder_ldr_pair")
+    passed = True
+    for rt, pair in ((0, 0), (3, 1), (15, 1)):
+        decoded = await decode_instruction(dut, encode_instruction(OP_LDR, rd=4, rs=2, rt=rt))
+        passed &= check_signals(decoded, {
+            'rd': 4, 'rs': 2, 'rt': rt,
+            'reg_write_enable': 1,
+            'mem_read_enable': 1,
+            'mem_pair': pair,
+            'reg_input_mux': REG_MUX_MEM,
+        }, logger)
+    for op in (OP_STR, OP_ADD, OP_CONST):
+        decoded = await decode_instruction(dut, encode_instruction(op, rd=4, rs=2, rt=3))
+        passed &= check_signals(decoded, {'mem_pair': 0}, logger)
+    logger.close()
+    assert passed, "Decoder LDR pair test failed"
 
 
 @cocotb.test()
