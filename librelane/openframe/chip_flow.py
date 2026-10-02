@@ -20,13 +20,43 @@ steps in place of LibreLane's through meta.substituting_steps, so the chip
 must be run through this script, which takes the same arguments as
 `python3 -m librelane`:
     ./chip_flow.py --pdk-root ~/.ciel config.json --run-tag chip_21
+
+OpenROAD.GlobalPlacementStrip (gpl_strip.tcl) replaces LibreLane's global
+placement: it places the standard cells in the strip between the tile rows,
+where every format's chip has room for them. Odb.PlacePortTies
+(port_ties.py) then moves the pads' configuration ties next to their ports.
+
+The chip config also excludes the weakest cells (EXTRA_EXCLUDED_CELLS): at
+ss their output reaches design repair's 0.5 ns slew target below 8 fF. On
+such a driver repair_design's wire repair cannot split the net (the buffer
+it inserts alone exceeds the driver's load budget) and inserts buffers at
+the load until memory runs out: a2111oi_1 (2.2 fF) on a 33 um net took the
+v2 chip's repair to 28 GB in 14 minutes, against 0.6 GB without it.
 """
 import os
 
 from librelane.__main__ import cli
-from librelane.steps import Magic, Step
+from librelane.steps import Magic, Odb, OpenROAD, Step
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+@Step.factory.register()
+class GlobalPlacementStrip(OpenROAD.GlobalPlacement):
+    id = "OpenROAD.GlobalPlacementStrip"
+    name = "Global placement in the strip"
+
+    def get_script_path(self):
+        return os.path.join(HERE, "gpl_strip.tcl")
+
+
+@Step.factory.register()
+class PlacePortTies(Odb.OdbpyStep):
+    id = "Odb.PlacePortTies"
+    name = "Move port tie cells next to their ports"
+
+    def get_script_path(self):
+        return os.path.join(HERE, "port_ties.py")
 
 
 @Step.factory.register()

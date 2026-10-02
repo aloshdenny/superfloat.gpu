@@ -23,7 +23,13 @@ The tile heights come from synthesis (SYNTH_AREA_UM2, from each format's
 Yosys run) times the synthesis-to-signoff growth v1 measured (GROWTH).
 
 The chip RTL does not depend on the format; each chip config points the
-core_tile macro at core_tile/views_<fmt>/.
+core_tile macro at core_tile/views_<fmt>/. The chip logic lives in the strip
+(openframe/gpl_strip.tcl places it there), which the largest tiles make as
+tall as the core allows: they sit at the core's edges, 10 um (their halo)
+inside it. A shorter tile leaves a band beside it that FP16's floorplan does
+not have. Only design repair and clock tree synthesis place cells there;
+blocking the bands (FP_OBSTRUCTIONS) broke the power grid twice, next to the
+vccd1/vssd1 connection macros.
 
 Rerun after editing either base config: ./make_variants.py
 """
@@ -37,7 +43,7 @@ FORMATS = {"sf16": 0, "fp16": 1, "bf16": 2}
 
 TILE_WIDTH = 1500.0
 MAX_TILE_HEIGHT = 2250.0
-STRIP_BOTTOM = 2320.0             # top edge of tiles 0 and 1
+STRIP_BOTTOM = 2300.0             # top edge of tiles 0 and 1
 HEIGHT_STEP = 10.0                # tile heights round up to 10 um
 
 # Yosys cell area per format (um2, v2 RTL with COMMON, server toolchain), and

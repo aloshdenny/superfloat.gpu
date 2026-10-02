@@ -5,7 +5,10 @@
         "substituting_steps": {
             "+OpenROAD.CTS": "Odb.InsertECOBuffers",
             "Magic.SpiceExtraction": "Magic.SpiceExtractionAbstractMacros",
-            "Magic.WriteLEF": "Magic.WriteLEFAbstractMacros"
+            "Magic.WriteLEF": "Magic.WriteLEFAbstractMacros",
+            "OpenROAD.GlobalPlacementSkipIO": null,
+            "OpenROAD.GlobalPlacement": "OpenROAD.GlobalPlacementStrip",
+            "+OpenROAD.GlobalPlacementStrip": "Odb.PlacePortTies"
         }
     },
     "DESIGN_NAME": "openframe_project_wrapper",
@@ -80,28 +83,28 @@
                 "chip.gpu_inst.tiles[0].tile": {
                     "location": [
                         60.0,
-                        590.0
+                        570.0
                     ],
                     "orientation": "N"
                 },
                 "chip.gpu_inst.tiles[1].tile": {
                     "location": [
                         1606.63,
-                        590.0
+                        570.0
                     ],
                     "orientation": "FN"
                 },
                 "chip.gpu_inst.tiles[2].tile": {
                     "location": [
                         60.0,
-                        2446.63
+                        2466.63
                     ],
                     "orientation": "FS"
                 },
                 "chip.gpu_inst.tiles[3].tile": {
                     "location": [
                         1606.63,
-                        2446.63
+                        2466.63
                     ],
                     "orientation": "S"
                 }
@@ -163,7 +166,7 @@
             "buffer": "sky130_fd_sc_hd__clkbuf_16",
             "placement": [
                 1373.99,
-                2319.86
+                2299.86
             ]
         },
         {
@@ -171,7 +174,7 @@
             "buffer": "sky130_fd_sc_hd__clkbuf_16",
             "placement": [
                 1792.64,
-                2319.86
+                2299.86
             ]
         },
         {
@@ -179,7 +182,7 @@
             "buffer": "sky130_fd_sc_hd__clkbuf_16",
             "placement": [
                 1373.99,
-                2446.77
+                2466.77
             ]
         },
         {
@@ -187,7 +190,7 @@
             "buffer": "sky130_fd_sc_hd__clkbuf_16",
             "placement": [
                 1792.64,
-                2446.77
+                2466.77
             ]
         }
     ],
@@ -242,7 +245,7 @@
     "SYNTH_HIERARCHY_MODE": "flatten",
     "SYNTH_STRATEGY": "AREA 2",
     "ERROR_ON_NL_ASSIGN_STATEMENTS": false,
-    "PL_TARGET_DENSITY_PCT": 25,
+    "PL_TARGET_DENSITY_PCT": 32,
     "PL_MAX_DISPLACEMENT_X": 1000,
     "PL_MAX_DISPLACEMENT_Y": 1500,
     "MAX_FANOUT_CONSTRAINT": 8,
@@ -280,7 +283,22 @@
         "sky130_fd_sc_hd__o21ai_0",
         "sky130_fd_sc_hd__o311ai_0",
         "sky130_fd_sc_hd__or2_0",
-        "sky130_fd_sc_hd__o31ai_1"
+        "sky130_fd_sc_hd__o31ai_1",
+        "sky130_fd_sc_hd__a2111oi_1",
+        "sky130_fd_sc_hd__a2111oi_2",
+        "sky130_fd_sc_hd__o311ai_1",
+        "sky130_fd_sc_hd__o41ai_1",
+        "sky130_fd_sc_hd__o41ai_2",
+        "sky130_fd_sc_hd__nor4b_1",
+        "sky130_fd_sc_hd__nor4_1",
+        "sky130_fd_sc_hd__nor4bb_1",
+        "sky130_fd_sc_hd__nor4bb_2",
+        "sky130_fd_sc_hd__a222oi_1",
+        "sky130_fd_sc_hd__a221oi_1",
+        "sky130_fd_sc_hd__o32ai_1",
+        "sky130_fd_sc_hd__a311oi_1",
+        "sky130_fd_sc_hd__a211oi_1",
+        "sky130_fd_sc_hd__nor3b_1"
     ],
     "DESIGN_REPAIR_MAX_SLEW_PCT": 50,
     "DESIGN_REPAIR_MAX_CAP_PCT": 50,
