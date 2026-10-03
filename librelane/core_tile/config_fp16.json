@@ -154,5 +154,13 @@
     "PDN_MULTILAYER": false,
     "SYNTH_PARAMETERS": [
         "NUMBER_FORMAT=1"
+    ],
+    "PL_SOFT_OBSTRUCTIONS": [
+        [
+            0.0,
+            1950.0,
+            250.0,
+            2250.0
+        ]
     ]
 }

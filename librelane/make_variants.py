@@ -62,6 +62,18 @@ COMMON = {
     "GRT_RESIZER_SETUP_SLACK_MARGIN": 3.0,
 }
 
+# Closure aids, one format only: they make a layout routable and change no
+# timing setting.
+#   FP16: global placement packed the L0 instruction buffer (512 enable
+#   flops) into the tile's top-left corner; with its clock-tree leaves and
+#   repair buffers the corner held more cell area than room, and every one
+#   of detailed routing's 290 residual violations (fp16_4, 64 iterations)
+#   was in a 50 x 77 um patch there. A soft placement blockage keeps global
+#   placement out of the corner (2.2% of the tile).
+FORMAT_EXTRA = {
+    "fp16": {"PL_SOFT_OBSTRUCTIONS": [[0.0, 1950.0, 250.0, 2250.0]]},
+}
+
 
 def load(path):
     with open(os.path.join(HERE, path)) as f:
@@ -120,6 +132,7 @@ def main():
             t["VERILOG_FILES"] = tile["VERILOG_FILES"] + [f"dir::../../src/{s}" for s in FP_SOURCES]
         t["SYNTH_PARAMETERS"] = [f"NUMBER_FORMAT={fmt}"]
         t.update(COMMON)
+        t.update(FORMAT_EXTRA.get(name, {}))
         t["PL_TARGET_DENSITY_PCT"] = density
         t["DIE_AREA"] = [0.0, 0.0, TILE_WIDTH, h]
         save(f"core_tile/config_{name}.json", t)
