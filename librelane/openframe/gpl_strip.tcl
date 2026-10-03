@@ -17,6 +17,12 @@
 # 200 um to 7,600 of a global route's 19,000 overflow, and its 50 rip-up
 # passes made it worse. At 32% the global route has no overflow (8 shared-read
 # lines, SF16, 4.7 s).
+#
+# The chip config also pads every cell by one site each side here
+# (GPL_CELL_PADDING 2) and in detailed placement (DPL_CELL_PADDING 2). With
+# the registered shared-read hit vectors (6d2729a) the unpadded SF16 chip's
+# detailed route still had 10,984 violations after 10 passes and 385 after
+# 52; padded, it had 796 after 10 and none after 28.
 source $::env(SCRIPTS_DIR)/openroad/common/io.tcl
 source $::env(SCRIPTS_DIR)/openroad/common/resizer.tcl
 
