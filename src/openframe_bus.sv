@@ -217,6 +217,18 @@ module openframe_bus #(
     // Shared-read lines.
     wire [NUM_CHANNELS-1:0] share_take;         // the channel answered from the lines this cycle
     wire [BUS_BITS-1:0]     share_word;         // its word
+
+    // Buffer moves this cycle (sync).
+    reg [NUM_CHANNELS-1:0] b_push, b_pop;
+    reg [1:0]              b_next [NUM_CHANNELS-1:0];
+    always @(*) begin
+        for (c = 0; c < NUM_CHANNELS; c = c + 1) begin
+            b_push[c] = sync_mode && !PROG_MASK[c] && room[c] && (ch_read_valid[c] || ch_write_valid[c]);
+            b_pop[c]  = (s_issue && (pick == CH_BITS'(c)) && !PROG_MASK[c]) || share_take[c];
+            b_next[c] = b_cnt[c] + {1'b0, b_push[c]} - {1'b0, b_pop[c]};
+        end
+    end
+
     generate
         if (SHARE_LINES > 0) begin : g_share
             localparam LB = (SHARE_LINES > 1) ? $clog2(SHARE_LINES) : 1;
@@ -226,18 +238,19 @@ module openframe_bus #(
             reg [BUS_BITS-1:0]       s_data  [8*SHARE_LINES-1:0];
             reg [LB-1:0]             s_next;
             reg [CH_BITS-1:0]        s_rr;
+            // The lines that hold each buffer entry's word (see below).
+            reg [SHARE_LINES-1:0]    e0_hit  [NUM_CHANNELS-1:0];
+            reg [SHARE_LINES-1:0]    e1_hit  [NUM_CHANNELS-1:0];
 
             // Lookup: each data channel's next request, if a read. It is held
             // off the bus while its word is here, and answered once none of
             // the channel's reads is in flight.
             reg [SHARE_LINES-1:0] s_match [NUM_CHANNELS-1:0];
             reg [NUM_CHANNELS-1:0] hold, hit;
-            integer sc, sl;
+            integer sc;
             always @(*) begin
                 for (sc = 0; sc < NUM_CHANNELS; sc = sc + 1) begin
-                    for (sl = 0; sl < SHARE_LINES; sl = sl + 1)
-                        s_match[sc][sl] = s_lvalid[sl] && (s_tag[sl] == b0_addr[sc][BUS_BITS-1:3]) &&
-                                          s_wvalid[sl][b0_addr[sc][2:0]];
+                    s_match[sc] = e0_hit[sc];
                     hold[sc] = sync_mode && !PROG_MASK[sc] && (b_cnt[sc] != 2'd0) && !b0_we[sc] &&
                                (|s_match[sc]);
                     hit[sc]  = hold[sc] && (rcnt[sc] == '0);
@@ -274,6 +287,56 @@ module openframe_bus #(
                 for (sf = 0; sf < SHARE_LINES; sf = sf + 1)
                     f_match[sf] = s_lvalid[sf] && (s_tag[sf] == f_addr[BUS_BITS-1:3]);
 
+            // Each data channel's buffer entries carry the lines that hold
+            // their word: e0_hit for entry 0 (the head), e1_hit for entry 1.
+            // A request is looked up against the tags as it enters the
+            // buffer, and its vector follows the lines' changes after that:
+            // a replaced line clears its bit, a write or flush clears them all,
+            // and a fill sets the line it writes in every entry of that
+            // address. The vector registered at the end of a cycle is the
+            // lookup of the next cycle's lines, so the head's match is the one
+            // comparing it with the tags would give, from a register: the
+            // compare is off the paths into the bus pick and the answers.
+            wire                   s_clear     = flush || w_issue || !sync_mode;   // the lines empty
+            wire                   s_repl      = fill && !(|f_match);               // line s_next refills
+            wire [SHARE_LINES-1:0] s_repl_mask = s_repl ? (SHARE_LINES'(1) << s_next) : {SHARE_LINES{1'b0}};
+            wire [SHARE_LINES-1:0] s_fill_mask = !fill ? {SHARE_LINES{1'b0}} : ((|f_match) ? f_match : s_repl_mask);
+            reg  [SHARE_LINES-1:0] in_look [NUM_CHANNELS-1:0];
+            reg  [SHARE_LINES-1:0] in_next [NUM_CHANNELS-1:0];
+            reg  [SHARE_LINES-1:0] e0_next [NUM_CHANNELS-1:0];
+            reg  [SHARE_LINES-1:0] e1_next [NUM_CHANNELS-1:0];
+            integer sn, sm;
+            always @(*) begin
+                for (sn = 0; sn < NUM_CHANNELS; sn = sn + 1) begin
+                    for (sm = 0; sm < SHARE_LINES; sm = sm + 1)
+                        in_look[sn][sm] = s_lvalid[sm] && (s_tag[sm] == in_addr[sn][BUS_BITS-1:3]) &&
+                                          s_wvalid[sm][in_addr[sn][2:0]];
+                    in_next[sn] = s_clear ? {SHARE_LINES{1'b0}} :
+                                  ((in_look[sn] & ~s_repl_mask) | ((in_addr[sn] == f_addr) ? s_fill_mask : {SHARE_LINES{1'b0}}));
+                    e0_next[sn] = s_clear ? {SHARE_LINES{1'b0}} :
+                                  ((e0_hit[sn] & ~s_repl_mask) | ((b0_addr[sn] == f_addr) ? s_fill_mask : {SHARE_LINES{1'b0}}));
+                    e1_next[sn] = s_clear ? {SHARE_LINES{1'b0}} :
+                                  ((e1_hit[sn] & ~s_repl_mask) | ((b1_addr[sn] == f_addr) ? s_fill_mask : {SHARE_LINES{1'b0}}));
+                end
+            end
+            // The same moves as the buffers' (b0/b1 below).
+            always @(posedge clk)
+                for (sn = 0; sn < NUM_CHANNELS; sn = sn + 1) begin
+                    if (reset || PROG_MASK[sn]) begin
+                        e0_hit[sn] <= {SHARE_LINES{1'b0}};
+                        e1_hit[sn] <= {SHARE_LINES{1'b0}};
+                    end else begin
+                        e0_hit[sn] <= b_pop[sn] ? e1_next[sn] : e0_next[sn];
+                        e1_hit[sn] <= e1_next[sn];
+                        if (b_push[sn]) begin
+                            if (b_cnt[sn] - {1'b0, b_pop[sn]} == 2'd0)
+                                e0_hit[sn] <= in_next[sn];
+                            else
+                                e1_hit[sn] <= in_next[sn];
+                        end
+                    end
+                end
+
             always @(posedge clk) begin
                 if (reset) begin
                     s_lvalid <= {SHARE_LINES{1'b0}};
@@ -307,17 +370,6 @@ module openframe_bus #(
             assign share_word = {BUS_BITS{1'b0}};
         end
     endgenerate
-
-    // Buffer moves this cycle (sync).
-    reg [NUM_CHANNELS-1:0] b_push, b_pop;
-    reg [1:0]              b_next [NUM_CHANNELS-1:0];
-    always @(*) begin
-        for (c = 0; c < NUM_CHANNELS; c = c + 1) begin
-            b_push[c] = sync_mode && !PROG_MASK[c] && room[c] && (ch_read_valid[c] || ch_write_valid[c]);
-            b_pop[c]  = (s_issue && (pick == CH_BITS'(c)) && !PROG_MASK[c]) || share_take[c];
-            b_next[c] = b_cnt[c] + {1'b0, b_push[c]} - {1'b0, b_pop[c]};
-        end
-    end
 
     integer i;
     always @(posedge clk) begin
