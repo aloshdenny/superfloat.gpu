@@ -320,19 +320,20 @@ module openframe_bus #(
                 end
             end
             // The same moves as the buffers' (b0/b1 below).
+            integer se;
             always @(posedge clk)
-                for (sn = 0; sn < NUM_CHANNELS; sn = sn + 1) begin
-                    if (reset || PROG_MASK[sn]) begin
-                        e0_hit[sn] <= {SHARE_LINES{1'b0}};
-                        e1_hit[sn] <= {SHARE_LINES{1'b0}};
+                for (se = 0; se < NUM_CHANNELS; se = se + 1) begin
+                    if (reset || PROG_MASK[se]) begin
+                        e0_hit[se] <= {SHARE_LINES{1'b0}};
+                        e1_hit[se] <= {SHARE_LINES{1'b0}};
                     end else begin
-                        e0_hit[sn] <= b_pop[sn] ? e1_next[sn] : e0_next[sn];
-                        e1_hit[sn] <= e1_next[sn];
-                        if (b_push[sn]) begin
-                            if (b_cnt[sn] - {1'b0, b_pop[sn]} == 2'd0)
-                                e0_hit[sn] <= in_next[sn];
+                        e0_hit[se] <= b_pop[se] ? e1_next[se] : e0_next[se];
+                        e1_hit[se] <= e1_next[se];
+                        if (b_push[se]) begin
+                            if (b_cnt[se] - {1'b0, b_pop[se]} == 2'd0)
+                                e0_hit[se] <= in_next[se];
                             else
-                                e1_hit[sn] <= in_next[sn];
+                                e1_hit[se] <= in_next[se];
                         end
                     end
                 end
