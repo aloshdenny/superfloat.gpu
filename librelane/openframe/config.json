@@ -159,7 +159,7 @@
     "CTS_CLK_MAX_WIRE_LENGTH": 400,
     "CTS_OBSTRUCTION_AWARE": true,
     "CTS_MAX_CAP": 0.3,
-    "CTS_DISTANCE_BETWEEN_BUFFERS": 300,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 150,
     "INSERT_ECO_BUFFERS": [
         {
             "target": "chip.gpu_inst.tiles[0].tile/clk",

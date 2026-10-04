@@ -32,6 +32,12 @@ such a driver repair_design's wire repair cannot split the net (the buffer
 it inserts alone exceeds the driver's load budget) and inserts buffers at
 the load until memory runs out: a2111oi_1 (2.2 fF) on a 33 um net took the
 v2 chip's repair to 28 GB in 14 minutes, against 0.6 GB without it.
+
+Clock tree synthesis places buffers at most 150 um apart
+(CTS_DISTANCE_BETWEEN_BUFFERS). The H-tree's levels 4 to 6 split the
+strip's 167 um height, too short a run for a buffer at 300 um, so a level-3
+buffer drove 16 leaf buffers (signoff fanout limit 10). At 150 um none drives
+more than 10, for 46 more buffers and 0.1 ns of post-CTS setup slack.
 """
 import os
 
