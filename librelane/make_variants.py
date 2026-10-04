@@ -74,6 +74,16 @@ FORMAT_EXTRA = {
     "fp16": {"PL_SOFT_OBSTRUCTIONS": [[0.0, 1950.0, 250.0, 2250.0]]},
 }
 
+# The same for the chips.
+#   SF16: the strip's tag-compare logic (the 8 line tags against every
+#   channel's request and the filling read) gathers at x = 2000-2200 um; with
+#   ddcb4e6 it gave chip_sf16_13 1,237 initial global-route overflow there and
+#   a detailed route stuck near 300 violations after 30 passes (BF16: 15
+#   overflow, routed). One more site of padding per side spreads it.
+CHIP_FORMAT_EXTRA = {
+    "sf16": {"GPL_CELL_PADDING": 3, "DPL_CELL_PADDING": 3},
+}
+
 
 def load(path):
     with open(os.path.join(HERE, path)) as f:
@@ -138,6 +148,7 @@ def main():
         save(f"core_tile/config_{name}.json", t)
 
         c = retarget_views(chip, f"views_{name}")
+        c.update(CHIP_FORMAT_EXTRA.get(name, {}))
         inst = c["MACROS"]["core_tile"]["instances"]
         for i in (0, 1):
             key = f"chip.gpu_inst.tiles[{i}].tile"
