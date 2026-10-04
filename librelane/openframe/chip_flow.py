@@ -38,6 +38,13 @@ Clock tree synthesis places buffers at most 150 um apart
 strip's 167 um height, too short a run for a buffer at 300 um, so a level-3
 buffer drove 16 leaf buffers (signoff fanout limit 10). At 150 um none drives
 more than 10, for 46 more buffers and 0.1 ns of post-CTS setup slack.
+
+Detailed placement may move a cell up to 2,500 um vertically
+(PL_MAX_DISPLACEMENT_Y). FP16's tiles reach the core's top edge, which
+leaves few rows there; once the hold repair after global routing had
+filled them, two wire buffers driving pads in the top-right corner had no
+site within 1,500 um and detailed placement failed (chip_fp16_1). The
+nearest rows are the strip's, about 2,250 um down.
 """
 import os
 
