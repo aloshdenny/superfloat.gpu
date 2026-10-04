@@ -101,13 +101,13 @@ module openframe_bus #(
     reg                ack_q1, ack_q2;
     reg [BUS_BITS-1:0] in_q;                   // IN, registered (sync mode)
     reg [BUS_BITS-1:0] rdata;
-    // Shared-read answers come on their own path (share_data, shared_q).
+    // Shared-read answers come on their own path (share_word, shared_q).
     reg [NUM_CHANNELS-1:0] shared_q;
-    reg [BUS_BITS-1:0]     share_data;
+    wire [BUS_BITS-1:0]    share_word;         // the word answered last cycle
     genvar gch;
     generate
         for (gch = 0; gch < NUM_CHANNELS; gch = gch + 1) begin : read_data_out
-            assign ch_read_data_flat[gch*BUS_BITS +: BUS_BITS] = shared_q[gch] ? share_data : rdata;
+            assign ch_read_data_flat[gch*BUS_BITS +: BUS_BITS] = shared_q[gch] ? share_word : rdata;
         end
     endgenerate
 
@@ -216,7 +216,6 @@ module openframe_bus #(
 
     // Shared-read lines.
     wire [NUM_CHANNELS-1:0] share_take;         // the channel answered from the lines this cycle
-    wire [BUS_BITS-1:0]     share_word;         // its word
 
     // Buffer moves this cycle (sync).
     reg [NUM_CHANNELS-1:0] b_push, b_pop;
@@ -236,7 +235,7 @@ module openframe_bus #(
             reg [SHARE_LINES-1:0]    s_lvalid;
             reg [7:0]                s_wvalid[SHARE_LINES-1:0];
             reg [BUS_BITS-1:0]       s_data  [8*SHARE_LINES-1:0];
-            // A fill's word write, pending for a cycle (see below).
+            // A fill's word write, a cycle after the fill (see below).
             reg                      wr_en;
             reg [SHARE_LINES-1:0]    wr_lines;
             reg [2:0]                wr_word;
@@ -266,7 +265,6 @@ module openframe_bus #(
             // One answer per cycle, rotating among the channels that hit.
             reg               s_found;
             reg [CH_BITS-1:0] s_pick;
-            reg [BUS_BITS-1:0] s_word;
             integer sk, sw;
             always @(*) begin
                 s_found = 1'b0;
@@ -276,14 +274,27 @@ module openframe_bus #(
                         s_found = 1'b1;
                         s_pick  = CH_BITS'(sk % NUM_CHANNELS);
                     end
-                s_word = {BUS_BITS{1'b0}};
-                for (sw = 0; sw < SHARE_LINES; sw = sw + 1)
-                    if (s_match[s_pick][sw])
-                        s_word = (wr_en && wr_lines[sw] && wr_word == b0_addr[s_pick][2:0])
-                                 ? wr_data : s_data[8*sw + b0_addr[s_pick][2:0]];
             end
             assign share_take = s_found ? (NUM_CHANNELS'(1) << s_pick) : {NUM_CHANNELS{1'b0}};
-            assign share_word = s_word;
+            // The answer's line and word are registered, and the word is read
+            // from the lines in the next cycle, while the channel takes it:
+            // the fills before the answer have been written by then (a word is
+            // written the cycle after its fill), and none after it, so it is
+            // the word the lines held at the answer. The pick stays off the
+            // 64-way read mux.
+            reg [SHARE_LINES-1:0] sh_lines;
+            reg [2:0]             sh_word;
+            reg [BUS_BITS-1:0]    sh_data;
+            always @(posedge clk) begin
+                sh_lines <= s_match[s_pick];
+                sh_word  <= b0_addr[s_pick][2:0];
+            end
+            always @(*) begin
+                sh_data = {BUS_BITS{1'b0}};
+                for (sw = 0; sw < SHARE_LINES; sw = sw + 1)
+                    if (sh_lines[sw]) sh_data = s_data[8*sw + sh_word];
+            end
+            assign share_word = sh_data;
 
             // Fill from the answers to data reads issued since the last write.
             // A write issued in the cycle of a fill empties the lines at the
@@ -391,8 +402,7 @@ module openframe_bus #(
             // The words are written a cycle after the fill, from registers
             // holding its lines, word and data, so the 1,024 word enables
             // decode straight from flops: neither reset, the bus pick, the
-            // queue nor the tag compare reaches them. A share answer in the
-            // cycle between takes the pending word (s_word above).
+            // queue nor the tag compare reaches them.
             always @(posedge clk) begin
                 wr_en    <= fill;
                 wr_lines <= (|f_match) ? f_match : (SHARE_LINES'(1) << s_next);
@@ -431,7 +441,6 @@ module openframe_bus #(
             last_sel       <= 1'b0;
             q_stale        <= {OUTSTANDING{1'b0}};
             shared_q       <= {NUM_CHANNELS{1'b0}};
-            share_data     <= {BUS_BITS{1'b0}};
             for (i = 0; i < NUM_CHANNELS; i = i + 1) rcnt[i] <= '0;
             w_beat         <= 1'b0;
             w_data         <= {BUS_BITS{1'b0}};
@@ -511,7 +520,6 @@ module openframe_bus #(
                 // Answers, oldest read first, and one from the shared lines.
                 ch_read_ready <= (answer ? q_mask[q_rd] : {NUM_CHANNELS{1'b0}}) | share_take;
                 shared_q      <= share_take;
-                share_data    <= share_word;
                 if (answer) begin
                     rdata         <= in_q;
                     busy          <= busy & ~q_mask[q_rd];
