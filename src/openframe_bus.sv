@@ -289,18 +289,27 @@ module openframe_bus #(
             // as it will be next cycle. A read is answered two cycles after
             // it issues at the earliest (the pins are registered both ways),
             // so its entry is written before the cycle this samples it, and
-            // every use of f_addr is gated by fill. That keeps the queue
-            // pointer and its 8-way address mux off the tag compare.
+            // every use of f_addr and f_match is gated by fill. So is its
+            // compare with the tags (f_tag_hit), against the tags as they will
+            // be: a line refilled this cycle takes this fill's tag. s_lvalid
+            // is applied after the register. That keeps the queue pointer, its
+            // 8-way address mux and the tag compare off the paths into the
+            // line words' 1,024 enables.
             wire fill = answer && q_sel[q_rd] && !q_stale[q_rd];
-            wire [Q_BITS-1:0]   q_rd_next = q_rd + Q_BITS'(answer);
-            reg  [BUS_BITS-1:0] f_addr;
-            always @(posedge clk)
-                f_addr <= q_addr[q_rd_next];
-            reg [SHARE_LINES-1:0] f_match;
-            integer sf, su;
-            always @(*)
-                for (sf = 0; sf < SHARE_LINES; sf = sf + 1)
-                    f_match[sf] = s_lvalid[sf] && (s_tag[sf] == f_addr[BUS_BITS-1:3]);
+            wire                   s_repl;
+            wire [Q_BITS-1:0]      q_rd_next   = q_rd + Q_BITS'(answer);
+            wire [BUS_BITS-1:0]    f_addr_next = q_addr[q_rd_next];
+            reg  [BUS_BITS-1:0]    f_addr;
+            reg  [SHARE_LINES-1:0] f_tag_hit;
+            integer sg;
+            always @(posedge clk) begin
+                f_addr <= f_addr_next;
+                for (sg = 0; sg < SHARE_LINES; sg = sg + 1)
+                    f_tag_hit[sg] <= (s_repl && s_next == LB'(sg)) ? (f_addr[BUS_BITS-1:3] == f_addr_next[BUS_BITS-1:3])
+                                                                   : (s_tag[sg] == f_addr_next[BUS_BITS-1:3]);
+            end
+            wire [SHARE_LINES-1:0] f_match = s_lvalid & f_tag_hit;
+            integer su;
 
             // Each data channel's buffer entries carry the lines that hold
             // their word: e0_hit for entry 0 (the head), e1_hit for entry 1.
@@ -313,7 +322,7 @@ module openframe_bus #(
             // comparing it with the tags would give, from a register: the
             // compare is off the paths into the bus pick and the answers.
             wire                   s_clear     = flush || w_issue || !sync_mode;   // the lines empty
-            wire                   s_repl      = fill && !(|f_match);               // line s_next refills
+            assign                 s_repl      = fill && !(|f_match);               // line s_next refills
             wire [SHARE_LINES-1:0] s_repl_mask = s_repl ? (SHARE_LINES'(1) << s_next) : {SHARE_LINES{1'b0}};
             wire [SHARE_LINES-1:0] s_fill_mask = !fill ? {SHARE_LINES{1'b0}} : ((|f_match) ? f_match : s_repl_mask);
             reg  [SHARE_LINES-1:0] in_look [NUM_CHANNELS-1:0];
@@ -361,25 +370,32 @@ module openframe_bus #(
                 end else begin
                     if (s_found)
                         s_rr <= (s_pick == CH_BITS'(NUM_CHANNELS - 1)) ? {CH_BITS{1'b0}} : s_pick + 1'b1;
-                    if (fill) begin
-                        if (|f_match) begin
-                            for (su = 0; su < SHARE_LINES; su = su + 1)
-                                if (f_match[su]) begin
-                                    s_wvalid[su][f_addr[2:0]]  <= 1'b1;
-                                    s_data[8*su + f_addr[2:0]] <= in_q;
-                                end
-                        end else begin
-                            s_tag[s_next]                 <= f_addr[BUS_BITS-1:3];
-                            s_lvalid[s_next]              <= 1'b1;
-                            s_wvalid[s_next]              <= 8'b1 << f_addr[2:0];
-                            s_data[8*s_next + f_addr[2:0]] <= in_q;
-                            s_next <= (s_next == LB'(SHARE_LINES - 1)) ? {LB{1'b0}} : s_next + 1'b1;
-                        end
+                    if (s_repl) begin
+                        s_lvalid[s_next] <= 1'b1;
+                        s_next <= (s_next == LB'(SHARE_LINES - 1)) ? {LB{1'b0}} : s_next + 1'b1;
                     end
                     if (flush || w_issue || !sync_mode)
                         s_lvalid <= {SHARE_LINES{1'b0}};
                 end
             end
+            // The tags, word-valid bits and words have no reset: a line is
+            // read only while its s_lvalid bit is set, and reset clears those.
+            // That keeps the reset tree off the paths into the line words'
+            // 1,024 enables.
+            always @(posedge clk)
+                if (fill) begin
+                    if (|f_match) begin
+                        for (su = 0; su < SHARE_LINES; su = su + 1)
+                            if (f_match[su]) begin
+                                s_wvalid[su][f_addr[2:0]]  <= 1'b1;
+                                s_data[8*su + f_addr[2:0]] <= in_q;
+                            end
+                    end else begin
+                        s_tag[s_next]                  <= f_addr[BUS_BITS-1:3];
+                        s_wvalid[s_next]               <= 8'b1 << f_addr[2:0];
+                        s_data[8*s_next + f_addr[2:0]] <= in_q;
+                    end
+                end
         end else begin : g_no_share
             assign share_hold = {NUM_CHANNELS{1'b0}};
             assign share_take = {NUM_CHANNELS{1'b0}};
