@@ -285,8 +285,17 @@ module openframe_bus #(
             // that keeps the bus pick off the paths into the line words'
             // 1,024 enables. Only s_next differs, by one line, while every
             // line is empty.
-            wire [BUS_BITS-1:0] f_addr = q_addr[q_rd];
+            // The filling read's address is registered: the head of the queue
+            // as it will be next cycle. A read is answered two cycles after
+            // it issues at the earliest (the pins are registered both ways),
+            // so its entry is written before the cycle this samples it, and
+            // every use of f_addr is gated by fill. That keeps the queue
+            // pointer and its 8-way address mux off the tag compare.
             wire fill = answer && q_sel[q_rd] && !q_stale[q_rd];
+            wire [Q_BITS-1:0]   q_rd_next = q_rd + Q_BITS'(answer);
+            reg  [BUS_BITS-1:0] f_addr;
+            always @(posedge clk)
+                f_addr <= q_addr[q_rd_next];
             reg [SHARE_LINES-1:0] f_match;
             integer sf, su;
             always @(*)
