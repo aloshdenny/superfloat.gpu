@@ -279,8 +279,14 @@ module openframe_bus #(
             assign share_word = s_word;
 
             // Fill from the answers to data reads issued since the last write.
+            // A write issued in the cycle of a fill empties the lines at the
+            // same edge, which overrides what the fill sets (s_lvalid and the
+            // hit vectors below), so the fill does not wait for the issue:
+            // that keeps the bus pick off the paths into the line words'
+            // 1,024 enables. Only s_next differs, by one line, while every
+            // line is empty.
             wire [BUS_BITS-1:0] f_addr = q_addr[q_rd];
-            wire fill = answer && q_sel[q_rd] && !q_stale[q_rd] && !w_issue;
+            wire fill = answer && q_sel[q_rd] && !q_stale[q_rd];
             reg [SHARE_LINES-1:0] f_match;
             integer sf, su;
             always @(*)

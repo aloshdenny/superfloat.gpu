@@ -36,10 +36,12 @@ set_false_path -to [get_ports {gpio_out[22] gpio_out[23] gpio_out[41] gpio_out[4
 # START, after which the launch sequencer holds the GPU in reset for 4 cycles
 # and waits 4 more before the run: no channel makes a request until at least
 # 9 cycles after it changes, and it is constant while a kernel runs. Its paths
-# (218 loads across the strip) get 4 cycles.
+# (218 loads across the strip) get 4 cycles. The exception names the
+# register: OpenSTA silently ignores -from on its Q pin, which is not a path
+# startpoint.
 set sync_mode_net [get_nets -quiet chip.bus.sync_mode]
 if { [llength $sync_mode_net] } {
-    set sync_mode_reg [get_pins -of_objects $sync_mode_net -filter "direction == output"]
+    set sync_mode_reg [get_cells -of_objects [get_pins -of_objects $sync_mode_net -filter "direction == output"]]
     set_multicycle_path 4 -setup -from $sync_mode_reg
     set_multicycle_path 3 -hold  -from $sync_mode_reg
 }
