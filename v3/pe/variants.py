@@ -18,6 +18,33 @@ VARIANTS = {
 for k in [k for k in VARIANTS if VARIANTS[k]["FMT"] == 1]:
     VARIANTS[k + "_a"] = dict(VARIANTS[k], ALIGN_STAGE=1)
 
+# Levers (round 2). m: the product written as partial-product rows, none
+# dropped (the structure the truncated product uses); t: columns below
+# TRUNC_K dropped, COMP = their expected value with random bits,
+# sum_{c<K} (c+1) 2^c / 4, rounded; g: weight-register clock gating.
+SF24, SF28, SF32 = dict(FMT=0, FRAC=19, ACC_W=24), dict(FMT=0, FRAC=23, ACC_W=28), dict(FMT=0, FRAC=23, ACC_W=32)
+FP16_24A = VARIANTS["fp16_fp24_a"]
+BF16_24A = VARIANTS["bf16_fp24_a"]
+T24 = dict(TRUNC_K=9, COMP=1024)          # 4097 / 4
+T28 = dict(TRUNC_K=6, COMP=80)            # 321 / 4
+TF16 = dict(TRUNC_K=4, COMP=12)           # 49 / 4, on the 11 x 11 significands
+VARIANTS.update({
+    "sf16_sf24_m":   dict(SF24, TRUNC_K=0),
+    "sf16_sf24_t":   dict(SF24, **T24),
+    "sf16_sf24_tg":  dict(SF24, **T24, CG=1),
+    "sf16_sf28":     dict(SF28),
+    "sf16_sf28_t":   dict(SF28, **T28),
+    "sf16_sf28_tg":  dict(SF28, **T28, CG=1),
+    "sf16_sf32_m":   dict(SF32, TRUNC_K=0),
+    "sf16_sf32_t":   dict(SF32, **T28),
+    "sf16_sf32_tg":  dict(SF32, **T28, CG=1),
+    "fp16_fp24_a_m": dict(FP16_24A, TRUNC_K=0),
+    "fp16_fp24_a_t": dict(FP16_24A, **TF16),
+    "fp16_fp24_a_tg": dict(FP16_24A, **TF16, CG=1),
+    "bf16_fp24_a_g": dict(BF16_24A, CG=1),
+})
+ROUND2 = [k for k in VARIANTS if k.endswith(("_m", "_t", "_tg", "_g")) or k == "sf16_sf28"]
+
 
 def widths(p):
     if p["FMT"] == 0:

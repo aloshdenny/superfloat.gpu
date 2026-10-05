@@ -85,3 +85,39 @@ for name in E.CASES:
     c.matmul(A, B)
     dt = time.perf_counter() - t
     print(f"{name:12s} {T}x{K}x{N}: {dt:6.2f} s  {T * K * N / dt / 1e9:6.2f} GMAC/s")
+
+
+# Truncated kernels against the RTL checker's reference (v3/pe/check_block.py).
+sys.path.insert(0, os.path.join(HERE, "..", "pe"))
+from check_block import tmul                           # noqa: E402
+A = E.sf16_ints(rng.uniform(-1, 1, (5, 300)) * 0.3, 0)
+B = E.sf16_ints(rng.uniform(-1, 1, (300, 7)), 0)
+for (drop, width, tk, comp) in [(11, 24, 9, 1024), (7, 28, 6, 80), (7, 32, 6, 80)]:
+    got, _ = E.k_fix_t(A, B, drop, width, tk, comp)
+    ref = np.zeros_like(got)
+    for t in range(A.shape[0]):
+        for n in range(B.shape[1]):
+            acc = 0
+            for k in range(A.shape[1]):
+                a, b = int(A[t, k]), int(B[k, n])
+                q = (tmul(abs(a), abs(b), tk, comp) if a else 0) >> drop
+                acc = min(max(acc + (-q if (a < 0) != (b < 0) else q), -(1 << (width - 1))), (1 << (width - 1)) - 1)
+            ref[t, n] = acc
+    print(f"k_fix_t K={tk}: {'exact' if (got == ref).all() else 'MISMATCH'}")
+    assert (got == ref).all()
+x = E.fp_round(rng.standard_normal((4, 200)), "fp16")
+y = E.fp_round(rng.standard_normal((200, 6)) * 0.05, "fp16")
+MA, EA = E.sig_exp(x, 10)
+MB, EB = E.sig_exp(y, 10)
+got = E.k_fpnat_t(MA, EA, MB, EB, 4, 12, 15, -126, 127)
+from check_block import Fmt, fma_mixed                   # noqa: E402
+fi, fa = Fmt("in", 5, 10), Fmt("acc", 8, 15)
+bad = 0
+for t in range(x.shape[0]):
+    for n in range(y.shape[1]):
+        acc = 0
+        for k in range(x.shape[1]):
+            acc = fma_mixed(fi, fa, fi.from_float(float(x[t, k])), fi.from_float(float(y[k, n])), acc, 4, 12)
+        bad += fa.to_float(acc) != got[t, n]
+print(f"k_fpnat_t: {bad} mismatches of {x.shape[0] * y.shape[1]}")
+assert bad == 0

@@ -12,17 +12,31 @@
 // cycles. The product is registered a stage earlier, off that path.
 // Datapath registers have no reset: they carry only streamed values.
 
+// Weight registers: with CG = 0 they load on w_shift / w_swap from clk; with
+// CG = 1 the block gates their clocks (clk_w, clk_a: v3_block) and they load
+// on every edge of those.
+//
 // SF16 in (Q1.15 sign-magnitude, canonical zero). The 15 x 15 product (Q0.30)
 // is truncated toward zero to FRAC fraction bits and added into an ACC_W-bit
 // two's-complement saturating sum with FRAC fraction bits:
 //   FRAC 15, ACC_W 16: the v2 PE's arithmetic (sat16)
 //   FRAC 19, ACC_W 24: Q5.19 (SF24)
+//   FRAC 23, ACC_W 28: Q5.23 (SF28)
 //   FRAC 23, ACC_W 32: Q9.23 (SF32)
+// TRUNC_K < 0 writes the product as a multiply; TRUNC_K >= 0 as the sum of
+// its partial-product rows with the columns below TRUNC_K left out and COMP
+// added (their expected value). COMP < 2^(30 - FRAC), so a zero operand
+// still gives a zero product.
 module v3_pe_sf #(
-    parameter FRAC  = 23,
-    parameter ACC_W = 32
+    parameter FRAC    = 23,
+    parameter ACC_W   = 32,
+    parameter TRUNC_K = -1,
+    parameter COMP    = 0,
+    parameter CG      = 0
 ) (
     input  wire             clk,
+    input  wire             clk_w,
+    input  wire             clk_a,
     input  wire             w_shift,
     input  wire             w_swap,
     input  wire [15:0]      a_in,
@@ -36,7 +50,31 @@ module v3_pe_sf #(
     reg [FRAC-1:0] p_mag;
     reg            p_sign;
 
-    wire [29:0] prod = a_out[14:0] * w_act[14:0];
+    wire [29:0] prod;
+    generate
+        if (TRUNC_K < 0) begin : g_mul
+            assign prod = a_out[14:0] * w_act[14:0];
+        end else begin : g_rows
+            localparam [29:0] KEEP = ~((30'd1 << TRUNC_K) - 30'd1);
+            reg [29:0] s;
+            integer i;
+            always @(*) begin
+                s = 30'(COMP);
+                for (i = 0; i < 15; i = i + 1)
+                    s = s + (({15'b0, w_act[14:0]} << i) & {30{a_out[i]}} & KEEP);
+            end
+            assign prod = s;
+        end
+        if (CG) begin : g_cg
+            always @(posedge clk_w) w_out <= w_in;
+            always @(posedge clk_a) w_act <= w_out;
+        end else begin : g_en
+            always @(posedge clk) begin
+                if (w_shift) w_out <= w_in;
+                if (w_swap)  w_act <= w_out;
+            end
+        end
+    endgenerate
 
     wire signed [ACC_W:0] term = p_sign ? -$signed({{(ACC_W+1-FRAC){1'b0}}, p_mag})
                                         :  $signed({{(ACC_W+1-FRAC){1'b0}}, p_mag});
@@ -46,8 +84,6 @@ module v3_pe_sf #(
 
     always @(posedge clk) begin
         a_out <= a_in;
-        if (w_shift) w_out <= w_in;
-        if (w_swap)  w_act <= w_out;
         p_mag    <= prod[29 -: FRAC];
         p_sign   <= a_out[15] ^ w_act[15];
         psum_out <= sat;
@@ -60,16 +96,22 @@ endmodule
 //   format, with fp_arith.sv's semantics (RNE, flush to zero, overflow to
 //   infinity, canonical NaN). IN = ACC is the v2 PE's arithmetic.
 // Stages: multiply | align, add (| with ALIGN_STAGE) | normalise, round.
+// TRUNC_K / COMP as in v3_pe_sf, on the significand product (fpx_mul).
 module v3_pe_fp #(
     parameter IN_E  = 5,
     parameter IN_M  = 10,
     parameter ACC_E = 8,
     parameter ACC_M = 23,
     parameter ALIGN_STAGE = 0,
+    parameter TRUNC_K = -1,
+    parameter COMP    = 0,
+    parameter CG      = 0,
     parameter IW = 1 + IN_E + IN_M,
     parameter CW = 1 + ACC_E + ACC_M
 ) (
     input  wire          clk,
+    input  wire          clk_w,
+    input  wire          clk_a,
     input  wire          w_shift,
     input  wire          w_swap,
     input  wire [IW-1:0] a_in,
@@ -91,7 +133,7 @@ module v3_pe_fp #(
     wire [2*Mi-1:0]      mul_prod;
     wire signed [EW-1:0] mul_top;
     wire                 mul_sign, mul_zero, mul_inf, mul_nan;
-    fp_mul #(.EXP_BITS(IN_E), .MANT_BITS(IN_M), .EW(EW)) u_mul (
+    fpx_mul #(.EXP_BITS(IN_E), .MANT_BITS(IN_M), .EW(EW), .TRUNC_K(TRUNC_K), .COMP(COMP)) u_mul (
         .a(a_out), .b(w_act),
         .prod(mul_prod), .top_exp(mul_top),
         .sign(mul_sign), .zero(mul_zero), .inf(mul_inf), .nan(mul_nan)
@@ -158,10 +200,20 @@ module v3_pe_fp #(
         .result(rounded)
     );
 
+    generate
+        if (CG) begin : g_cg
+            always @(posedge clk_w) w_out <= w_in;
+            always @(posedge clk_a) w_act <= w_out;
+        end else begin : g_en
+            always @(posedge clk) begin
+                if (w_shift) w_out <= w_in;
+                if (w_swap)  w_act <= w_out;
+            end
+        end
+    endgenerate
+
     always @(posedge clk) begin
         a_out <= a_in;
-        if (w_shift) w_out <= w_in;
-        if (w_swap)  w_act <= w_out;
         p_prod <= mul_prod;
         p_top  <= mul_top;
         {p_sign, p_zero, p_inf, p_nan} <= {mul_sign, mul_zero, mul_inf, mul_nan};

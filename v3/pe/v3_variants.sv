@@ -180,3 +180,159 @@ module blk_bf16_fp32_a (
         .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
         .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
 endmodule
+
+module blk_sf16_sf24_m (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [191:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [191:0] psum_south
+);
+    v3_block #(.N(8), .FMT(0), .FRAC(19), .ACC_W(24), .TRUNC_K(0)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_sf16_sf24_t (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [191:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [191:0] psum_south
+);
+    v3_block #(.N(8), .FMT(0), .FRAC(19), .ACC_W(24), .TRUNC_K(9), .COMP(1024)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_sf16_sf24_tg (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [191:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [191:0] psum_south
+);
+    v3_block #(.N(8), .FMT(0), .FRAC(19), .ACC_W(24), .TRUNC_K(9), .COMP(1024), .CG(1)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_sf16_sf28 (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [223:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [223:0] psum_south
+);
+    v3_block #(.N(8), .FMT(0), .FRAC(23), .ACC_W(28)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_sf16_sf28_t (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [223:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [223:0] psum_south
+);
+    v3_block #(.N(8), .FMT(0), .FRAC(23), .ACC_W(28), .TRUNC_K(6), .COMP(80)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_sf16_sf28_tg (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [223:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [223:0] psum_south
+);
+    v3_block #(.N(8), .FMT(0), .FRAC(23), .ACC_W(28), .TRUNC_K(6), .COMP(80), .CG(1)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_sf16_sf32_m (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [255:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [255:0] psum_south
+);
+    v3_block #(.N(8), .FMT(0), .FRAC(23), .ACC_W(32), .TRUNC_K(0)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_sf16_sf32_t (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [255:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [255:0] psum_south
+);
+    v3_block #(.N(8), .FMT(0), .FRAC(23), .ACC_W(32), .TRUNC_K(6), .COMP(80)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_sf16_sf32_tg (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [255:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [255:0] psum_south
+);
+    v3_block #(.N(8), .FMT(0), .FRAC(23), .ACC_W(32), .TRUNC_K(6), .COMP(80), .CG(1)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_fp16_fp24_a_m (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [191:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [191:0] psum_south
+);
+    v3_block #(.N(8), .FMT(1), .IN_E(5), .IN_M(10), .ACC_E(8), .ACC_M(15), .ALIGN_STAGE(1), .TRUNC_K(0)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_fp16_fp24_a_t (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [191:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [191:0] psum_south
+);
+    v3_block #(.N(8), .FMT(1), .IN_E(5), .IN_M(10), .ACC_E(8), .ACC_M(15), .ALIGN_STAGE(1), .TRUNC_K(4), .COMP(12)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_fp16_fp24_a_tg (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [191:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [191:0] psum_south
+);
+    v3_block #(.N(8), .FMT(1), .IN_E(5), .IN_M(10), .ACC_E(8), .ACC_M(15), .ALIGN_STAGE(1), .TRUNC_K(4), .COMP(12), .CG(1)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule
+
+module blk_bf16_fp24_a_g (
+    input  wire clk, w_shift, w_swap,
+    input  wire [127:0] a_west, w_north,
+    input  wire [191:0] psum_north,
+    output wire [127:0] a_east,
+    output wire [191:0] psum_south
+);
+    v3_block #(.N(8), .FMT(1), .IN_E(8), .IN_M(7), .ACC_E(8), .ACC_M(15), .ALIGN_STAGE(1), .CG(1)) u_blk (
+        .clk(clk), .w_shift(w_shift), .w_swap(w_swap), .a_west(a_west), .w_north(w_north),
+        .psum_north(psum_north), .a_east(a_east), .psum_south(psum_south));
+endmodule

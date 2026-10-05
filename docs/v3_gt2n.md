@@ -146,6 +146,10 @@ GPT-2 small on the WikiText-2 test set: 32 windows of 1,024 tokens (32,736 next-
 | BF16, native BF16 (v2) | 129.3 | +344% | 39.3% |
 | BF16, FP24 | 29.342 | +0.72% | 89.4% |
 | BF16, FP32 | 29.355 | +0.76% | 89.6% |
+| SF16, SF24, truncated product | 29.294 | +0.55% | 97.3% |
+| SF16, SF28 (Q5.23) | 29.161 | +0.10% | 98.8% |
+| SF16, SF28 or SF32, truncated product | 29.153 | +0.07% | 98.9% |
+| FP16, FP24, truncated product | 29.140 | +0.02% | 98.4% |
 
 - **The v2 SF16 PE cannot run GPT-2's matmuls.** Each product is truncated to Q1.15, and with one scale per tensor most activations and weights sit far below full scale, so small products lose most of their bits. Headroom does not help: with no clipping at all, perplexity is still +323%.
 - **Under the 1% rule:** SF16 takes SF24 (by 0.004 points), FP16 and BF16 take FP24. SF32 is the safe SF16 choice: its 98.8% top-1 agreement matches FP16 with FP24 or FP32.
@@ -196,9 +200,48 @@ With SF32 instead (the quality match for FP16): 1.47× area, 1.94× energy and 1
 - **Where SF16 wins and loses:** its fixed-point accumulator needs no alignment or normalization, so one stage meets 2 GHz where FP needs three. Its cost is the 15 × 15 magnitude multiplier, against BF16's 8 × 8.
 - **The fewer stages matter for latency:** a 128-row column fills in 128 cycles for SF16 against 384 for FP. That counts most in batch-1 decode, where each matmul pass is short.
 
-**Levers not yet measured:**
-1. **A truncated SF16 multiplier.** The PE keeps 19 (SF24) or 23 (SF32) of the product's 30 fraction bits, so the lowest columns only feed carries. The v2 PE study measured 18% less area at 12 dropped columns (13% of products off by 1 LSB of Q1.15); here the error lands 4–8 bits below the kept LSB.
-2. **Clock gating** of the weight registers, which load once per tile; the clock is about a third of every block's power. This applies to all three formats.
+## Levers: truncated product and clock gating
+
+Both measured as S2 was, on a second pod, with S1's GPT-2 run for every variant that changes the arithmetic. Every block is bit-exact against its Python model and its gate-level netlist matches the RTL.
+- **Truncated product.** The PE keeps 19 (SF24) or 23 (SF28, SF32) of the product's 30 fraction bits, so its lowest columns only feed carries. The product is written as its partial-product rows with the columns below K left out, plus COMP, their expected value with random bits: SF24 K 9, COMP 1,024; SF28 and SF32 K 6, COMP 80. COMP stays below the kept LSB, so a zero operand still gives zero.
+  - FP16 gets the same on its 11 × 11 significands: K 4, COMP 12; FP24 keeps 16 of the product's 22 bits.
+  - BF16's 8 × 8 product is narrower than FP24's significand, so there is nothing to drop.
+  - COMP also cancels the truncation's bias toward zero: SF24 improves from +0.996% to +0.55% perplexity.
+- **Clock gating** of both weight registers, in every format. GT2N has no clock-gate cell or latch, so a gate is a falling-edge flop holding the enable, ANDed with the clock (cycle-identical). Synthesis merges the per-row gates into one per register, and the clock tree is built under each.
+- **SF28 (Q5.23).** S1 never clipped SF24's Q5 integer range, so SF28 has SF32's precision with four fewer bits.
+
+| Variant at 2 GHz | Area/MAC (µm²) | Energy/MAC (fJ) | TFLOPS/mm² | TFLOPS/W | Max clock (GHz) |
+|---|---|---|---|---|---|
+| SF16, SF24 | 75.0 | 314 | 53.4 | 6.36 | 2.53 |
+| SF16, SF24, rows (none dropped) | 74.6 | 317 | 53.6 | 6.30 | 2.81 |
+| SF16, SF24, truncated | 67.8 | 275 | 59.0 | 7.26 | 2.86 |
+| **SF16, SF24, truncated + gated** | **66.5** | **233** | **60.1** | **8.60** | 2.62 |
+| SF16, SF28 | 80.0 | 340 | 50.0 | 5.87 | 2.52 |
+| SF16, SF28, truncated | 77.2 | 331 | 51.8 | 6.04 | 2.66 |
+| **SF16, SF28, truncated + gated** | **75.8** | **294** | **52.8** | **6.80** | 2.70 |
+| SF16, SF32, truncated + gated | 78.4 | 304 | 51.0 | 6.57 | 2.75 |
+| FP16, FP24 (a) | 122.0 | 678 | 32.8 | 2.95 | 2.46 |
+| FP16, FP24 (a), truncated | 113.6 | 624 | 35.2 | 3.21 | 2.81 |
+| **FP16, FP24 (a), truncated + gated** | **113.0** | **589** | **35.4** | **3.40** | 2.82 |
+| BF16, FP24 (a) | 98.0 | 516 | 40.8 | 3.87 | 2.77 |
+| **BF16, FP24 (a), gated** | **98.2** | **487** | **40.7** | **4.11** | 2.87 |
+
+TFLOPS/mm² is 2 FLOPs per MAC per cycle at 2 GHz over the area per MAC; TFLOPS/W is 2 FLOPs over the energy per MAC.
+
+**Compute with every lever, SF16 ahead by:**
+
+| | vs FP16 | vs BF16 |
+|---|---|---|
+| SF24, TFLOPS/mm² | 1.70× | 1.48× |
+| SF24, TFLOPS/W | 2.53× | 2.09× |
+| SF28 (quality of FP16), TFLOPS/mm² | 1.49× | 1.30× |
+| SF28, TFLOPS/W | 2.00× | 1.65× |
+| Max clock (SF24) | 0.93× | 0.91× |
+
+- **Compute per watt clears 2× against both** with SF24, and against FP16 with SF28.
+- **Compute per mm² does not:** SF24 is 1.70× FP16 and 1.48× BF16.
+- **Max clock:** FP and BF16 clock higher only with two more pipeline stages; at equal stages SF16 is faster (S2).
+- **The truncated product is worth 9.6% of SF24's area and 12% of its energy,** and the rows form alone is not where the saving comes from (74.6 µm² vs 75.0). Clock gating takes another 15% of SF24's energy and 5–6% of the FP formats'.
 
 ## GT2N flow notes (from the v2 runs)
 
@@ -212,7 +255,7 @@ With SF32 instead (the quality match for FP16): 1.47× area, 1.94× energy and 1
 
 ## Milestones
 
-1. S1 and S2 (done); accumulator per format: SF16 SF24 or SF32, FP16 FP24, BF16 FP24.
+1. S1, S2 and the levers (done): SF16 SF24 or SF28 with a truncated product, FP16 FP24 truncated, BF16 FP24; weight-register clock gating in all three.
 2. Freeze the ISA; assembler, and the compiler's exp/rsqrt/GELU lowering.
 3. RTL in all three formats: matrix unit, vector unit, scalar core, DMA, issue queues.
 4. Cocotb tests per unit and per format, then GPT-2 and YOLOv8n end to end against the Python reference.

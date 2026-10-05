@@ -20,6 +20,11 @@ when it leaves the unit (MXU.POP).
                rounded to FP16 at the pop.
   fp16_fp32    FP16 in, FP32 accumulator, rounded to FP16 at the pop.
   bf16_nat, bf16_fp24, bf16_fp32   The same three for BF16.
+  sf16_sf28    SF16 in, Q5.23 28-bit accumulator.
+  *t           Truncated product (v3/pe/v3_pe.sv): the partial-product bits in
+               columns below K left out and COMP added, then as above.
+               sf16_sf24t K 9 COMP 1024; sf16_sf28t, sf16_sf32t K 6 COMP 80;
+               fp16_fp24t K 4 COMP 12 on the 11 x 11 significands.
 
 SF16 tensors carry one power-of-two scale each, chosen so the largest
 magnitude fits (inputs and outputs; negative exponents allowed). FP16 and
@@ -39,10 +44,14 @@ import numpy as np
 from numba import njit, prange
 
 CASES = ("sf16_sat16", "sf16_sat16h", "sf16_sf24", "sf16_sf32",
-         "fp16_nat", "fp16_fp24", "fp16_fp32", "bf16_nat", "bf16_fp24", "bf16_fp32")
-# SF16 accumulators: (fraction bits kept per product, total width)
-FIX = {"sf16_sat16": (15, 16), "sf16_sat16h": (15, 16),
-       "sf16_sf24": (19, 24), "sf16_sf32": (23, 32)}
+         "fp16_nat", "fp16_fp24", "fp16_fp32", "bf16_nat", "bf16_fp24", "bf16_fp32",
+         "sf16_sf24t", "sf16_sf28", "sf16_sf28t", "sf16_sf32t", "fp16_fp24t")
+# SF16 accumulators: (fraction bits kept per product, total width, K, COMP)
+FIX = {"sf16_sat16": (15, 16, -1, 0), "sf16_sat16h": (15, 16, -1, 0),
+       "sf16_sf24": (19, 24, -1, 0), "sf16_sf32": (23, 32, -1, 0),
+       "sf16_sf24t": (19, 24, 9, 1024), "sf16_sf28": (23, 28, -1, 0),
+       "sf16_sf28t": (23, 28, 6, 80), "sf16_sf32t": (23, 32, 6, 80)}
+FP_TRUNC = {"fp16_fp24t": (4, 12)}
 
 
 # ------------------------------------------------------------------ SF16
@@ -83,6 +92,52 @@ def k_fix(A, B, drop, width):
             for n in range(N):
                 p = a * B[k, n]
                 q = (p + ((p >> 63) & rnd)) >> drop        # truncate toward zero
+                s = acc[n] + q
+                r = min(max(s, lo), hi)
+                c += s != r
+                acc[n] = r
+        for n in range(N):
+            out[t, n] = acc[n]
+        clips[t] = c
+    return out, clips
+
+
+@njit(parallel=True, cache=True)
+def k_fix_t(A, B, drop, width, tk, comp):
+    """k_fix with the truncated magnitude product: |a||b| minus its
+    partial-product bits in columns below tk, plus comp; then truncated by
+    `drop` bits and signed."""
+    T, K = A.shape
+    N = B.shape[1]
+    out = np.empty((T, N), np.int64)
+    clips = np.zeros(T, np.int64)
+    lo = -(np.int64(1) << (width - 1))
+    hi = (np.int64(1) << (width - 1)) - 1
+    for t in prange(T):
+        acc = np.zeros(N, np.int64)
+        bits = np.empty(16, np.int64)
+        c = 0
+        for k in range(K):
+            a = np.int64(A[t, k])
+            if a == 0:
+                continue
+            am = abs(a)
+            neg_a = a < 0
+            nb = 0
+            for i in range(tk):
+                if (am >> i) & 1:
+                    bits[nb] = i
+                    nb += 1
+            for n in range(N):
+                b = np.int64(B[k, n])
+                bm = abs(b)
+                d = np.int64(0)
+                for j in range(nb):
+                    i = bits[j]
+                    d += (bm & ((np.int64(1) << (tk - i)) - 1)) << i
+                q = (am * bm - d + comp) >> drop
+                if (b < 0) != neg_a:
+                    q = -q
                 s = acc[n] + q
                 r = min(max(s, lo), hi)
                 c += s != r
@@ -169,6 +224,69 @@ def k_fpnat(A, B, m, emin, emax):
     return out
 
 
+@njit(parallel=True, cache=True)
+def k_fpnat_t(MA, EA, MB, EB, tk, comp, m, emin, emax):
+    """k_fpnat with the truncated significand product: operands as integer
+    significands and exponents (value = M * 2**E, M = 0 for zero)."""
+    T, K = MA.shape
+    N = MB.shape[1]
+    out = np.empty((T, N), np.float64)
+    drop = 52 - m
+    half = (np.int64(1) << (drop - 1)) - 1
+    mask = ~((np.int64(1) << drop) - 1)
+    tiny = 2.0 ** emin
+    maxf = (2.0 - 2.0 ** (-m)) * 2.0 ** emax
+    for t in prange(T):
+        acc = np.zeros(N, np.float64)
+        bits = acc.view(np.int64)
+        ib = np.empty(16, np.int64)
+        for k in range(K):
+            ma = MA[t, k]
+            if ma == 0:
+                continue
+            am = abs(ma)
+            nb = 0
+            for i in range(tk):
+                if (am >> i) & 1:
+                    ib[nb] = i
+                    nb += 1
+            for n in range(N):
+                mb = MB[k, n]
+                if mb == 0:
+                    continue
+                bm = abs(mb)
+                d = np.int64(0)
+                for j in range(nb):
+                    i = ib[j]
+                    d += (bm & ((np.int64(1) << (tk - i)) - 1)) << i
+                p = math.ldexp(float(am * bm - d + comp), EA[t, k] + EB[k, n])
+                if (ma < 0) != (mb < 0):
+                    p = -p
+                acc[n] = acc[n] + p
+            for n in range(N):
+                s = acc[n]
+                if abs(s) < tiny:
+                    acc[n] = 0.0 * s
+                else:
+                    b = bits[n]
+                    bits[n] = (b + half + ((b >> drop) & 1)) & mask
+                    if abs(acc[n]) > maxf:
+                        acc[n] = math.copysign(math.inf, s)
+        for n in range(N):
+            out[t, n] = acc[n]
+    return out
+
+
+def sig_exp(x: np.ndarray, m: int):
+    """Integer significands (sign included) and exponents of 16-bit values:
+    x = M * 2**E, M with m + 1 bits, M = 0 for zero."""
+    assert np.isfinite(x).all(), "sig_exp: non-finite operand"
+    f, e = np.frexp(x)
+    M = np.rint(f * 2.0 ** (m + 1)).astype(np.int64)
+    E = (e - (m + 1)).astype(np.int64)
+    return np.ascontiguousarray(M), np.ascontiguousarray(E)
+
+
 # ------------------------------------------------------------- dispatcher
 
 class Case:
@@ -206,7 +324,7 @@ class Case:
         if n == "fp32":
             return (A.astype(np.float32) @ B.astype(np.float32)).astype(np.float32)
         if n.startswith("sf16"):
-            frac, width = FIX[n]
+            frac, width, tk, comp = FIX[n]
             Bi, eb = self._sf16_w(B, key)
             ea = scale_exp(float(np.max(np.abs(A))))
             Ai = sf16_ints(A, ea)
@@ -218,12 +336,28 @@ class Case:
                     ea += h
                     Ai = sf16_ints(A, ea)
                     self.stats["headroom_bits"] += h
-            acc, clips = k_fix(Ai, Bi, 30 - frac, width)
+            if tk < 0:
+                acc, clips = k_fix(Ai, Bi, 30 - frac, width)
+            else:
+                acc, clips = k_fix_t(Ai, Bi, 30 - frac, width, tk, comp)
             self.stats["clips"] += int(clips.sum())
             return pop_sf16(acc, frac, ea + eb).astype(np.float32)
         fmt, acc_kind = n.split("_")
         Bq = self._fp_w(B, key, fmt)
         Aq = np.ascontiguousarray(fp_round(A, fmt))
+        if n in FP_TRUNC:
+            tk, comp = FP_TRUNC[n]
+            m, emin, emax = FMTS["fp24"]
+            fm = FMTS[fmt][0]
+            MA, EA = sig_exp(Aq, fm)
+            if key is None:
+                MB, EB = sig_exp(Bq, fm)
+            else:
+                if (key, "sig") not in self.wcache:
+                    self.wcache[(key, "sig")] = sig_exp(Bq, fm)
+                MB, EB = self.wcache[(key, "sig")]
+            r = k_fpnat_t(MA, EA, MB, EB, tk, comp, m, emin, emax)
+            return fp_round(r, fmt).astype(np.float32)
         if acc_kind == "fp32":
             r = Aq.astype(np.float32) @ Bq.astype(np.float32)
             return fp_round(r, fmt).astype(np.float32)

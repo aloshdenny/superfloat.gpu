@@ -43,10 +43,28 @@ class Fmt(fp16fmt.Fmt):
         return ("num", s, -v if s else v)
 
 
-def fma_mixed(fi, fa, a, b, c):
-    """round_fa(a * b + c): a, b in fi, c and the result in fa."""
+def dropped(x, y, k):
+    """The partial-product bits of x * y in columns below k (their sum)."""
+    return sum(((y & ((1 << (k - i)) - 1)) << i) for i in range(k) if (x >> i) & 1)
+
+
+def tmul(x, y, k, comp):
+    """The truncated product: x * y without the columns below k, plus comp."""
+    return x * y if k < 0 else x * y - dropped(x, y, k) + comp
+
+
+def fma_mixed(fi, fa, a, b, c, k=-1, comp=0):
+    """round_fa(a * b + c): a, b in fi, c and the result in fa. With k >= 0
+    the significand product is truncated (tmul)."""
     ka, sa, va = fi.decode(a)
     kb, sb, vb = fi.decode(b)
+    if k >= 0 and ka == "num" and kb == "num":
+        ma = (1 << fi.m) | (a & ((1 << fi.m) - 1))
+        mb = (1 << fi.m) | (b & ((1 << fi.m) - 1))
+        ea = ((a >> fi.m) & fi.emax_field) - fi.bias
+        eb = ((b >> fi.m) & fi.emax_field) - fi.bias
+        mag = Fraction(tmul(ma, mb, k, comp)) * Fraction(2) ** (ea + eb - 2 * fi.m)
+        va, vb = (-mag if sa ^ sb else mag), Fraction(1)
     kc, sc, vc = fa.decode(c)
     sp = sa ^ sb
     if "nan" in (ka, kb, kc):
@@ -72,7 +90,7 @@ def fma_mixed(fi, fa, a, b, c):
 
 def sf_op(p, a, w, psum):
     frac, width = p["FRAC"], p["ACC_W"]
-    mag = ((a & 0x7FFF) * (w & 0x7FFF)) >> (30 - frac)
+    mag = tmul(a & 0x7FFF, w & 0x7FFF, p.get("TRUNC_K", -1), p.get("COMP", 0)) >> (30 - frac)
     term = -mag if ((a ^ w) >> 15) & 1 else mag
     s = psum - (1 << width) if psum >> (width - 1) else psum        # signed
     s = max(min(s + term, (1 << (width - 1)) - 1), -(1 << (width - 1)))
@@ -117,7 +135,7 @@ def run(name):
         fa = Fmt("acc", p["ACC_E"], p["ACC_M"])
         rin = lambda: rand_fp(rng, fi, fi.bias, 4)
         racc = lambda: rand_fp(rng, fa, fa.bias + rng.randint(-3, 3), 6)
-        op = lambda a, w, s: fma_mixed(fi, fa, a, w, s)
+        op = lambda a, w, s: fma_mixed(fi, fa, a, w, s, p.get("TRUNC_K", -1), p.get("COMP", 0))
     W = [[rin() for _ in range(N)] for _ in range(N)]
     A = [[rin() for _ in range(N)] for _ in range(M)]
     P0 = [[racc() for _ in range(N)] for _ in range(M)]
