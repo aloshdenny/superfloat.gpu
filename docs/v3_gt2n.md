@@ -4,7 +4,7 @@ This is the plan for v3: a new core built around four 128 × 128 matrix units, h
 
 v3 targets GT2N only. v2 stays the SKY130 ChipFoundry OpenFrame build on `cf-openframe-v2`. There is no v3 at 130 nm and no double-wide OpenFrame build.
 
-Nothing here is RTL yet. Studies S1 and S2 below come first, because their results set the accumulator format and show whether the performance target is reachable.
+Studies S1 (numerics) and S2 (PE cost) are done; their results are below. They set the accumulator and show how far SF16 is ahead at the PE level. The rest of the core is not RTL yet.
 
 ## Decisions
 
@@ -15,7 +15,7 @@ Nothing here is RTL yet. Studies S1 and S2 below come first, because their resul
 | Data and compute | SF16 in every buffer, register and vector lane |
 | Special functions (exp, rsqrt, divide) | None in hardware; the compiler lowers them to vector ops |
 | Core organization | One scalar control core, a 128-lane vector unit, four matrix units and DMA; the 8-thread SIMT design goes |
-| Accumulator | SF16-compatible. Proposed: SF32 (Q9.23) inside the matrix units only, pending S1 and S2 |
+| Accumulator | SF24 (Q5.19) or SF32 (Q9.23) inside the matrix units only; S1 rules out the v2 16-bit accumulator (see S1) |
 | Target | SF16 at least 2–2.5× ahead of FP16 and BF16 on every metric |
 
 Why four 128 × 128 units rather than one 256 × 256: a 256-wide array runs partly empty on layers narrower than 256, and GPT-2's attention heads are 64 wide while YOLOv8n's layers have 16–256 channels. Google moved from TPU v1's single 256 × 256 array to four 128 × 128 units per core for the same reason. GPT-2's 768-wide matrices also tile evenly into 128-wide blocks.
@@ -102,7 +102,7 @@ Removed from v2: the per-thread `SYS load` / `SYS compute` / `SYS read`, the SIM
 
 ## Same core in three formats
 
-FP16 and BF16 get the same core: the same matrix-unit geometry, buffers, ISA and flow settings. Their matrix units accumulate in FP32, as production FP16/BF16 units do, with native-precision accumulation measured as the cheaper alternative. Their vector units compute in their own format.
+FP16 and BF16 get the same core: the same matrix-unit geometry, buffers, ISA and flow settings. Their matrix units accumulate in FP24, the cheapest accumulator that passes S1 for both (native accumulation does not); FP32 was measured too. Their vector units compute in their own format.
 
 ## Target: 2–2.5× ahead
 
@@ -125,25 +125,80 @@ The v2 tile at GT2N, before those runs were deleted on 2026-10-05:
 | 500 ps target, 55% utilization, global route: max clock | 2.00 GHz | not reached | 1.94 GHz |
 | Power at that clock | 35.2 mW | not reached | 49.9 mW |
 
-GT2N has no parasitic-extraction rules for OpenRCX, so these use estimated parasitics in every format. On these numbers SF16 clears 2× only on energy against FP16. The accumulator is where the gap can widen: an FP32 accumulator needs alignment and normalization shifters about as large as the multiplier, and SF32 needs none. S2 measures whether that is enough. If it is not, we report the ratios we measure rather than the target.
+GT2N has no parasitic-extraction rules for OpenRCX, so these use estimated parasitics in every format. On these numbers SF16 clears 2× only on energy against FP16. The accumulator is where the gap can widen: an FP32 accumulator needs alignment and normalization shifters about as large as the multiplier, and SF32 needs none. S2 measured that this is not enough on every metric: SF16 is 2.16× ahead of FP16 on energy, but 1.3–1.6× ahead of BF16 and level on clock (S2 below).
 
 At 2.0 GHz, one core's 65,536 MACs give 131 TMAC/s.
 
-## Studies before RTL
+## Study S1: accumulator numerics
 
-**S1. Numerics (CPU, no GPU spend).** GPT-2 small in Python bit-level emulation, with matmuls tiled the way the matrix units do them: 128-row K chunks summed across chunks in the accumulator, then one pop.
-- Cases: SF16 with the v2 saturating 16-bit accumulator; SF16 with SF32; FP16 and BF16 each with native and with FP32 accumulation; FP32 as the reference.
-- Measures: perplexity, top-1 agreement with FP32, maximum logit error.
-- Decision rule, the same for every format: use the cheapest accumulator whose perplexity is within 1% of the FP32 reference.
+GPT-2 small on the WikiText-2 test set: 32 windows of 1,024 tokens (32,736 next-token predictions), spread evenly over the set. Every matmul runs through an emulated matrix unit (`v3/s1/mxu_emu.py`): operands quantized to the 16-bit format, products accumulated along K in order as a column does, one rounding to the 16-bit format at the pop. Everything else stays FP32, so only the matrix unit changes. The emulation is bit-exact against the RTL's reference arithmetic (`v3/s1/check_kernels.py`). Run on a RunPod 32-vCPU pod.
 
-**S2. PE synthesis at SKY130 and GT2N.** Six PEs: SF16 into SF16 (v2) and into SF32; FP16 into FP16 (v2) and into FP32; BF16 into BF16 (v2) and into FP32.
-- Synthesis plus a placed and routed 16 × 16 PE block per case at GT2N, so wiring counts.
-- Measures: area per MAC, energy per MAC at a fixed clock, maximum clock.
-- Gate: if S1's chosen accumulators leave SF16 short of 2× against BF16, say so before writing RTL.
+| Format, accumulator | Perplexity | vs FP32 | Top-1 agreement with FP32 |
+|---|---|---|---|
+| FP32 reference | 29.133 | | |
+| SF16, v2 16-bit saturating (4 windows; FP32 27.78) | 196.9 | +609% | 36.3% |
+| SF16, 16-bit with oracle headroom (4 windows) | 117.5 | +323% | 45.2% |
+| SF16, SF24 (Q5.19) | 29.423 | +0.996% | 96.1% |
+| SF16, SF32 (Q9.23) | 29.161 | +0.10% | 98.8% |
+| FP16, native FP16 (v2) | 30.048 | +3.14% | 86.0% |
+| FP16, FP24 (1/8/15) | 29.143 | +0.03% | 98.4% |
+| FP16, FP32 | 29.138 | +0.02% | 98.5% |
+| BF16, native BF16 (v2) | 129.3 | +344% | 39.3% |
+| BF16, FP24 | 29.342 | +0.72% | 89.4% |
+| BF16, FP32 | 29.355 | +0.76% | 89.6% |
 
-**S3. Matrix-unit hardening at GT2N.** After the RTL exists, harden one 128 × 128 unit per format. A v2 tile's detailed route needed 52–73 GB, and 128 GB is RunPod's largest CPU pod, so a flat 16,384-PE route will not fit. The unit is built hierarchically, from 32 × 32 PE macros.
+- **The v2 SF16 PE cannot run GPT-2's matmuls.** Each product is truncated to Q1.15, and with one scale per tensor most activations and weights sit far below full scale, so small products lose most of their bits. Headroom does not help: with no clipping at all, perplexity is still +323%.
+- **Under the 1% rule:** SF16 takes SF24 (by 0.004 points), FP16 and BF16 take FP24. SF32 is the safe SF16 choice: its 98.8% top-1 agreement matches FP16 with FP24 or FP32.
+- **BF16's 8-bit significand caps top-1 agreement at about 89%,** whatever the accumulator.
 
-**S4. Buffer sizing and memories.** Size the unified, weight and accumulator buffers from the GPT-2 and YOLOv8n schedules. GT2N has no SRAM compiler: v2 used flip-flop RAM32 blocks. Check whether ORFS's GT2N platform ships memory macros; if it does not, any SRAM figures are modeled, and will be labeled that way.
+## Study S2: PE cost at GT2N
+
+Each variant is an 8 × 8 block of v3 PEs (`v3/pe/`) with registered edges, taken through ORFS on GT2N to global routing: synthesis, floorplan, placement, clock tree, global route. GT2N has no extraction rules, so timing and power use the global route's estimated parasitics; detailed routing would not change them.
+- **Checks:** every PE is bit-exact against Python models (`v3/pe/check_block.py`, 8,000 outputs per variant), and every block's gate-level netlist matches its RTL on the power stimulus.
+- **Power:** gate-level switching activity at 2 GHz on real GPT-2 operands (layer 5's MLP input, 1,024 tokens, four 8 × 8 weight tiles from its weights, true partial sums from the north).
+- **Maximum clock:** from a 300 ps run, 1 / (300 ps − register-to-register slack).
+- **Per MAC:** the block's figure / 64, edge registers included.
+
+Stages are the register stages on the partial-sum path through one PE (the array skews each row by that many cycles); FP blocks marked (a) register the alignment.
+
+| Variant | Stages | Meets 2 GHz | Area/MAC (µm²) | Energy/MAC (fJ) | Max clock (GHz) | SKY130 synthesis area/MAC (µm²) |
+|---|---|---|---|---|---|---|
+| SF16, 16-bit (v2) | 1 | yes | 68.8 | 278 | 2.64 | 10,107 |
+| SF16, SF24 | 1 | yes | 75.0 | 314 | 2.53 | 10,798 |
+| SF16, SF32 | 1 | yes | 82.9 | 350 | 2.51 | 11,434 |
+| FP16, native | 2 | no | 104.0 | 566 | 2.14 | 12,206 |
+| FP16, FP24 | 2 | no | 116.1 | 630 | 2.03 | 13,086 |
+| FP16, FP32 | 2 | no | 124.6 | 708 | 2.00 | 14,295 |
+| FP16, native (a) | 3 | yes | 112.5 | 630 | 2.70 | 13,503 |
+| FP16, FP24 (a) | 3 | yes | 122.0 | 678 | 2.46 | 14,471 |
+| FP16, FP32 (a) | 3 | yes | 131.3 | 726 | 2.48 | 15,482 |
+| BF16, native | 2 | no | 86.1 | 435 | 2.17 | 9,950 |
+| BF16, FP24 | 2 | no | 91.3 | 473 | 2.26 | 10,642 |
+| BF16, FP32 | 2 | no | 113.1 | 610 | 2.06 | 12,578 |
+| BF16, native (a) | 3 | yes | 95.4 | 491 | 3.02 | 10,968 |
+| BF16, FP24 (a) | 3 | yes | 98.0 | 516 | 2.77 | 11,497 |
+| BF16, FP32 (a) | 3 | yes | 119.3 | 657 | 2.69 | 13,835 |
+
+Area and energy of a block that misses 2 GHz are for reference only. The SKY130 column is synthesis area (Yosys/ABC, 10 ns) with no timing.
+
+**At 2 GHz, each format's cheapest variant that meets the clock and S1's rule:**
+
+| | SF16, SF24 | FP16, FP24 (a) | BF16, FP24 (a) | SF16 vs FP16 | SF16 vs BF16 |
+|---|---|---|---|---|---|
+| Area/MAC | 75.0 µm² | 122.0 µm² | 98.0 µm² | 1.63× | 1.31× |
+| Energy/MAC | 314 fJ | 678 fJ | 516 fJ | 2.16× | 1.64× |
+| Max clock | 2.53 GHz | 2.46 GHz | 2.77 GHz | 1.03× | 0.91× |
+| Partial-sum stages per row | 1 | 3 | 3 | 3× fewer | 3× fewer |
+
+With SF32 instead (the quality match for FP16): 1.47× area, 1.94× energy and 1.02× clock against FP16; 1.18×, 1.47× and 0.90× against BF16.
+
+- **2× is reached on energy against FP16 only.** Against BF16, SF16 is 1.3× smaller and 1.6× more efficient, and BF16 clocks 9% higher once it has two more pipeline stages.
+- **Where SF16 wins and loses:** its fixed-point accumulator needs no alignment or normalization, so one stage meets 2 GHz where FP needs three. Its cost is the 15 × 15 magnitude multiplier, against BF16's 8 × 8.
+- **The fewer stages matter for latency:** a 128-row column fills in 128 cycles for SF16 against 384 for FP. That counts most in batch-1 decode, where each matmul pass is short.
+
+**Levers not yet measured:**
+1. **A truncated SF16 multiplier.** The PE keeps 19 (SF24) or 23 (SF32) of the product's 30 fraction bits, so the lowest columns only feed carries. The v2 PE study measured 18% less area at 12 dropped columns (13% of products off by 1 LSB of Q1.15); here the error lands 4–8 bits below the kept LSB.
+2. **Clock gating** of the weight registers, which load once per tile; the clock is about a third of every block's power. This applies to all three formats.
 
 ## GT2N flow notes (from the v2 runs)
 
@@ -157,7 +212,7 @@ At 2.0 GHz, one core's 65,536 MACs give 131 TMAC/s.
 
 ## Milestones
 
-1. S1 and S2; fix the accumulator per format.
+1. S1 and S2 (done); accumulator per format: SF16 SF24 or SF32, FP16 FP24, BF16 FP24.
 2. Freeze the ISA; assembler, and the compiler's exp/rsqrt/GELU lowering.
 3. RTL in all three formats: matrix unit, vector unit, scalar core, DMA, issue queues.
 4. Cocotb tests per unit and per format, then GPT-2 and YOLOv8n end to end against the Python reference.
