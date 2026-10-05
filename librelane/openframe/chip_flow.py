@@ -24,7 +24,8 @@ must be run through this script, which takes the same arguments as
 OpenROAD.GlobalPlacementStrip (gpl_strip.tcl) replaces LibreLane's global
 placement: it places the standard cells in the strip between the tile rows,
 where every format's chip has room for them. Odb.PlacePortTies
-(port_ties.py) then moves the pads' configuration ties next to their ports.
+(port_ties.py) then moves the pads' configuration ties next to their ports,
+and the pin bus's output registers, cloning those the bus logic also reads.
 
 The chip config also excludes the weakest cells (EXTRA_EXCLUDED_CELLS): at
 ss their output reaches design repair's 0.5 ns slew target below 8 fF. On
