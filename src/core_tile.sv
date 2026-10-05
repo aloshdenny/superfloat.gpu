@@ -132,9 +132,12 @@ module core_tile #(
         .NUM_SYSTOLIC_ARRAYS(NUM_SYSTOLIC_ARRAYS),
         .CACHE_SIZE(CACHE_SIZE),
         .NUMBER_FORMAT(NUMBER_FORMAT),
-        // The FP tiles' reset tree is too slow to take core_reset straight from
-        // the pin: on the chip it arrives 6.3 ns into the cycle.
-        .RESET_STAGE(NUMBER_FORMAT != 0)
+        // The reset tree across the tile is too slow to take core_reset
+        // straight from the pin: the chip's registers are clocked about 10 ns
+        // into the cycle (the clock tree matches the tiles' insertion delay),
+        // and SF16's tile, without the stage, needed core_reset 13.5 ns before
+        // its clock (chip_sf16_18: -1.2 ns at max_ss). Every format registers it.
+        .RESET_STAGE(1)
     ) core_instance (
         .clk(clk),
         .reset(core_reset),
