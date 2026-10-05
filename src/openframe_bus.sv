@@ -249,14 +249,17 @@ module openframe_bus #(
             // Lookup: each data channel's next request, if a read. It is held
             // off the bus while its word is here, and answered once none of
             // the channel's reads is in flight.
+            // hold_q is the rest of the condition, registered from the next
+            // values of the buffer count, the head's write flag and its hit
+            // vector (below), so the bus pick's eligible vector starts at a
+            // register.
             reg [SHARE_LINES-1:0] s_match [NUM_CHANNELS-1:0];
-            reg [NUM_CHANNELS-1:0] hold, hit;
+            reg [NUM_CHANNELS-1:0] hold, hit, hold_q;
             integer sc;
             always @(*) begin
                 for (sc = 0; sc < NUM_CHANNELS; sc = sc + 1) begin
                     s_match[sc] = e0_hit[sc];
-                    hold[sc] = sync_mode && !PROG_MASK[sc] && (b_cnt[sc] != 2'd0) && !b0_we[sc] &&
-                               (|s_match[sc]);
+                    hold[sc] = sync_mode && hold_q[sc];
                     hit[sc]  = hold[sc] && (rcnt[sc] == '0);
                 end
             end
@@ -352,22 +355,30 @@ module openframe_bus #(
                                   ((e1_hit[sn] & ~s_repl_mask) | ((b1_addr[sn] == f_addr) ? s_fill_mask : {SHARE_LINES{1'b0}}));
                 end
             end
-            // The same moves as the buffers' (b0/b1 below).
+            // The same moves as the buffers' (b0/b1 below): a pushed request
+            // goes to entry 0 if the buffer is empty once the pop is done.
+            reg [SHARE_LINES-1:0] e0_nx [NUM_CHANNELS-1:0];
+            reg [SHARE_LINES-1:0] e1_nx [NUM_CHANNELS-1:0];
+            reg [NUM_CHANNELS-1:0] to_e0, b0_we_nx;
+            integer sp;
+            always @(*)
+                for (sp = 0; sp < NUM_CHANNELS; sp = sp + 1) begin
+                    to_e0[sp]    = b_push[sp] && (b_cnt[sp] - {1'b0, b_pop[sp]} == 2'd0);
+                    e0_nx[sp]    = to_e0[sp] ? in_next[sp] : (b_pop[sp] ? e1_next[sp] : e0_next[sp]);
+                    e1_nx[sp]    = (b_push[sp] && !to_e0[sp]) ? in_next[sp] : e1_next[sp];
+                    b0_we_nx[sp] = to_e0[sp] ? ch_write_valid[sp] : (b_pop[sp] ? b1_we[sp] : b0_we[sp]);
+                end
             integer se;
             always @(posedge clk)
                 for (se = 0; se < NUM_CHANNELS; se = se + 1) begin
                     if (reset || PROG_MASK[se]) begin
                         e0_hit[se] <= {SHARE_LINES{1'b0}};
                         e1_hit[se] <= {SHARE_LINES{1'b0}};
+                        hold_q[se] <= 1'b0;
                     end else begin
-                        e0_hit[se] <= b_pop[se] ? e1_next[se] : e0_next[se];
-                        e1_hit[se] <= e1_next[se];
-                        if (b_push[se]) begin
-                            if (b_cnt[se] - {1'b0, b_pop[se]} == 2'd0)
-                                e0_hit[se] <= in_next[se];
-                            else
-                                e1_hit[se] <= in_next[se];
-                        end
+                        e0_hit[se] <= e0_nx[se];
+                        e1_hit[se] <= e1_nx[se];
+                        hold_q[se] <= (b_next[se] != 2'd0) && !b0_we_nx[se] && (|e0_nx[se]);
                     end
                 end
 
