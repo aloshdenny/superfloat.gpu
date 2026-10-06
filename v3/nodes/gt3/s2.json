@@ -1,0 +1,2694 @@
+{
+ "node": "gt3",
+ "period_ps": 1000,
+ "variants": {
+  "sf16_sat16": {
+   "gt3": {
+    "1000": {
+     "area_um2": 4444.0,
+     "util_pct": 55.0,
+     "cells": 158484,
+     "regs": 5762,
+     "r2r_slack_ps": 0.72,
+     "worst_slack_ps": 0.72,
+     "sequential": {
+      "internal": 0.0050049,
+      "switching": 0.0008015299,
+      "leakage": 6.078987e-06,
+      "total": 0.005812509
+     },
+     "combinational": {
+      "internal": 0.0005318945,
+      "switching": 0.006453728,
+      "leakage": 4.037627e-05,
+      "total": 0.007025999
+     },
+     "clock": {
+      "internal": -0.001371915,
+      "switching": 0.003749723,
+      "leakage": 2.559964e-06,
+      "total": 0.002380368
+     },
+     "total": {
+      "internal": 0.004164847,
+      "switching": 0.01100472,
+      "leakage": 4.901387e-05,
+      "total": 0.01521858
+     },
+     "annotated_pins": 411804,
+     "equiv": [
+      1014,
+      1014
+     ]
+    },
+    "500": {
+     "area_um2": 5037.0,
+     "util_pct": 63.0,
+     "cells": 188536,
+     "regs": 5762,
+     "r2r_slack_ps": -332.72,
+     "worst_slack_ps": -332.72,
+     "sequential": {
+      "internal": 0.01000657,
+      "switching": 0.0009431955,
+      "leakage": 6.078987e-06,
+      "total": 0.01095585
+     },
+     "combinational": {
+      "internal": 0.0002011825,
+      "switching": 0.01520855,
+      "leakage": 5.763565e-05,
+      "total": 0.01546737
+     },
+     "clock": {
+      "internal": -0.002822353,
+      "switching": 0.007561242,
+      "leakage": 2.600149e-06,
+      "total": 0.004741489
+     },
+     "total": {
+      "internal": 0.007385543,
+      "switching": 0.02371316,
+      "leakage": 6.628897e-05,
+      "total": 0.031165
+     },
+     "annotated_pins": 471908,
+     "equiv": [
+      1014,
+      1014
+     ]
+    },
+    "300": {
+     "area_um2": 5093.0,
+     "util_pct": 63.0,
+     "cells": 191531,
+     "regs": 5762,
+     "r2r_slack_ps": -555.29,
+     "worst_slack_ps": -555.29
+    }
+   },
+   "area_per_mac_um2": 69.4375,
+   "tflops_per_mm2_1000ps": 28.8028802880288,
+   "power_mw_1000ps": 15.218580000000001,
+   "energy_per_mac_fj": 237.79031250000003,
+   "tflops_per_w": 8.410771570015072,
+   "fmax_ghz": 1.1691940745244302,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf24": {
+   "gt3": {
+    "1000": {
+     "area_um2": 4882.0,
+     "util_pct": 56.0,
+     "cells": 172716,
+     "regs": 6658,
+     "r2r_slack_ps": 5.04,
+     "worst_slack_ps": 5.04,
+     "sequential": {
+      "internal": 0.005880423,
+      "switching": 0.001075455,
+      "leakage": 7.024279e-06,
+      "total": 0.006962903
+     },
+     "combinational": {
+      "internal": 0.0006350389,
+      "switching": 0.007320552,
+      "leakage": 4.380286e-05,
+      "total": 0.007999394
+     },
+     "clock": {
+      "internal": -0.001554514,
+      "switching": 0.004323295,
+      "leakage": 2.970505e-06,
+      "total": 0.002771751
+     },
+     "total": {
+      "internal": 0.004960911,
+      "switching": 0.01271905,
+      "leakage": 5.379655e-05,
+      "total": 0.01773376
+     },
+     "annotated_pins": 445613,
+     "equiv": [
+      1014,
+      1014
+     ]
+    },
+    "500": {
+     "area_um2": 5537.0,
+     "util_pct": 63.0,
+     "cells": 205951,
+     "regs": 6658,
+     "r2r_slack_ps": -349.86,
+     "worst_slack_ps": -349.86,
+     "sequential": {
+      "internal": 0.01175186,
+      "switching": 0.001342028,
+      "leakage": 7.024279e-06,
+      "total": 0.01310091
+     },
+     "combinational": {
+      "internal": 0.0002880089,
+      "switching": 0.01743863,
+      "leakage": 6.288116e-05,
+      "total": 0.01778952
+     },
+     "clock": {
+      "internal": -0.003131776,
+      "switching": 0.008648453,
+      "leakage": 2.968632e-06,
+      "total": 0.005519646
+     },
+     "total": {
+      "internal": 0.008908336,
+      "switching": 0.02742919,
+      "leakage": 7.284239e-05,
+      "total": 0.03641037
+     },
+     "annotated_pins": 512081,
+     "equiv": [
+      1014,
+      1014
+     ]
+    },
+    "300": {
+     "area_um2": 5607.0,
+     "util_pct": 64.0,
+     "cells": 209714,
+     "regs": 6658,
+     "r2r_slack_ps": -555.02,
+     "worst_slack_ps": -555.02
+    }
+   },
+   "area_per_mac_um2": 76.28125,
+   "tflops_per_mm2_1000ps": 26.218762802130275,
+   "power_mw_1000ps": 17.73376,
+   "energy_per_mac_fj": 277.09000000000003,
+   "tflops_per_w": 7.217871449709479,
+   "fmax_ghz": 1.1695632850693551,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf32": {
+   "gt3": {
+    "1000": {
+     "area_um2": 5350.0,
+     "util_pct": 56.0,
+     "cells": 188565,
+     "regs": 7554,
+     "r2r_slack_ps": 1.39,
+     "worst_slack_ps": 1.39,
+     "sequential": {
+      "internal": 0.00675642,
+      "switching": 0.001370533,
+      "leakage": 7.969571e-06,
+      "total": 0.008134923
+     },
+     "combinational": {
+      "internal": 0.0007397659,
+      "switching": 0.008182904,
+      "leakage": 4.750338e-05,
+      "total": 0.008970173
+     },
+     "clock": {
+      "internal": -0.00175037,
+      "switching": 0.004913946,
+      "leakage": 3.349573e-06,
+      "total": 0.003166925
+     },
+     "total": {
+      "internal": 0.005745749,
+      "switching": 0.01446695,
+      "leakage": 5.882108e-05,
+      "total": 0.02027152
+     },
+     "annotated_pins": 485786,
+     "equiv": [
+      1014,
+      1014
+     ]
+    },
+    "500": {
+     "area_um2": 6042.0,
+     "util_pct": 64.0,
+     "cells": 223899,
+     "regs": 7554,
+     "r2r_slack_ps": -376.22,
+     "worst_slack_ps": -376.22,
+     "sequential": {
+      "internal": 0.01350275,
+      "switching": 0.001682745,
+      "leakage": 7.969571e-06,
+      "total": 0.01519347
+     },
+     "combinational": {
+      "internal": 0.0003397133,
+      "switching": 0.01971519,
+      "leakage": 6.759488e-05,
+      "total": 0.0201225
+     },
+     "clock": {
+      "internal": -0.003514236,
+      "switching": 0.009830656,
+      "leakage": 3.34995e-06,
+      "total": 0.00631977
+     },
+     "total": {
+      "internal": 0.01032842,
+      "switching": 0.03122872,
+      "leakage": 7.888737e-05,
+      "total": 0.04163602
+     },
+     "annotated_pins": 556446,
+     "equiv": [
+      1014,
+      1014
+     ]
+    },
+    "300": {
+     "area_um2": 6121.0,
+     "util_pct": 64.0,
+     "cells": 228101,
+     "regs": 7554,
+     "r2r_slack_ps": -582.99,
+     "worst_slack_ps": -582.99
+    }
+   },
+   "area_per_mac_um2": 83.59375,
+   "tflops_per_mm2_1000ps": 23.925233644859812,
+   "power_mw_1000ps": 20.271520000000002,
+   "energy_per_mac_fj": 316.74250000000006,
+   "tflops_per_w": 6.3142773704191875,
+   "fmax_ghz": 1.1325156570289585,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "fp16_fp16": {
+   "gt3": {
+    "1000": {
+     "area_um2": 6746.0,
+     "util_pct": 56.0,
+     "cells": 248104,
+     "regs": 9474,
+     "r2r_slack_ps": -3.2,
+     "worst_slack_ps": -3.2,
+     "sequential": {
+      "internal": 0.008749405,
+      "switching": 0.002175514,
+      "leakage": 9.995198e-06,
+      "total": 0.01093491
+     },
+     "combinational": {
+      "internal": 0.001265581,
+      "switching": 0.01723718,
+      "leakage": 5.906335e-05,
+      "total": 0.01856182
+     },
+     "clock": {
+      "internal": -0.002201154,
+      "switching": 0.006171314,
+      "leakage": 4.175486e-06,
+      "total": 0.003974336
+     },
+     "total": {
+      "internal": 0.007813943,
+      "switching": 0.02558379,
+      "leakage": 7.319758e-05,
+      "total": 0.03347093
+     },
+     "annotated_pins": 681185,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "500": {
+     "area_um2": 7725.0,
+     "util_pct": 64.0,
+     "cells": 296822,
+     "regs": 9474,
+     "r2r_slack_ps": -444.8,
+     "worst_slack_ps": -444.8,
+     "sequential": {
+      "internal": 0.01747415,
+      "switching": 0.002492989,
+      "leakage": 9.995198e-06,
+      "total": 0.01997713
+     },
+     "combinational": {
+      "internal": -0.0001607849,
+      "switching": 0.04075563,
+      "leakage": 8.780873e-05,
+      "total": 0.04068265
+     },
+     "clock": {
+      "internal": -0.004475817,
+      "switching": 0.01236377,
+      "leakage": 4.194625e-06,
+      "total": 0.007892149
+     },
+     "total": {
+      "internal": 0.01283855,
+      "switching": 0.05561205,
+      "leakage": 0.0001019791,
+      "total": 0.06855257
+     },
+     "annotated_pins": 778617,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "300": {
+     "area_um2": 7791.0,
+     "util_pct": 64.0,
+     "cells": 300323,
+     "regs": 9474,
+     "r2r_slack_ps": -639.01,
+     "worst_slack_ps": -639.01
+    }
+   },
+   "area_per_mac_um2": 105.40625,
+   "tflops_per_mm2_1000ps": 18.974206937444414,
+   "power_mw_1000ps": 33.47093,
+   "energy_per_mac_fj": 522.98328125,
+   "tflops_per_w": 3.8242140269182836,
+   "fmax_ghz": 1.0649513849692762,
+   "fmax_capped": false,
+   "meets_1000ps": false,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "fp16_fp24": {
+   "gt3": {
+    "1000": {
+     "area_um2": 7472.0,
+     "util_pct": 57.0,
+     "cells": 276297,
+     "regs": 10370,
+     "r2r_slack_ps": -36.18,
+     "worst_slack_ps": -36.18,
+     "sequential": {
+      "internal": 0.009571083,
+      "switching": 0.002192539,
+      "leakage": 1.094049e-05,
+      "total": 0.01177456
+     },
+     "combinational": {
+      "internal": 0.0009623026,
+      "switching": 0.01879817,
+      "leakage": 6.877467e-05,
+      "total": 0.01982924
+     },
+     "clock": {
+      "internal": -0.002344291,
+      "switching": 0.006714857,
+      "leakage": 4.56246e-06,
+      "total": 0.004375128
+     },
+     "total": {
+      "internal": 0.008189216,
+      "switching": 0.02770545,
+      "leakage": 8.425995e-05,
+      "total": 0.03597892
+     },
+     "annotated_pins": 750709,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "500": {
+     "area_um2": 8443.0,
+     "util_pct": 64.0,
+     "cells": 325719,
+     "regs": 10370,
+     "r2r_slack_ps": -515.17,
+     "worst_slack_ps": -515.17,
+     "sequential": {
+      "internal": 0.01912523,
+      "switching": 0.002717991,
+      "leakage": 1.094049e-05,
+      "total": 0.02185416
+     },
+     "combinational": {
+      "internal": -0.0004930649,
+      "switching": 0.04373185,
+      "leakage": 9.710692e-05,
+      "total": 0.04333589
+     },
+     "clock": {
+      "internal": -0.004692777,
+      "switching": 0.01344182,
+      "leakage": 4.532698e-06,
+      "total": 0.008753573
+     },
+     "total": {
+      "internal": 0.01394022,
+      "switching": 0.05989175,
+      "leakage": 0.0001125812,
+      "total": 0.07394455
+     },
+     "annotated_pins": 849536,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "300": {
+     "area_um2": 8520.0,
+     "util_pct": 65.0,
+     "cells": 329593,
+     "regs": 10370,
+     "r2r_slack_ps": -706.7,
+     "worst_slack_ps": -706.7
+    }
+   },
+   "area_per_mac_um2": 116.75,
+   "tflops_per_mm2_1000ps": 17.130620985010708,
+   "power_mw_1000ps": 35.978919999999995,
+   "energy_per_mac_fj": 562.170625,
+   "tflops_per_w": 3.557638750690683,
+   "fmax_ghz": 0.9933445912387007,
+   "fmax_capped": false,
+   "meets_1000ps": false,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "fp16_fp32": {
+   "gt3": {
+    "1000": {
+     "area_um2": 8049.0,
+     "util_pct": 58.0,
+     "cells": 297677,
+     "regs": 11202,
+     "r2r_slack_ps": -36.48,
+     "worst_slack_ps": -36.48,
+     "sequential": {
+      "internal": 0.01041265,
+      "switching": 0.002236024,
+      "leakage": 1.181826e-05,
+      "total": 0.01266049
+     },
+     "combinational": {
+      "internal": 0.0008962429,
+      "switching": 0.02101837,
+      "leakage": 7.534956e-05,
+      "total": 0.02198997
+     },
+     "clock": {
+      "internal": -0.002795598,
+      "switching": 0.007284874,
+      "leakage": 5.099889e-06,
+      "total": 0.004494376
+     },
+     "total": {
+      "internal": 0.008513431,
+      "switching": 0.03053929,
+      "leakage": 9.226881e-05,
+      "total": 0.03914499
+     },
+     "annotated_pins": 805743,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "500": {
+     "area_um2": 9015.0,
+     "util_pct": 64.0,
+     "cells": 347362,
+     "regs": 11202,
+     "r2r_slack_ps": -518.43,
+     "worst_slack_ps": -518.43,
+     "sequential": {
+      "internal": 0.02080866,
+      "switching": 0.002942953,
+      "leakage": 1.181826e-05,
+      "total": 0.02376343
+     },
+     "combinational": {
+      "internal": -0.0005887061,
+      "switching": 0.04819742,
+      "leakage": 0.0001034362,
+      "total": 0.04771215
+     },
+     "clock": {
+      "internal": -0.00560364,
+      "switching": 0.01459096,
+      "leakage": 5.082223e-06,
+      "total": 0.008992399
+     },
+     "total": {
+      "internal": 0.01461713,
+      "switching": 0.06573427,
+      "leakage": 0.0001203377,
+      "total": 0.08047173
+     },
+     "annotated_pins": 905090,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "300": {
+     "area_um2": 9107.0,
+     "util_pct": 65.0,
+     "cells": 351896,
+     "regs": 11202,
+     "r2r_slack_ps": -714.9,
+     "worst_slack_ps": -714.9
+    }
+   },
+   "area_per_mac_um2": 125.765625,
+   "tflops_per_mm2_1000ps": 15.902596595850419,
+   "power_mw_1000ps": 39.14499,
+   "energy_per_mac_fj": 611.64046875,
+   "tflops_per_w": 3.26989481923485,
+   "fmax_ghz": 0.9853187506158242,
+   "fmax_capped": false,
+   "meets_1000ps": false,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "bf16_bf16": {
+   "gt3": {
+    "1000": {
+     "area_um2": 5560.0,
+     "util_pct": 57.0,
+     "cells": 198309,
+     "regs": 9090,
+     "r2r_slack_ps": -10.29,
+     "worst_slack_ps": -10.29,
+     "sequential": {
+      "internal": 0.008150967,
+      "switching": 0.001725493,
+      "leakage": 9.590072e-06,
+      "total": 0.00988605
+     },
+     "combinational": {
+      "internal": 0.0006930717,
+      "switching": 0.01111382,
+      "leakage": 4.58164e-05,
+      "total": 0.01185271
+     },
+     "clock": {
+      "internal": -0.001928044,
+      "switching": 0.005779992,
+      "leakage": 3.875192e-06,
+      "total": 0.003855823
+     },
+     "total": {
+      "internal": 0.00691613,
+      "switching": 0.0186193,
+      "leakage": 5.928047e-05,
+      "total": 0.02559472
+     },
+     "annotated_pins": 536787,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "500": {
+     "area_um2": 6265.0,
+     "util_pct": 64.0,
+     "cells": 233591,
+     "regs": 9090,
+     "r2r_slack_ps": -460.38,
+     "worst_slack_ps": -460.38,
+     "sequential": {
+      "internal": 0.01628845,
+      "switching": 0.001998688,
+      "leakage": 9.590072e-06,
+      "total": 0.01829673
+     },
+     "combinational": {
+      "internal": -0.000369228,
+      "switching": 0.02657238,
+      "leakage": 6.657969e-05,
+      "total": 0.02626974
+     },
+     "clock": {
+      "internal": -0.003879317,
+      "switching": 0.0116121,
+      "leakage": 3.811851e-06,
+      "total": 0.007736592
+     },
+     "total": {
+      "internal": 0.01204058,
+      "switching": 0.04018301,
+      "leakage": 7.994464e-05,
+      "total": 0.05230353
+     },
+     "annotated_pins": 607314,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "300": {
+     "area_um2": 6383.0,
+     "util_pct": 65.0,
+     "cells": 239694,
+     "regs": 9090,
+     "r2r_slack_ps": -642.27,
+     "worst_slack_ps": -642.27
+    }
+   },
+   "area_per_mac_um2": 86.875,
+   "tflops_per_mm2_1000ps": 23.02158273381295,
+   "power_mw_1000ps": 25.594720000000002,
+   "energy_per_mac_fj": 399.9175000000001,
+   "tflops_per_w": 5.0010314627391885,
+   "fmax_ghz": 1.0612669404735373,
+   "fmax_capped": false,
+   "meets_1000ps": false,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "bf16_fp24": {
+   "gt3": {
+    "1000": {
+     "area_um2": 5921.0,
+     "util_pct": 57.0,
+     "cells": 211416,
+     "regs": 9794,
+     "r2r_slack_ps": -2.59,
+     "worst_slack_ps": -2.59,
+     "sequential": {
+      "internal": 0.008873847,
+      "switching": 0.001723406,
+      "leakage": 1.03328e-05,
+      "total": 0.01060759
+     },
+     "combinational": {
+      "internal": 0.0006352097,
+      "switching": 0.01253996,
+      "leakage": 4.874786e-05,
+      "total": 0.01322392
+     },
+     "clock": {
+      "internal": -0.002058705,
+      "switching": 0.006251194,
+      "leakage": 4.137642e-06,
+      "total": 0.004196627
+     },
+     "total": {
+      "internal": 0.00745056,
+      "switching": 0.02051456,
+      "leakage": 6.321367e-05,
+      "total": 0.02802833
+     },
+     "annotated_pins": 570371,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "500": {
+     "area_um2": 6709.0,
+     "util_pct": 64.0,
+     "cells": 250556,
+     "regs": 9794,
+     "r2r_slack_ps": -431.7,
+     "worst_slack_ps": -431.7,
+     "sequential": {
+      "internal": 0.01773356,
+      "switching": 0.00218984,
+      "leakage": 1.03328e-05,
+      "total": 0.01993373
+     },
+     "combinational": {
+      "internal": -0.0006653743,
+      "switching": 0.02982789,
+      "leakage": 7.191198e-05,
+      "total": 0.02923443
+     },
+     "clock": {
+      "internal": -0.004368394,
+      "switching": 0.01266783,
+      "leakage": 4.1944e-06,
+      "total": 0.008303629
+     },
+     "total": {
+      "internal": 0.0127006,
+      "switching": 0.04468501,
+      "leakage": 8.639707e-05,
+      "total": 0.057472
+     },
+     "annotated_pins": 648634,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "300": {
+     "area_um2": 6834.0,
+     "util_pct": 65.0,
+     "cells": 256921,
+     "regs": 9794,
+     "r2r_slack_ps": -627.4,
+     "worst_slack_ps": -627.4
+    }
+   },
+   "area_per_mac_um2": 92.515625,
+   "tflops_per_mm2_1000ps": 21.617969937510555,
+   "power_mw_1000ps": 28.02833,
+   "energy_per_mac_fj": 437.94265625,
+   "tflops_per_w": 4.566807940394593,
+   "fmax_ghz": 1.0782833728703904,
+   "fmax_capped": false,
+   "meets_1000ps": false,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "bf16_fp32": {
+   "gt3": {
+    "1000": {
+     "area_um2": 7360.0,
+     "util_pct": 58.0,
+     "cells": 269304,
+     "regs": 10946,
+     "r2r_slack_ps": -44.61,
+     "worst_slack_ps": -44.61,
+     "sequential": {
+      "internal": 0.01000798,
+      "switching": 0.00209524,
+      "leakage": 1.154818e-05,
+      "total": 0.01211477
+     },
+     "combinational": {
+      "internal": 0.0005884893,
+      "switching": 0.01727833,
+      "leakage": 6.740958e-05,
+      "total": 0.01793423
+     },
+     "clock": {
+      "internal": -0.002650281,
+      "switching": 0.007025884,
+      "leakage": 5.002078e-06,
+      "total": 0.004380605
+     },
+     "total": {
+      "internal": 0.00794646,
+      "switching": 0.02639936,
+      "leakage": 8.393147e-05,
+      "total": 0.03442975
+     },
+     "annotated_pins": 734464,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "500": {
+     "area_um2": 8207.0,
+     "util_pct": 65.0,
+     "cells": 312691,
+     "regs": 10946,
+     "r2r_slack_ps": -511.22,
+     "worst_slack_ps": -511.22,
+     "sequential": {
+      "internal": 0.01999444,
+      "switching": 0.002535998,
+      "leakage": 1.154818e-05,
+      "total": 0.02254199
+     },
+     "combinational": {
+      "internal": -0.0009568915,
+      "switching": 0.0401595,
+      "leakage": 9.205665e-05,
+      "total": 0.03929467
+     },
+     "clock": {
+      "internal": -0.005386672,
+      "switching": 0.01413107,
+      "leakage": 5.014118e-06,
+      "total": 0.008749416
+     },
+     "total": {
+      "internal": 0.01365189,
+      "switching": 0.05682633,
+      "leakage": 0.0001086027,
+      "total": 0.07058682
+     },
+     "annotated_pins": 821224,
+     "equiv": [
+      1006,
+      1006
+     ]
+    },
+    "300": {
+     "area_um2": 8329.0,
+     "util_pct": 66.0,
+     "cells": 318986,
+     "regs": 10946,
+     "r2r_slack_ps": -720.3,
+     "worst_slack_ps": -720.3
+    }
+   },
+   "area_per_mac_um2": 115.0,
+   "tflops_per_mm2_1000ps": 17.39130434782609,
+   "power_mw_1000ps": 34.42975,
+   "energy_per_mac_fj": 537.96484375,
+   "tflops_per_w": 3.7177150574720987,
+   "fmax_ghz": 0.9801038910124473,
+   "fmax_capped": false,
+   "meets_1000ps": false,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "fp16_fp16_a": {
+   "gt3": {
+    "1000": {
+     "area_um2": 7225.0,
+     "util_pct": 56.0,
+     "cells": 248828,
+     "regs": 13506,
+     "r2r_slack_ps": 26.64,
+     "worst_slack_ps": 26.64,
+     "sequential": {
+      "internal": 0.01249343,
+      "switching": 0.00329215,
+      "leakage": 1.424901e-05,
+      "total": 0.01579983
+     },
+     "combinational": {
+      "internal": 0.001098451,
+      "switching": 0.01435738,
+      "leakage": 5.291551e-05,
+      "total": 0.01550875
+     },
+     "clock": {
+      "internal": -0.00305573,
+      "switching": 0.008550347,
+      "leakage": 5.816362e-06,
+      "total": 0.005500433
+     },
+     "total": {
+      "internal": 0.01053625,
+      "switching": 0.02619914,
+      "leakage": 7.296998e-05,
+      "total": 0.03680836
+     },
+     "annotated_pins": 658629,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "500": {
+     "area_um2": 8022.0,
+     "util_pct": 62.0,
+     "cells": 287736,
+     "regs": 13506,
+     "r2r_slack_ps": -203.37,
+     "worst_slack_ps": -241.56,
+     "sequential": {
+      "internal": 0.02494926,
+      "switching": 0.004070607,
+      "leakage": 1.424901e-05,
+      "total": 0.02903411
+     },
+     "combinational": {
+      "internal": -0.0004903688,
+      "switching": 0.03466679,
+      "leakage": 7.645495e-05,
+      "total": 0.03425288
+     },
+     "clock": {
+      "internal": -0.006187655,
+      "switching": 0.01710586,
+      "leakage": 5.900674e-06,
+      "total": 0.01092411
+     },
+     "total": {
+      "internal": 0.0182721,
+      "switching": 0.05584289,
+      "leakage": 9.656785e-05,
+      "total": 0.07421156
+     },
+     "annotated_pins": 736450,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "300": {
+     "area_um2": 8195.0,
+     "util_pct": 63.0,
+     "cells": 297057,
+     "regs": 13506,
+     "r2r_slack_ps": -382.64,
+     "worst_slack_ps": -382.64
+    }
+   },
+   "area_per_mac_um2": 112.890625,
+   "tflops_per_mm2_1000ps": 17.716262975778548,
+   "power_mw_1000ps": 36.80836,
+   "energy_per_mac_fj": 575.130625,
+   "tflops_per_w": 3.477470878898163,
+   "fmax_ghz": 1.464900972694246,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "fp16_fp24_a": {
+   "gt3": {
+    "1000": {
+     "area_um2": 7942.0,
+     "util_pct": 56.0,
+     "cells": 275217,
+     "regs": 14594,
+     "r2r_slack_ps": 1.04,
+     "worst_slack_ps": 1.04,
+     "sequential": {
+      "internal": 0.01356886,
+      "switching": 0.003673395,
+      "leakage": 1.539687e-05,
+      "total": 0.01725765
+     },
+     "combinational": {
+      "internal": 0.001153321,
+      "switching": 0.01610793,
+      "leakage": 5.954874e-05,
+      "total": 0.0173208
+     },
+     "clock": {
+      "internal": -0.003322768,
+      "switching": 0.009268253,
+      "leakage": 6.277042e-06,
+      "total": 0.005951762
+     },
+     "total": {
+      "internal": 0.01139946,
+      "switching": 0.02904933,
+      "leakage": 8.120741e-05,
+      "total": 0.04053
+     },
+     "annotated_pins": 729277,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "500": {
+     "area_um2": 8848.0,
+     "util_pct": 63.0,
+     "cells": 319014,
+     "regs": 14594,
+     "r2r_slack_ps": -211.51,
+     "worst_slack_ps": -211.51,
+     "sequential": {
+      "internal": 0.0271032,
+      "switching": 0.004622339,
+      "leakage": 1.539687e-05,
+      "total": 0.03174094
+     },
+     "combinational": {
+      "internal": -0.0005826406,
+      "switching": 0.03884891,
+      "leakage": 8.640324e-05,
+      "total": 0.03835268
+     },
+     "clock": {
+      "internal": -0.006814135,
+      "switching": 0.01865045,
+      "leakage": 6.322995e-06,
+      "total": 0.01184264
+     },
+     "total": {
+      "internal": 0.0197075,
+      "switching": 0.06212153,
+      "leakage": 0.0001081195,
+      "total": 0.08193716
+     },
+     "annotated_pins": 816874,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "300": {
+     "area_um2": 9036.0,
+     "util_pct": 64.0,
+     "cells": 329192,
+     "regs": 14594,
+     "r2r_slack_ps": -406.09,
+     "worst_slack_ps": -406.09
+    }
+   },
+   "area_per_mac_um2": 124.09375,
+   "tflops_per_mm2_1000ps": 16.11684714177789,
+   "power_mw_1000ps": 40.529999999999994,
+   "energy_per_mac_fj": 633.28125,
+   "tflops_per_w": 3.1581544534912407,
+   "fmax_ghz": 1.4162500531093771,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "fp16_fp32_a": {
+   "gt3": {
+    "1000": {
+     "area_um2": 8571.0,
+     "util_pct": 56.0,
+     "cells": 298226,
+     "regs": 15746,
+     "r2r_slack_ps": 0.39,
+     "worst_slack_ps": 0.39,
+     "sequential": {
+      "internal": 0.01483105,
+      "switching": 0.004140075,
+      "leakage": 1.661224e-05,
+      "total": 0.01898774
+     },
+     "combinational": {
+      "internal": 0.001108574,
+      "switching": 0.01813885,
+      "leakage": 6.479684e-05,
+      "total": 0.01931222
+     },
+     "clock": {
+      "internal": -0.003442286,
+      "switching": 0.01004163,
+      "leakage": 6.798273e-06,
+      "total": 0.006606143
+     },
+     "total": {
+      "internal": 0.01249742,
+      "switching": 0.03232027,
+      "leakage": 8.820933e-05,
+      "total": 0.0449059
+     },
+     "annotated_pins": 788395,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "500": {
+     "area_um2": 9552.0,
+     "util_pct": 63.0,
+     "cells": 345899,
+     "regs": 15746,
+     "r2r_slack_ps": -251.63,
+     "worst_slack_ps": -255.29,
+     "sequential": {
+      "internal": 0.02961926,
+      "switching": 0.004977121,
+      "leakage": 1.661224e-05,
+      "total": 0.03461299
+     },
+     "combinational": {
+      "internal": -0.0008927081,
+      "switching": 0.04402655,
+      "leakage": 9.396826e-05,
+      "total": 0.04322781
+     },
+     "clock": {
+      "internal": -0.00695032,
+      "switching": 0.01998892,
+      "leakage": 6.747575e-06,
+      "total": 0.01304535
+     },
+     "total": {
+      "internal": 0.02177716,
+      "switching": 0.06899597,
+      "leakage": 0.0001173296,
+      "total": 0.09089047
+     },
+     "annotated_pins": 883721,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "300": {
+     "area_um2": 9755.0,
+     "util_pct": 64.0,
+     "cells": 356735,
+     "regs": 15746,
+     "r2r_slack_ps": -439.65,
+     "worst_slack_ps": -439.89
+    }
+   },
+   "area_per_mac_um2": 133.921875,
+   "tflops_per_mm2_1000ps": 14.934080037335203,
+   "power_mw_1000ps": 44.905899999999995,
+   "energy_per_mac_fj": 701.6546875,
+   "tflops_per_w": 2.850404957923123,
+   "fmax_ghz": 1.3519908064625161,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "bf16_bf16_a": {
+   "gt3": {
+    "1000": {
+     "area_um2": 6139.0,
+     "util_pct": 56.0,
+     "cells": 205526,
+     "regs": 12546,
+     "r2r_slack_ps": 40.33,
+     "worst_slack_ps": 40.33,
+     "sequential": {
+      "internal": 0.01132251,
+      "switching": 0.0025857,
+      "leakage": 1.32362e-05,
+      "total": 0.01392145
+     },
+     "combinational": {
+      "internal": 0.0007691621,
+      "switching": 0.00979663,
+      "leakage": 4.195332e-05,
+      "total": 0.01060775
+     },
+     "clock": {
+      "internal": -0.002699808,
+      "switching": 0.007882657,
+      "leakage": 5.26978e-06,
+      "total": 0.005188119
+     },
+     "total": {
+      "internal": 0.009391962,
+      "switching": 0.02026478,
+      "leakage": 6.046115e-05,
+      "total": 0.0297172
+     },
+     "annotated_pins": 542262,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "500": {
+     "area_um2": 6718.0,
+     "util_pct": 62.0,
+     "cells": 233108,
+     "regs": 12546,
+     "r2r_slack_ps": -102.08,
+     "worst_slack_ps": -126.69,
+     "sequential": {
+      "internal": 0.02262015,
+      "switching": 0.003375463,
+      "leakage": 1.32362e-05,
+      "total": 0.02600885
+     },
+     "combinational": {
+      "internal": -0.0002752176,
+      "switching": 0.02364616,
+      "leakage": 5.919743e-05,
+      "total": 0.02343014
+     },
+     "clock": {
+      "internal": -0.00556586,
+      "switching": 0.01585263,
+      "leakage": 5.287524e-06,
+      "total": 0.01029206
+     },
+     "total": {
+      "internal": 0.01677987,
+      "switching": 0.04287399,
+      "leakage": 7.766437e-05,
+      "total": 0.05973152
+     },
+     "annotated_pins": 597444,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "300": {
+     "area_um2": 6996.0,
+     "util_pct": 64.0,
+     "cells": 247810,
+     "regs": 12546,
+     "r2r_slack_ps": -312.47,
+     "worst_slack_ps": -343.04
+    }
+   },
+   "area_per_mac_um2": 95.921875,
+   "tflops_per_mm2_1000ps": 20.85030135201173,
+   "power_mw_1000ps": 29.7172,
+   "energy_per_mac_fj": 464.33125,
+   "tflops_per_w": 4.307269863917193,
+   "fmax_ghz": 1.6327330318219666,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "bf16_fp24_a": {
+   "gt3": {
+    "1000": {
+     "area_um2": 6428.0,
+     "util_pct": 57.0,
+     "cells": 216172,
+     "regs": 13314,
+     "r2r_slack_ps": 11.84,
+     "worst_slack_ps": 11.84,
+     "sequential": {
+      "internal": 0.0122371,
+      "switching": 0.002896097,
+      "leakage": 1.404645e-05,
+      "total": 0.01514725
+     },
+     "combinational": {
+      "internal": 0.0006523327,
+      "switching": 0.01084101,
+      "leakage": 4.42564e-05,
+      "total": 0.0115376
+     },
+     "clock": {
+      "internal": -0.002884041,
+      "switching": 0.008341708,
+      "leakage": 5.678021e-06,
+      "total": 0.005463345
+     },
+     "total": {
+      "internal": 0.01000557,
+      "switching": 0.02207812,
+      "leakage": 6.396331e-05,
+      "total": 0.03214765
+     },
+     "annotated_pins": 561588,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "500": {
+     "area_um2": 7076.0,
+     "util_pct": 63.0,
+     "cells": 247406,
+     "regs": 13314,
+     "r2r_slack_ps": -167.68,
+     "worst_slack_ps": -167.68,
+     "sequential": {
+      "internal": 0.02444818,
+      "switching": 0.00361289,
+      "leakage": 1.404645e-05,
+      "total": 0.02807512
+     },
+     "combinational": {
+      "internal": -0.0006274091,
+      "switching": 0.02651989,
+      "leakage": 6.357306e-05,
+      "total": 0.02595606
+     },
+     "clock": {
+      "internal": -0.005727495,
+      "switching": 0.01665198,
+      "leakage": 5.6676e-06,
+      "total": 0.01093016
+     },
+     "total": {
+      "internal": 0.01809426,
+      "switching": 0.0467848,
+      "leakage": 8.321991e-05,
+      "total": 0.06496228
+     },
+     "annotated_pins": 624069,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "300": {
+     "area_um2": 7281.0,
+     "util_pct": 64.0,
+     "cells": 258252,
+     "regs": 13314,
+     "r2r_slack_ps": -368.19,
+     "worst_slack_ps": -368.19
+    }
+   },
+   "area_per_mac_um2": 100.4375,
+   "tflops_per_mm2_1000ps": 19.912881144990667,
+   "power_mw_1000ps": 32.14765,
+   "energy_per_mac_fj": 502.30703125,
+   "tflops_per_w": 3.9816285171699946,
+   "fmax_ghz": 1.4965803139825498,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "bf16_fp32_a": {
+   "gt3": {
+    "1000": {
+     "area_um2": 7866.0,
+     "util_pct": 57.0,
+     "cells": 267919,
+     "regs": 15490,
+     "r2r_slack_ps": 4.24,
+     "worst_slack_ps": 4.24,
+     "sequential": {
+      "internal": 0.01433917,
+      "switching": 0.00380829,
+      "leakage": 1.634216e-05,
+      "total": 0.01816381
+     },
+     "combinational": {
+      "internal": 0.0009661529,
+      "switching": 0.01450514,
+      "leakage": 5.677417e-05,
+      "total": 0.01552807
+     },
+     "clock": {
+      "internal": -0.003482004,
+      "switching": 0.009809376,
+      "leakage": 6.576331e-06,
+      "total": 0.006333948
+     },
+     "total": {
+      "internal": 0.01182348,
+      "switching": 0.02812185,
+      "leakage": 7.967163e-05,
+      "total": 0.040025
+     },
+     "annotated_pins": 712065,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "500": {
+     "area_um2": 8694.0,
+     "util_pct": 63.0,
+     "cells": 307432,
+     "regs": 15490,
+     "r2r_slack_ps": -174.86,
+     "worst_slack_ps": -174.86,
+     "sequential": {
+      "internal": 0.02864211,
+      "switching": 0.004607291,
+      "leakage": 1.634216e-05,
+      "total": 0.03326575
+     },
+     "combinational": {
+      "internal": -0.0006828268,
+      "switching": 0.03554801,
+      "leakage": 8.143237e-05,
+      "total": 0.03494662
+     },
+     "clock": {
+      "internal": -0.007116619,
+      "switching": 0.01971331,
+      "leakage": 6.643691e-06,
+      "total": 0.01260334
+     },
+     "total": {
+      "internal": 0.0208436,
+      "switching": 0.05986862,
+      "leakage": 0.0001044026,
+      "total": 0.08081663
+     },
+     "annotated_pins": 791101,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "300": {
+     "area_um2": 8956.0,
+     "util_pct": 64.0,
+     "cells": 321305,
+     "regs": 15490,
+     "r2r_slack_ps": -370.31,
+     "worst_slack_ps": -370.31
+    }
+   },
+   "area_per_mac_um2": 122.90625,
+   "tflops_per_mm2_1000ps": 16.27256547165014,
+   "power_mw_1000ps": 40.025,
+   "energy_per_mac_fj": 625.390625,
+   "tflops_per_w": 3.198001249219238,
+   "fmax_ghz": 1.4918470558398353,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf24_m": {
+   "gt3": {
+    "1000": {
+     "area_um2": 4842.0,
+     "util_pct": 56.0,
+     "cells": 170656,
+     "regs": 6658,
+     "r2r_slack_ps": 56.54,
+     "worst_slack_ps": 56.54,
+     "sequential": {
+      "internal": 0.005882197,
+      "switching": 0.00116274,
+      "leakage": 7.024279e-06,
+      "total": 0.007051961
+     },
+     "combinational": {
+      "internal": 0.000657942,
+      "switching": 0.007019193,
+      "leakage": 4.342611e-05,
+      "total": 0.007720561
+     },
+     "clock": {
+      "internal": -0.001554857,
+      "switching": 0.004317612,
+      "leakage": 2.98027e-06,
+      "total": 0.002765736
+     },
+     "total": {
+      "internal": 0.00498526,
+      "switching": 0.01249936,
+      "leakage": 5.34291e-05,
+      "total": 0.01753805
+     },
+     "annotated_pins": 439735,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "500": {
+     "area_um2": 5491.0,
+     "util_pct": 63.0,
+     "cells": 203402,
+     "regs": 6658,
+     "r2r_slack_ps": -249.87,
+     "worst_slack_ps": -249.87,
+     "sequential": {
+      "internal": 0.01175311,
+      "switching": 0.001334345,
+      "leakage": 7.024279e-06,
+      "total": 0.01309448
+     },
+     "combinational": {
+      "internal": 0.0002650902,
+      "switching": 0.01696665,
+      "leakage": 6.238808e-05,
+      "total": 0.01729412
+     },
+     "clock": {
+      "internal": -0.003168816,
+      "switching": 0.008687951,
+      "leakage": 3.001628e-06,
+      "total": 0.005522137
+     },
+     "total": {
+      "internal": 0.008849622,
+      "switching": 0.026989,
+      "leakage": 7.238161e-05,
+      "total": 0.035911
+     },
+     "annotated_pins": 505227,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "300": {
+     "area_um2": 5570.0,
+     "util_pct": 64.0,
+     "cells": 207579,
+     "regs": 6658,
+     "r2r_slack_ps": -457.47,
+     "worst_slack_ps": -457.47
+    }
+   },
+   "area_per_mac_um2": 75.65625,
+   "tflops_per_mm2_1000ps": 26.43535729037588,
+   "power_mw_1000ps": 17.53805,
+   "energy_per_mac_fj": 274.03203125,
+   "tflops_per_w": 7.298416870746748,
+   "fmax_ghz": 1.3201842977279628,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf24_t": {
+   "gt3": {
+    "1000": {
+     "area_um2": 4403.0,
+     "util_pct": 56.0,
+     "cells": 152305,
+     "regs": 6658,
+     "r2r_slack_ps": 33.65,
+     "worst_slack_ps": 33.65,
+     "sequential": {
+      "internal": 0.005882537,
+      "switching": 0.001186898,
+      "leakage": 7.024279e-06,
+      "total": 0.007076459
+     },
+     "combinational": {
+      "internal": 0.0005270017,
+      "switching": 0.005201494,
+      "leakage": 3.758604e-05,
+      "total": 0.005766082
+     },
+     "clock": {
+      "internal": -0.001545155,
+      "switching": 0.004303742,
+      "leakage": 2.917986e-06,
+      "total": 0.002761505
+     },
+     "total": {
+      "internal": 0.004864313,
+      "switching": 0.01069184,
+      "leakage": 4.75296e-05,
+      "total": 0.01560368
+     },
+     "annotated_pins": 391730,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "500": {
+     "area_um2": 4992.0,
+     "util_pct": 63.0,
+     "cells": 182428,
+     "regs": 6658,
+     "r2r_slack_ps": -247.12,
+     "worst_slack_ps": -247.12,
+     "sequential": {
+      "internal": 0.01175376,
+      "switching": 0.001305258,
+      "leakage": 7.024279e-06,
+      "total": 0.01306604
+     },
+     "combinational": {
+      "internal": 0.0002126363,
+      "switching": 0.01317294,
+      "leakage": 5.468303e-05,
+      "total": 0.01344026
+     },
+     "clock": {
+      "internal": -0.003163881,
+      "switching": 0.008653687,
+      "leakage": 2.919799e-06,
+      "total": 0.005492725
+     },
+     "total": {
+      "internal": 0.008802662,
+      "switching": 0.02313195,
+      "leakage": 6.460067e-05,
+      "total": 0.03199922
+     },
+     "annotated_pins": 451976,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "300": {
+     "area_um2": 5064.0,
+     "util_pct": 64.0,
+     "cells": 186285,
+     "regs": 6658,
+     "r2r_slack_ps": -464.06,
+     "worst_slack_ps": -464.06
+    }
+   },
+   "area_per_mac_um2": 68.796875,
+   "tflops_per_mm2_1000ps": 29.07108789461731,
+   "power_mw_1000ps": 15.60368,
+   "energy_per_mac_fj": 243.80750000000003,
+   "tflops_per_w": 8.203193092911413,
+   "fmax_ghz": 1.3087977383975082,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf24_tg": {
+   "gt3": {
+    "1000": {
+     "area_um2": 4332.0,
+     "util_pct": 56.0,
+     "cells": 147255,
+     "regs": 6660,
+     "r2r_slack_ps": 77.55,
+     "worst_slack_ps": 77.55,
+     "sequential": {
+      "internal": 0.00433528,
+      "switching": 0.001163087,
+      "leakage": 7.026389e-06,
+      "total": 0.005505393
+     },
+     "combinational": {
+      "internal": 0.0005498555,
+      "switching": 0.005253231,
+      "leakage": 3.724016e-05,
+      "total": 0.005840327
+     },
+     "clock": {
+      "internal": -0.00103937,
+      "switching": 0.003075253,
+      "leakage": 3.307057e-06,
+      "total": 0.00203919
+     },
+     "total": {
+      "internal": 0.003845734,
+      "switching": 0.009491568,
+      "leakage": 4.757465e-05,
+      "total": 0.01338488
+     },
+     "annotated_pins": 377791,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "500": {
+     "area_um2": 4917.0,
+     "util_pct": 64.0,
+     "cells": 177352,
+     "regs": 6660,
+     "r2r_slack_ps": -280.18,
+     "worst_slack_ps": -280.18,
+     "sequential": {
+      "internal": 0.008663674,
+      "switching": 0.001286694,
+      "leakage": 7.026389e-06,
+      "total": 0.009957395
+     },
+     "combinational": {
+      "internal": 0.000286276,
+      "switching": 0.01332131,
+      "leakage": 5.416153e-05,
+      "total": 0.01366175
+     },
+     "clock": {
+      "internal": -0.002111854,
+      "switching": 0.006172593,
+      "leakage": 3.308187e-06,
+      "total": 0.004064048
+     },
+     "total": {
+      "internal": 0.006838217,
+      "switching": 0.02078067,
+      "leakage": 6.447055e-05,
+      "total": 0.02768336
+     },
+     "annotated_pins": 437985,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "300": {
+     "area_um2": 4988.0,
+     "util_pct": 65.0,
+     "cells": 181257,
+     "regs": 6660,
+     "r2r_slack_ps": -474.23,
+     "worst_slack_ps": -474.23
+    }
+   },
+   "area_per_mac_um2": 67.6875,
+   "tflops_per_mm2_1000ps": 29.547553093259467,
+   "power_mw_1000ps": 13.38488,
+   "energy_per_mac_fj": 209.13875000000002,
+   "tflops_per_w": 9.56302932861557,
+   "fmax_ghz": 1.2916058535577284,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf28": {
+   "gt3": {
+    "1000": {
+     "area_um2": 5208.0,
+     "util_pct": 56.0,
+     "cells": 183966,
+     "regs": 7234,
+     "r2r_slack_ps": 0.23,
+     "worst_slack_ps": 0.23,
+     "sequential": {
+      "internal": 0.006474645,
+      "switching": 0.001313812,
+      "leakage": 7.631967e-06,
+      "total": 0.00779609
+     },
+     "combinational": {
+      "internal": 0.0007330964,
+      "switching": 0.007920505,
+      "leakage": 4.634981e-05,
+      "total": 0.008699951
+     },
+     "clock": {
+      "internal": -0.00162685,
+      "switching": 0.004671077,
+      "leakage": 3.181263e-06,
+      "total": 0.003047408
+     },
+     "total": {
+      "internal": 0.005580859,
+      "switching": 0.01390532,
+      "leakage": 5.716177e-05,
+      "total": 0.01954334
+     },
+     "annotated_pins": 473610,
+     "equiv": [
+      1014,
+      1014
+     ]
+    },
+    "500": {
+     "area_um2": 5905.0,
+     "util_pct": 63.0,
+     "cells": 219519,
+     "regs": 7234,
+     "r2r_slack_ps": -337.08,
+     "worst_slack_ps": -337.08,
+     "sequential": {
+      "internal": 0.0129402,
+      "switching": 0.001578941,
+      "leakage": 7.631967e-06,
+      "total": 0.01452677
+     },
+     "combinational": {
+      "internal": 0.0003538145,
+      "switching": 0.01915345,
+      "leakage": 6.657302e-05,
+      "total": 0.01957384
+     },
+     "clock": {
+      "internal": -0.003366987,
+      "switching": 0.009415087,
+      "leakage": 3.205841e-06,
+      "total": 0.006051307
+     },
+     "total": {
+      "internal": 0.009927325,
+      "switching": 0.03014755,
+      "leakage": 7.738906e-05,
+      "total": 0.04015226
+     },
+     "annotated_pins": 544716,
+     "equiv": [
+      1014,
+      1014
+     ]
+    },
+    "300": {
+     "area_um2": 5976.0,
+     "util_pct": 64.0,
+     "cells": 223186,
+     "regs": 7234,
+     "r2r_slack_ps": -537.34,
+     "worst_slack_ps": -537.34
+    }
+   },
+   "area_per_mac_um2": 81.375,
+   "tflops_per_mm2_1000ps": 24.577572964669738,
+   "power_mw_1000ps": 19.54334,
+   "energy_per_mac_fj": 305.3646875,
+   "tflops_per_w": 6.549545778766577,
+   "fmax_ghz": 1.1942580074999403,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf28_t": {
+   "gt3": {
+    "1000": {
+     "area_um2": 5028.0,
+     "util_pct": 56.0,
+     "cells": 176736,
+     "regs": 7234,
+     "r2r_slack_ps": 12.23,
+     "worst_slack_ps": 12.23,
+     "sequential": {
+      "internal": 0.006476697,
+      "switching": 0.001422306,
+      "leakage": 7.631967e-06,
+      "total": 0.007906635
+     },
+     "combinational": {
+      "internal": 0.0007021903,
+      "switching": 0.00722391,
+      "leakage": 4.396623e-05,
+      "total": 0.007970066
+     },
+     "clock": {
+      "internal": -0.001622257,
+      "switching": 0.004650061,
+      "leakage": 3.191774e-06,
+      "total": 0.003030996
+     },
+     "total": {
+      "internal": 0.005556632,
+      "switching": 0.01329611,
+      "leakage": 5.478879e-05,
+      "total": 0.01890753
+     },
+     "annotated_pins": 453338,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "500": {
+     "area_um2": 5694.0,
+     "util_pct": 64.0,
+     "cells": 210469,
+     "regs": 7234,
+     "r2r_slack_ps": -278.78,
+     "worst_slack_ps": -278.78,
+     "sequential": {
+      "internal": 0.01294198,
+      "switching": 0.001603963,
+      "leakage": 7.631967e-06,
+      "total": 0.01455358
+     },
+     "combinational": {
+      "internal": 0.0003028754,
+      "switching": 0.01780045,
+      "leakage": 6.334564e-05,
+      "total": 0.01816667
+     },
+     "clock": {
+      "internal": -0.003438151,
+      "switching": 0.009452233,
+      "leakage": 3.237292e-06,
+      "total": 0.00601732
+     },
+     "total": {
+      "internal": 0.009806923,
+      "switching": 0.0288566,
+      "leakage": 7.418319e-05,
+      "total": 0.03873771
+     },
+     "annotated_pins": 520804,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "300": {
+     "area_um2": 5774.0,
+     "util_pct": 64.0,
+     "cells": 214732,
+     "regs": 7234,
+     "r2r_slack_ps": -497.11,
+     "worst_slack_ps": -497.11
+    }
+   },
+   "area_per_mac_um2": 78.5625,
+   "tflops_per_mm2_1000ps": 25.45743834526651,
+   "power_mw_1000ps": 18.907529999999998,
+   "energy_per_mac_fj": 295.43015625000004,
+   "tflops_per_w": 6.769789602343615,
+   "fmax_ghz": 1.2545319968385793,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf28_tg": {
+   "gt3": {
+    "1000": {
+     "area_um2": 4946.0,
+     "util_pct": 57.0,
+     "cells": 170696,
+     "regs": 7236,
+     "r2r_slack_ps": 0.45,
+     "worst_slack_ps": 0.45,
+     "sequential": {
+      "internal": 0.004933263,
+      "switching": 0.001386907,
+      "leakage": 7.634077e-06,
+      "total": 0.006327804
+     },
+     "combinational": {
+      "internal": 0.000689011,
+      "switching": 0.007165654,
+      "leakage": 4.399313e-05,
+      "total": 0.007898658
+     },
+     "clock": {
+      "internal": -0.001046022,
+      "switching": 0.003480285,
+      "leakage": 3.638066e-06,
+      "total": 0.002437901
+     },
+     "total": {
+      "internal": 0.004576241,
+      "switching": 0.01203293,
+      "leakage": 5.526379e-05,
+      "total": 0.01666443
+     },
+     "annotated_pins": 437788,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "500": {
+     "area_um2": 5591.0,
+     "util_pct": 64.0,
+     "cells": 203388,
+     "regs": 7236,
+     "r2r_slack_ps": -370.67,
+     "worst_slack_ps": -370.67,
+     "sequential": {
+      "internal": 0.00985097,
+      "switching": 0.001558634,
+      "leakage": 7.634077e-06,
+      "total": 0.01141724
+     },
+     "combinational": {
+      "internal": 0.0003040541,
+      "switching": 0.01760881,
+      "leakage": 6.28037e-05,
+      "total": 0.01797567
+     },
+     "clock": {
+      "internal": -0.002203827,
+      "switching": 0.007007868,
+      "leakage": 3.648628e-06,
+      "total": 0.00480769
+     },
+     "total": {
+      "internal": 0.007951541,
+      "switching": 0.02617538,
+      "leakage": 7.404268e-05,
+      "total": 0.03420097
+     },
+     "annotated_pins": 503170,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "300": {
+     "area_um2": 5673.0,
+     "util_pct": 65.0,
+     "cells": 207788,
+     "regs": 7236,
+     "r2r_slack_ps": -579.7,
+     "worst_slack_ps": -579.7
+    }
+   },
+   "area_per_mac_um2": 77.28125,
+   "tflops_per_mm2_1000ps": 25.879498584714923,
+   "power_mw_1000ps": 16.66443,
+   "energy_per_mac_fj": 260.38171875,
+   "tflops_per_w": 7.681030794332599,
+   "fmax_ghz": 1.1367511651699442,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf32_m": {
+   "gt3": {
+    "1000": {
+     "area_um2": 5377.0,
+     "util_pct": 56.0,
+     "cells": 190243,
+     "regs": 7554,
+     "r2r_slack_ps": -0.63,
+     "worst_slack_ps": -0.63,
+     "sequential": {
+      "internal": 0.006758551,
+      "switching": 0.001492646,
+      "leakage": 7.969571e-06,
+      "total": 0.008259166
+     },
+     "combinational": {
+      "internal": 0.0007764038,
+      "switching": 0.00812476,
+      "leakage": 4.759487e-05,
+      "total": 0.008948759
+     },
+     "clock": {
+      "internal": -0.00177734,
+      "switching": 0.004927862,
+      "leakage": 3.3705e-06,
+      "total": 0.003153892
+     },
+     "total": {
+      "internal": 0.005757599,
+      "switching": 0.01454488,
+      "leakage": 5.893374e-05,
+      "total": 0.02036141
+     },
+     "annotated_pins": 489749,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "500": {
+     "area_um2": 6082.0,
+     "util_pct": 64.0,
+     "cells": 225939,
+     "regs": 7554,
+     "r2r_slack_ps": -287.67,
+     "worst_slack_ps": -287.67,
+     "sequential": {
+      "internal": 0.01349929,
+      "switching": 0.001646967,
+      "leakage": 7.969571e-06,
+      "total": 0.01515423
+     },
+     "combinational": {
+      "internal": 0.0003589252,
+      "switching": 0.0198765,
+      "leakage": 6.819102e-05,
+      "total": 0.02030362
+     },
+     "clock": {
+      "internal": -0.003425465,
+      "switching": 0.009796198,
+      "leakage": 3.314259e-06,
+      "total": 0.006374048
+     },
+     "total": {
+      "internal": 0.01043286,
+      "switching": 0.03131966,
+      "leakage": 7.944885e-05,
+      "total": 0.04183197
+     },
+     "annotated_pins": 561141,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "300": {
+     "area_um2": 6183.0,
+     "util_pct": 65.0,
+     "cells": 231237,
+     "regs": 7554,
+     "r2r_slack_ps": -515.17,
+     "worst_slack_ps": -515.17
+    }
+   },
+   "area_per_mac_um2": 84.015625,
+   "tflops_per_mm2_1000ps": 23.805095778315046,
+   "power_mw_1000ps": 20.36141,
+   "energy_per_mac_fj": 318.14703125,
+   "tflops_per_w": 6.286401580244197,
+   "fmax_ghz": 1.2267379810346308,
+   "fmax_capped": false,
+   "meets_1000ps": false,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf32_t": {
+   "gt3": {
+    "1000": {
+     "area_um2": 5185.0,
+     "util_pct": 56.0,
+     "cells": 181595,
+     "regs": 7554,
+     "r2r_slack_ps": 9.92,
+     "worst_slack_ps": 9.92,
+     "sequential": {
+      "internal": 0.006757754,
+      "switching": 0.001523879,
+      "leakage": 7.969571e-06,
+      "total": 0.008289604
+     },
+     "combinational": {
+      "internal": 0.0007383383,
+      "switching": 0.007456243,
+      "leakage": 4.516715e-05,
+      "total": 0.008239749
+     },
+     "clock": {
+      "internal": -0.001653429,
+      "switching": 0.004845003,
+      "leakage": 3.296808e-06,
+      "total": 0.00319487
+     },
+     "total": {
+      "internal": 0.005842664,
+      "switching": 0.01382488,
+      "leakage": 5.64323e-05,
+      "total": 0.01972398
+     },
+     "annotated_pins": 468227,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "500": {
+     "area_um2": 5863.0,
+     "util_pct": 63.0,
+     "cells": 215894,
+     "regs": 7554,
+     "r2r_slack_ps": -289.39,
+     "worst_slack_ps": -289.39,
+     "sequential": {
+      "internal": 0.0135005,
+      "switching": 0.001662972,
+      "leakage": 7.969571e-06,
+      "total": 0.01517144
+     },
+     "combinational": {
+      "internal": 0.0003242969,
+      "switching": 0.01874215,
+      "leakage": 6.488265e-05,
+      "total": 0.01913133
+     },
+     "clock": {
+      "internal": -0.003441226,
+      "switching": 0.009779807,
+      "leakage": 3.334505e-06,
+      "total": 0.006341916
+     },
+     "total": {
+      "internal": 0.01038385,
+      "switching": 0.030185,
+      "leakage": 7.615831e-05,
+      "total": 0.040645
+     },
+     "annotated_pins": 536823,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "300": {
+     "area_um2": 5960.0,
+     "util_pct": 65.0,
+     "cells": 220982,
+     "regs": 7554,
+     "r2r_slack_ps": -506.4,
+     "worst_slack_ps": -506.4
+    }
+   },
+   "area_per_mac_um2": 81.015625,
+   "tflops_per_mm2_1000ps": 24.686595949855356,
+   "power_mw_1000ps": 19.723979999999997,
+   "energy_per_mac_fj": 308.1871875,
+   "tflops_per_w": 6.489562451391656,
+   "fmax_ghz": 1.2400793650793651,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "sf16_sf32_tg": {
+   "gt3": {
+    "1000": {
+     "area_um2": 5097.0,
+     "util_pct": 56.0,
+     "cells": 175670,
+     "regs": 7556,
+     "r2r_slack_ps": 6.91,
+     "worst_slack_ps": 6.91,
+     "sequential": {
+      "internal": 0.005209797,
+      "switching": 0.001552989,
+      "leakage": 7.971681e-06,
+      "total": 0.006770757
+     },
+     "combinational": {
+      "internal": 0.000761138,
+      "switching": 0.007382846,
+      "leakage": 4.424236e-05,
+      "total": 0.008188227
+     },
+     "clock": {
+      "internal": -0.001373602,
+      "switching": 0.003667656,
+      "leakage": 3.884158e-06,
+      "total": 0.002297938
+     },
+     "total": {
+      "internal": 0.004597325,
+      "switching": 0.01260348,
+      "leakage": 5.609652e-05,
+      "total": 0.0172569
+     },
+     "annotated_pins": 451974,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "500": {
+     "area_um2": 5792.0,
+     "util_pct": 64.0,
+     "cells": 211059,
+     "regs": 7556,
+     "r2r_slack_ps": -272.48,
+     "worst_slack_ps": -272.48,
+     "sequential": {
+      "internal": 0.01040426,
+      "switching": 0.00164839,
+      "leakage": 7.971681e-06,
+      "total": 0.01206062
+     },
+     "combinational": {
+      "internal": 0.0003430997,
+      "switching": 0.0185399,
+      "leakage": 6.44671e-05,
+      "total": 0.01894747
+     },
+     "clock": {
+      "internal": -0.002788254,
+      "switching": 0.007369673,
+      "leakage": 3.896775e-06,
+      "total": 0.004585316
+     },
+     "total": {
+      "internal": 0.00795942,
+      "switching": 0.02755795,
+      "leakage": 7.629894e-05,
+      "total": 0.03559367
+     },
+     "annotated_pins": 522750,
+     "equiv": [
+      1015,
+      1015
+     ]
+    },
+    "300": {
+     "area_um2": 5873.0,
+     "util_pct": 65.0,
+     "cells": 215221,
+     "regs": 7556,
+     "r2r_slack_ps": -460.64,
+     "worst_slack_ps": -460.64
+    }
+   },
+   "area_per_mac_um2": 79.640625,
+   "tflops_per_mm2_1000ps": 25.112811457720227,
+   "power_mw_1000ps": 17.256899999999998,
+   "energy_per_mac_fj": 269.6390625,
+   "tflops_per_w": 7.417322925902101,
+   "fmax_ghz": 1.3146823727387464,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "fp16_fp24_a_m": {
+   "gt3": {
+    "1000": {
+     "area_um2": 7808.0,
+     "util_pct": 56.0,
+     "cells": 267472,
+     "regs": 14594,
+     "r2r_slack_ps": 2.91,
+     "worst_slack_ps": 2.91,
+     "sequential": {
+      "internal": 0.01357277,
+      "switching": 0.003682225,
+      "leakage": 1.539687e-05,
+      "total": 0.01727039
+     },
+     "combinational": {
+      "internal": 0.001129001,
+      "switching": 0.0152413,
+      "leakage": 5.824893e-05,
+      "total": 0.01642855
+     },
+     "clock": {
+      "internal": -0.003342593,
+      "switching": 0.009286272,
+      "leakage": 6.261703e-06,
+      "total": 0.005949941
+     },
+     "total": {
+      "internal": 0.01135924,
+      "switching": 0.02820906,
+      "leakage": 7.988772e-05,
+      "total": 0.03964818
+     },
+     "annotated_pins": 707129,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "500": {
+     "area_um2": 8667.0,
+     "util_pct": 62.0,
+     "cells": 309027,
+     "regs": 14594,
+     "r2r_slack_ps": -184.11,
+     "worst_slack_ps": -206.07,
+     "sequential": {
+      "internal": 0.02710535,
+      "switching": 0.004496708,
+      "leakage": 1.539687e-05,
+      "total": 0.03161745
+     },
+     "combinational": {
+      "internal": -0.0003774848,
+      "switching": 0.03706037,
+      "leakage": 8.375273e-05,
+      "total": 0.03676664
+     },
+     "clock": {
+      "internal": -0.006633468,
+      "switching": 0.01852996,
+      "leakage": 6.227479e-06,
+      "total": 0.01190272
+     },
+     "total": {
+      "internal": 0.02009522,
+      "switching": 0.06008691,
+      "leakage": 0.0001053653,
+      "total": 0.0802875
+     },
+     "annotated_pins": 790258,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "300": {
+     "area_um2": 8864.0,
+     "util_pct": 64.0,
+     "cells": 319297,
+     "regs": 14594,
+     "r2r_slack_ps": -367.28,
+     "worst_slack_ps": -367.28
+    }
+   },
+   "area_per_mac_um2": 122.0,
+   "tflops_per_mm2_1000ps": 16.393442622950822,
+   "power_mw_1000ps": 39.648179999999996,
+   "energy_per_mac_fj": 619.5028125,
+   "tflops_per_w": 3.228395351312469,
+   "fmax_ghz": 1.4986212684330416,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "fp16_fp24_a_t": {
+   "gt3": {
+    "1000": {
+     "area_um2": 7369.0,
+     "util_pct": 56.0,
+     "cells": 252055,
+     "regs": 14146,
+     "r2r_slack_ps": 0.36,
+     "worst_slack_ps": 0.36,
+     "sequential": {
+      "internal": 0.01317011,
+      "switching": 0.003467356,
+      "leakage": 1.492422e-05,
+      "total": 0.01665239
+     },
+     "combinational": {
+      "internal": 0.0009721198,
+      "switching": 0.01401894,
+      "leakage": 5.402573e-05,
+      "total": 0.01504509
+     },
+     "clock": {
+      "internal": -0.00310531,
+      "switching": 0.008880352,
+      "leakage": 6.027012e-06,
+      "total": 0.005781069
+     },
+     "total": {
+      "internal": 0.01103705,
+      "switching": 0.02636617,
+      "leakage": 7.495969e-05,
+      "total": 0.03747818
+     },
+     "annotated_pins": 656198,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "500": {
+     "area_um2": 8194.0,
+     "util_pct": 63.0,
+     "cells": 292213,
+     "regs": 14146,
+     "r2r_slack_ps": -177.08,
+     "worst_slack_ps": -177.08,
+     "sequential": {
+      "internal": 0.02630685,
+      "switching": 0.00423595,
+      "leakage": 1.492422e-05,
+      "total": 0.03055772
+     },
+     "combinational": {
+      "internal": -0.0004522688,
+      "switching": 0.03434367,
+      "leakage": 7.838508e-05,
+      "total": 0.03396978
+     },
+     "clock": {
+      "internal": -0.006464734,
+      "switching": 0.01794532,
+      "leakage": 6.067426e-06,
+      "total": 0.01148666
+     },
+     "total": {
+      "internal": 0.01939056,
+      "switching": 0.05652481,
+      "leakage": 9.934469e-05,
+      "total": 0.07601471
+     },
+     "annotated_pins": 736521,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "300": {
+     "area_um2": 8383.0,
+     "util_pct": 64.0,
+     "cells": 302240,
+     "regs": 14146,
+     "r2r_slack_ps": -378.28,
+     "worst_slack_ps": -378.28
+    }
+   },
+   "area_per_mac_um2": 115.140625,
+   "tflops_per_mm2_1000ps": 17.370063780702946,
+   "power_mw_1000ps": 37.47818,
+   "energy_per_mac_fj": 585.5965625,
+   "tflops_per_w": 3.4153205945432776,
+   "fmax_ghz": 1.4743173910479448,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "fp16_fp24_a_tg": {
+   "gt3": {
+    "1000": {
+     "area_um2": 7364.0,
+     "util_pct": 57.0,
+     "cells": 248025,
+     "regs": 14148,
+     "r2r_slack_ps": 2.96,
+     "worst_slack_ps": 2.96,
+     "sequential": {
+      "internal": 0.01162443,
+      "switching": 0.00351129,
+      "leakage": 1.492633e-05,
+      "total": 0.01515064
+     },
+     "combinational": {
+      "internal": 0.001086218,
+      "switching": 0.01433975,
+      "leakage": 5.464295e-05,
+      "total": 0.01548061
+     },
+     "clock": {
+      "internal": -0.002890035,
+      "switching": 0.007788358,
+      "leakage": 6.935697e-06,
+      "total": 0.004905259
+     },
+     "total": {
+      "internal": 0.009820745,
+      "switching": 0.02563903,
+      "leakage": 7.648011e-05,
+      "total": 0.03553626
+     },
+     "annotated_pins": 652488,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "500": {
+     "area_um2": 8180.0,
+     "util_pct": 63.0,
+     "cells": 287550,
+     "regs": 14148,
+     "r2r_slack_ps": -163.23,
+     "worst_slack_ps": -174.33,
+     "sequential": {
+      "internal": 0.02320958,
+      "switching": 0.004285088,
+      "leakage": 1.492633e-05,
+      "total": 0.0275096
+     },
+     "combinational": {
+      "internal": -0.0003178024,
+      "switching": 0.03501026,
+      "leakage": 7.879792e-05,
+      "total": 0.03477126
+     },
+     "clock": {
+      "internal": -0.00588426,
+      "switching": 0.01563555,
+      "leakage": 6.950684e-06,
+      "total": 0.009758241
+     },
+     "total": {
+      "internal": 0.01700853,
+      "switching": 0.05493047,
+      "leakage": 0.000100644,
+      "total": 0.07203963
+     },
+     "annotated_pins": 731557,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "300": {
+     "area_um2": 8382.0,
+     "util_pct": 65.0,
+     "cells": 298659,
+     "regs": 14148,
+     "r2r_slack_ps": -386.82,
+     "worst_slack_ps": -386.82
+    }
+   },
+   "area_per_mac_um2": 115.0625,
+   "tflops_per_mm2_1000ps": 17.381857686040195,
+   "power_mw_1000ps": 35.53626,
+   "energy_per_mac_fj": 555.2540625,
+   "tflops_per_w": 3.6019547358106894,
+   "fmax_ghz": 1.4559855566232784,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  },
+  "bf16_fp24_a_g": {
+   "gt3": {
+    "1000": {
+     "area_um2": 6380.0,
+     "util_pct": 57.0,
+     "cells": 210160,
+     "regs": 13316,
+     "r2r_slack_ps": 9.27,
+     "worst_slack_ps": 9.27,
+     "sequential": {
+      "internal": 0.01069149,
+      "switching": 0.002884381,
+      "leakage": 1.404856e-05,
+      "total": 0.01358992
+     },
+     "combinational": {
+      "internal": 0.0007207838,
+      "switching": 0.01099106,
+      "leakage": 4.3993e-05,
+      "total": 0.01175583
+     },
+     "clock": {
+      "internal": -0.002596795,
+      "switching": 0.007197008,
+      "leakage": 6.47126e-06,
+      "total": 0.004606684
+     },
+     "total": {
+      "internal": 0.008815669,
+      "switching": 0.0210721,
+      "leakage": 6.449264e-05,
+      "total": 0.02995226
+     },
+     "annotated_pins": 551346,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "500": {
+     "area_um2": 7035.0,
+     "util_pct": 63.0,
+     "cells": 241590,
+     "regs": 13316,
+     "r2r_slack_ps": -145.49,
+     "worst_slack_ps": -146.28,
+     "sequential": {
+      "internal": 0.02135711,
+      "switching": 0.003577246,
+      "leakage": 1.404856e-05,
+      "total": 0.02494841
+     },
+     "combinational": {
+      "internal": -0.000554635,
+      "switching": 0.0269292,
+      "leakage": 6.35719e-05,
+      "total": 0.02643814
+     },
+     "clock": {
+      "internal": -0.005214624,
+      "switching": 0.01438894,
+      "leakage": 6.422333e-06,
+      "total": 0.009180734
+     },
+     "total": {
+      "internal": 0.01558858,
+      "switching": 0.044895,
+      "leakage": 8.39766e-05,
+      "total": 0.06056755
+     },
+     "annotated_pins": 614232,
+     "equiv": [
+      998,
+      998
+     ]
+    },
+    "300": {
+     "area_um2": 7246.0,
+     "util_pct": 65.0,
+     "cells": 252806,
+     "regs": 13316,
+     "r2r_slack_ps": -332.92,
+     "worst_slack_ps": -332.92
+    }
+   },
+   "area_per_mac_um2": 99.6875,
+   "tflops_per_mm2_1000ps": 20.062695924764892,
+   "power_mw_1000ps": 29.952260000000003,
+   "energy_per_mac_fj": 468.00406250000003,
+   "tflops_per_w": 4.273467177435024,
+   "fmax_ghz": 1.5799785122922327,
+   "fmax_capped": false,
+   "meets_1000ps": true,
+   "meets_2ghz": false,
+   "meets_300ps": false
+  }
+ }
+}
