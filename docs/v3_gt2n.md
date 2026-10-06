@@ -243,6 +243,14 @@ TFLOPS/mm² is 2 FLOPs per MAC per cycle at 2 GHz over the area per MAC; TFLOPS/
 - **Max clock:** FP and BF16 clock higher only with two more pipeline stages; at equal stages SF16 is faster (S2).
 - **The truncated product is worth 9.6% of SF24's area and 12% of its energy,** and the rows form alone is not where the saving comes from (74.6 µm² vs 75.0). Clock gating takes another 15% of SF24's energy and 5–6% of the FP formats'.
 
+## Workloads on a 2 nm die (modeled)
+
+`v3/perf/v3_perf.py` (run on the research server) puts the measured PEs on an 800 mm² die: 70 mm² of matrix units in every format (SF16 64, FP16 37, BF16 43 units of 128 × 128), 14 mm² of cores, 40 mm² of I/O, and the rest SRAM at 38.1 Mb/mm², 3.22 GB in every format, with 4 HBM3E stacks for overflow. It is a roofline over the matrix units (128 × 128 tiles, 128 cycles to load a tile, fill latency per GEMM), the vector units (software exp/GELU/softmax/SiLU), HBM and a 700 W cap, on GPT-2 small to XL and YOLOv8 n to x. `v3/perf/update_doc.py` writes the results into the shuttle-plan document's section 6.
+- **With the plan's 16 × 128 vector lanes,** every large prompt and image batch is vector-bound. The matrix units are 2–32% busy, and SF16 trails by 8–12% (its scale ops).
+- **With 65,536 lanes,** prompts and batches become matrix-bound. SF16 leads FP16 by 1.40–1.83× and BF16 by 1.36–1.57× on GPT-2 prompts, and 1.33–1.89× and 1.26–1.71× on YOLOv8 batches.
+- **Batch-1 decode is set by the 128-cycle weight load per tile.** SF16 leads 1.66–1.72× (more units, 1 stage vs 3), and 4 rows per cycle would give 1.86×.
+- **GPT-2 XL's weights take the SRAM,** so its KV cache goes to HBM and batch decode ties at about 15,500 tokens/s.
+
 ## GT2N flow notes (from the v2 runs)
 
 - ORFS Docker image `openroad/orfs:latest`, platform `gt2n`.
