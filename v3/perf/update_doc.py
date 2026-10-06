@@ -308,6 +308,36 @@ table([["SF16", "v1, measured (SKY130, pin bus)", "v3 at 2 nm (modeled, 65,536 l
 para("The earlier projection's 2.0 µs per token assumed power-bound arrays. The model now includes each tile's "
      "128-cycle weight load, which sets batch-1 decode.")
 
+# ------------------------------------------------- 6.9 the chips, from GDS
+FIGS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "figs")
+if os.path.exists(os.path.join(FIGS, "chips_gds.png")):
+    from docx.shared import Inches
+    heading("6.9 The same chip at 130 nm and 2 nm")
+    para("The v2 SF16 chip from its GDS at both nodes. At 130 nm it is the OpenFrame chip (chip_sf16_20); at 2 nm the "
+         "same RTL was hardened on GT2N: the core tile alone, then four of them as macros with the pin bus, "
+         "dispatcher and icache between them.")
+
+    def picture(path, width):
+        p = d.add_paragraph()
+        p.alignment = 1
+        p.add_run().add_picture(path, width=Inches(width))
+        anchor.addprevious(p._p)
+
+    picture(os.path.join(FIGS, "chips_gds.png"), 6.3)
+    table([["", "130 nm (SKY130)", "2 nm (GT2N)", "Ratio"],
+           ["Core tile", "1,500 × 1,730 µm (2.60 mm²)", "122 × 122 µm (0.0149 mm²)", "174×"],
+           ["Chip", "3,167 × 4,767 µm (15.09 mm²)", "264 × 288 µm (0.076 mm²)", "199×"],
+           ["Detailed-route violations", "0 (and DRC, LVS 0)", "0 (tile and chip)", ""],
+           ["Clock", "50 MHz, met at the slow corner", "tile: 650 ps met; chip: 1.24 ns as routed", ""]],
+          widths=[2200, 2500, 2700, 1200])
+    para("Two caveats for the 2 nm chip. It has no pad ring, because GT2N has no I/O cells, while the 130 nm die "
+         "includes OpenFrame's harness. Its top-level paths, from the tiles through the bus, miss the 650 ps target by "
+         "587 ps, so the chip as routed runs at about 0.81 GHz; the tiles meet 650 ps. GT2N results use the global "
+         "route's estimated parasitics at the typical corner.")
+    picture(os.path.join(FIGS, "chips_scale.png"), 4.6)
+    para("To scale: one 2 nm chip, 264 × 288 µm, fills 1/199 of the 130 nm die's area. In whole chips, 11 × 16 = 176 "
+         "of them fit in the same 3.17 × 4.77 mm.")
+
 # ----------------------------------------------------------- summary bullet
 for p in d.paragraphs:
     if p.text.startswith("v3 at 2 nm"):
