@@ -1,0 +1,36 @@
+{
+ "source": "signoff/<fmt>/tile/final/metrics.json and test/gpt2/power/results/<fmt>_<kernel>.json at cf-openframe 0884a30",
+ "note": "SKY130 (130 nm) tile macros as signed off for the OpenFrame chip; hardened at 20 ns. fmax = 1 / (20 ns - worst setup slack of the tile). Power: OpenSTA on gate-level GPT-2 activity at 50 MHz, nom_tt.",
+ "formats": {
+  "sf16": {
+   "tile_fmax_ss_mhz": 51.92718649096037,
+   "tile_fmax_tt_mhz": 107.24976944249974,
+   "tile_stdcell_area_um2": 1401520,
+   "tile_die_area_um2": 3375000,
+   "tile_power_w_50mhz": {
+    "gemv": 0.0607,
+    "gemm": 0.0606
+   }
+  },
+  "fp16": {
+   "tile_fmax_ss_mhz": 55.672063719228035,
+   "tile_fmax_tt_mhz": 118.68181217101672,
+   "tile_stdcell_area_um2": 1861440,
+   "tile_die_area_um2": 3375000,
+   "tile_power_w_50mhz": {
+    "gemv": 0.113,
+    "gemm": 0.113
+   }
+  },
+  "bf16": {
+   "tile_fmax_ss_mhz": 54.13740824882727,
+   "tile_fmax_tt_mhz": 110.2879525801913,
+   "tile_stdcell_area_um2": 1633720,
+   "tile_die_area_um2": 3375000,
+   "tile_power_w_50mhz": {
+    "gemv": 0.108,
+    "gemm": 0.108
+   }
+  }
+ }
+}

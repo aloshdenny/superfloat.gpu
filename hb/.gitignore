@@ -1,1 +1,3 @@
 build/
+# the measurements are kept (the top-level .gitignore drops results/)
+!results/

@@ -1,0 +1,2 @@
+{"name": "vanilla_gemv_768_10", "fmt": -1, "make_rc": 0, "sim_seconds": 49.1, "gemv": 1, "kc": 768, "nb": 10, "cycles": 161863, "outputs": 80, "mismatches": 0, "finish": true, "timeout": false, "errors": 0}
+{"name": "vanilla_gemm_768_9", "fmt": -1, "make_rc": 0, "sim_seconds": 96.5, "gemv": 0, "kc": 768, "nb": 9, "cycles": 468624, "outputs": 576, "mismatches": 0, "finish": true, "timeout": false, "errors": 0}
