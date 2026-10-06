@@ -1,0 +1,43 @@
+{
+ "node": "gt3",
+ "period_ps": 1000,
+ "parasitics": "global-route estimates (no OpenRCX rules)",
+ "tile": {
+  "design": "core_tile (v2 SF16)",
+  "die_um": [
+   122.32,
+   122.32
+  ],
+  "drt_violations": 0,
+  "setup_ws_ps": 2.61,
+  "setup_r2r_ps": 2.61,
+  "setup_tns_ps": 0.0,
+  "hold_ws_ps": -30.87,
+  "hold_r2r_ps": 11.37,
+  "hold_violations": 7,
+  "hold_tns_ps": -89.96,
+  "hold_violations_from": "input ports",
+  "flops": 11495,
+  "missed_periods_at_global_route_ps": {
+   "650": -200.81,
+   "900": -49.83
+  }
+ },
+ "chip": {
+  "design": "superfloat_openframe, 4 core_tile macros",
+  "die_um": [
+   264,
+   288
+  ],
+  "drt_violations": 0,
+  "setup_ws_ps": -1235.7,
+  "setup_r2r_ps": -790.39,
+  "setup_tns_ps": -52807,
+  "setup_violations": 155,
+  "hold_ws_ps": -22.77,
+  "hold_r2r_ps": -22.77,
+  "hold_violations": 5,
+  "hold_tns_ps": -69.3,
+  "flops_outside_tiles": 2796
+ }
+}
