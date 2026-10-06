@@ -3,9 +3,13 @@
 # block on the GPT-2 power stimulus (power_stim.py), checked against the RTL
 # on the same stimulus, then OpenSTA power from the run's switching activity
 # with global-route parasitics. Report: /root/v3/reports/<variant>_<ps>_power.txt
+# PLATFORM as setup.sh; zero-delay cell models from the platform's Liberty
+# (lib2v.py): gt2n w31 lvt (every flavour shares it), nangate45 typical.
+# The testbench runs in ps on every platform (PERIOD = <period_ps>).
 set -uo pipefail
 v=$1; ps=$2
 F=/OpenROAD-flow-scripts/flow
+P=${PLATFORM:-gt2n}
 V=/root/v3
 W=$V/gl/${v}_$ps; mkdir -p $W; cd $W
 read L LINES FROM TO IW CW < <(python3 - <<PY
@@ -20,15 +24,20 @@ print(m["L"], m["lines"], m["dump_from"], m["dump_to"], iw // 8, cw // 8)
 PY
 )
 cp $V/stim/$v.txt stim.txt
-[ -f $V/gt2n_cells.v ] || python3 $V/lib2v.py $F/platforms/gt2n/lib/gt2_6t_w31_lvt_tt_0p7v25c.lib $V/gt2n_cells.v
+case $P in
+  gt2n)      LIB=$F/platforms/gt2n/lib/gt2_6t_w31_lvt_tt_0p7v25c.lib ;;
+  nangate45) LIB=$F/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib ;;
+esac
+[ -f $V/${P}_cells.v ] || python3 $V/lib2v.py $LIB $V/${P}_cells.v
 DEFS="-DTOP=blk_$v -DIW=$IW -DCW=$CW -DN=8 -DPERIOD=$ps -DDUMP_FROM=$FROM -DDUMP_TO=$TO"
 mkdir -p rtl && (cd rtl && cp ../stim.txt . && iverilog -g2012 -s tb_block $DEFS -o rtl.vvp $V/v3_blocks.v $V/tb_gl.sv && vvp -n rtl.vvp > /dev/null && rm -f act.vcd)
-iverilog -g2012 -s tb_block $DEFS -o gl.vvp $V/gt2n_cells.v $V/netlists/${v}_$ps.v $V/tb_gl.sv || exit 1
+iverilog -g2012 -s tb_block $DEFS -o gl.vvp $V/${P}_cells.v $V/netlists/${v}_$ps.v $V/tb_gl.sv || exit 1
 vvp -n gl.vvp > gl.log 2>&1 || exit 1
 python3 - <<PY > equiv.txt
 a = open("rtl/out.txt").read().split(); b = open("out.txt").read().split()
 n = sum(1 for x in a if "x" not in x)
 bad = sum(1 for x, y in zip(a, b) if "x" not in x and x != y)
+bad += sum(1 for x in a[len(b):] if "x" not in x)    # lines the gate level never wrote
 print(f"EQUIV {n - bad}/{n} defined RTL output lines match the gate level")
 PY
 cat equiv.txt
@@ -41,7 +50,7 @@ puts "VARIANT $v PERIOD_PS $ps WINDOW \$::env(WIN_CYCLES) cycles"
 report_power -digits 6
 TCL
 cd $F
-WIN_CYCLES=$((TO - FROM)) CLK_PERIOD_PS=$ps make DESIGN_CONFIG=designs/gt2n/v3_$v/config.mk FLOW_VARIANT=p$ps \
+WIN_CYCLES=$((TO - FROM)) CLK_PERIOD_PS=$ps make DESIGN_CONFIG=designs/$P/v3_$v/config.mk FLOW_VARIANT=p$ps \
   RUN_SCRIPT=$W/power.tcl run > $V/reports/${v}_${ps}_power.txt 2>&1
 cat $W/equiv.txt >> $V/reports/${v}_${ps}_power.txt
 rm -f $W/act.vcd $W/gl.vvp

@@ -1,0 +1,24 @@
+#!/bin/bash
+# worker.sh <id>: pop "<variant> <period_ps> <power 0|1>" lines off the top of
+# /root/v3/queue.txt (under a lock, so lines can be added while workers run)
+# until it is empty: run_one.sh, then gl_power.sh if power is 1. Start N of
+# these for N slots (four of 8 cores, as run_all.sh). PLATFORM as setup.sh.
+# After each run, keeps only the globally routed block (5_1_grt.odb/.sdc,
+# enough to redo the reports and the power) and the logs, to save disk.
+Q=/root/v3/queue.txt; id=$1
+F=/OpenROAD-flow-scripts/flow
+P=${PLATFORM:-gt2n}
+touch $Q
+while true; do
+  while [ $(df --output=avail -B1G / | tail -1) -lt 8 ]; do sleep 60; done
+  line=$(flock /root/v3/queue.lock bash -c "l=\$(head -n1 $Q); [ -n \"\$l\" ] && { sed -i 1d $Q || l=; }; echo \"\$l\"")
+  [ -z "$line" ] && break
+  set -- $line
+  echo "START $1 $2 $(date +%T) w$id" >> /root/v3/done.txt
+  /root/v3/run_one.sh $1 $2
+  [ "$3" = 1 ] && /root/v3/gl_power.sh $1 $2 > /root/v3/logs/$1_$2_power.log 2>&1
+  echo "DONE $1 $2 $(date +%T) w$id $(tail -1 /root/v3/logs/$1_$2.log)" >> /root/v3/done.txt
+  find $F/results/$P/v3_$1/p$2 -type f ! -name "5_1_grt.odb" ! -name "5_1_grt.sdc" -delete
+  rm -rf $F/objects/$P/v3_$1/p$2
+done
+echo "WORKER $id EMPTY $(date +%T)" >> /root/v3/done.txt
