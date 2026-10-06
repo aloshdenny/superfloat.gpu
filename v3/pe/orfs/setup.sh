@@ -1,18 +1,20 @@
 #!/bin/bash
-# S2 on the GT2N pod: one ORFS design per v3 block variant (v3_variants.sv
-# via sv2v as v3_blocks.v). Clock period from CLK_PERIOD_PS (FLOW_VARIANT
-# names the run), so one design serves every target.
-#   setup.sh <variant ...>
+# S2 on a pod: one ORFS design per v3 block variant (v3_variants.sv via
+# sv2v as v3_blocks.v). Clock period from CLK_PERIOD_PS (FLOW_VARIANT names
+# the run), so one design serves every target. PLATFORM: gt2n (default) or
+# gt3; MAX_ROUTING_LAYER M10 on both.
+#   [PLATFORM=gt3] setup.sh <variant ...>
 set -euo pipefail
 F=/OpenROAD-flow-scripts/flow
+P=${PLATFORM:-gt2n}
 mkdir -p $F/designs/src/v3
 cp /root/v3/v3_blocks.v $F/designs/src/v3/
 for v in "$@"; do
-  d=$F/designs/gt2n/v3_$v; mkdir -p $d
+  d=$F/designs/$P/v3_$v; mkdir -p $d
   cat > $d/config.mk <<MK
 export DESIGN_NICKNAME = v3_$v
 export DESIGN_NAME     = blk_$v
-export PLATFORM        = gt2n
+export PLATFORM        = $P
 export VERILOG_FILES   = \$(DESIGN_HOME)/src/v3/v3_blocks.v
 export SDC_FILE        = \$(DESIGN_HOME)/\$(PLATFORM)/\$(DESIGN_NICKNAME)/constraint.sdc
 export CORE_UTILIZATION  = 50

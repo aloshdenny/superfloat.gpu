@@ -1,10 +1,12 @@
 #!/bin/bash
 # report.sh <variant> <period_ps>: area, cells, flops and register-to-register
 # timing of the globally routed block (estimated parasitics from the global
-# route: GT2N has no extraction rules), into /root/v3/reports/<variant>_<ps>.txt.
+# route: GT2N and GT3 have no extraction rules), into
+# /root/v3/reports/<variant>_<ps>.txt. PLATFORM as setup.sh.
 v=$1; ps=$2
 F=/OpenROAD-flow-scripts/flow
-R=$F/results/gt2n/v3_$v/p$ps
+P=${PLATFORM:-gt2n}
+R=$F/results/$P/v3_$v/p$ps
 mkdir -p /root/v3/reports
 cd $F
 export CLK_PERIOD_PS=$ps
@@ -32,5 +34,5 @@ write_verilog /root/v3/netlists/${v}_$ps.v
 TCL
 mkdir -p /root/v3/netlists
 # The platform's variables (PLATFORM_DIR and the libs) come from the flow's Makefile.
-make DESIGN_CONFIG=designs/gt2n/v3_$v/config.mk FLOW_VARIANT=p$ps \
+make DESIGN_CONFIG=designs/$P/v3_$v/config.mk FLOW_VARIANT=p$ps \
   RUN_SCRIPT=/tmp/rep_${v}_$ps.tcl run > /root/v3/reports/${v}_$ps.txt 2>&1
