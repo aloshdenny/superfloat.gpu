@@ -8,7 +8,7 @@
 #    from SF_ACCEL_TYPE when those are defined; other machines are unchanged.
 # 3. Makefile.verilator passes a machine's SF_MACHINE_DEFINES to Verilator.
 # 4. test.cpp waits for reset to rise before arming assertions (below).
-# 5. The three machines hb/machines/sf_4x2_{sf16,fp16,bf16}.
+# 5. The machines in hb/machines (v1 tiles: sf_4x2_*, v3 matrix tiles: v3_4x2_*).
 set -e
 MC=$(cd "$1" && pwd); ROOT=$(cd "$2" && pwd)
 cd $MC
@@ -42,9 +42,9 @@ PY
 F=machines/Makefile.verilator
 grep -q SF_MACHINE_DEFINES $F || sed -i 's|^\t\$(eval VERILATOR_DEFINES += +define+BSG_MACHINE_HETERO_TYPE_VEC=.*$|&\n\t$(eval VERILATOR_DEFINES += $(SF_MACHINE_DEFINES))|' $F
 grep -n SF_MACHINE_DEFINES $F
-for m in sf16 fp16 bf16 sf16_rb fp16_rb bf16_rb; do
-  mkdir -p machines/sf_4x2_$m
-  cp $ROOT/hb/machines/sf_4x2_$m/Makefile.machine.include machines/sf_4x2_$m/
+for m in $(cd $ROOT/hb/machines && ls -d */ | tr -d /); do
+  mkdir -p machines/$m
+  cp $ROOT/hb/machines/$m/Makefile.machine.include machines/$m/
 done
 git diff --stat
 echo wired

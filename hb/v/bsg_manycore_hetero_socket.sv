@@ -132,6 +132,19 @@ module bsg_manycore_hetero_socket
   `HETERO_TYPE_MACRO(12,sf_hb_accel_sf16_rb) else
   `HETERO_TYPE_MACRO(13,sf_hb_accel_fp16_rb) else
   `HETERO_TYPE_MACRO(14,sf_hb_accel_bf16_rb) else
+  // SuperFloat v3 matrix tiles (hb/v/sf_hb_v3.sv): one and two product stages
+  `HETERO_TYPE_MACRO(15,sf_hb_v3_sf16) else
+  `HETERO_TYPE_MACRO(16,sf_hb_v3_fp16) else
+  `HETERO_TYPE_MACRO(17,sf_hb_v3_bf16) else
+  `HETERO_TYPE_MACRO(18,sf_hb_v3_sf16_m2) else
+  `HETERO_TYPE_MACRO(19,sf_hb_v3_fp16_m2) else
+  `HETERO_TYPE_MACRO(20,sf_hb_v3_bf16_m2) else
+  `HETERO_TYPE_MACRO(21,sf_hb_v3_sf16_a4) else
+  `HETERO_TYPE_MACRO(22,sf_hb_v3_fp16_a4) else
+  `HETERO_TYPE_MACRO(23,sf_hb_v3_bf16_a4) else
+  `HETERO_TYPE_MACRO(24,sf_hb_v3_sf16_m2a4) else
+  `HETERO_TYPE_MACRO(25,sf_hb_v3_fp16_m2a4) else
+  `HETERO_TYPE_MACRO(26,sf_hb_v3_bf16_m2a4) else
   begin : nh
   // synopsys translate_off
     initial begin
