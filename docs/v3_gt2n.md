@@ -243,6 +243,27 @@ TFLOPS/mm² is 2 FLOPs per MAC per cycle at 2 GHz over the area per MAC; TFLOPS/
 - **Max clock:** FP and BF16 clock higher only with two more pipeline stages; at equal stages SF16 is faster (S2).
 - **The truncated product is worth 9.6% of SF24's area and 12% of its energy,** and the rows form alone is not where the saving comes from (74.6 µm² vs 75.0). Clock gating takes another 15% of SF24's energy and 5–6% of the FP formats'.
 
+## Levers for clock: two product stages, carry-save multiplier, wavefront swap
+
+Each format's lever variant again, with the product taken over two pipeline stages off the partial-sum path (`MUL_ST 2`), written as an explicit 3:2 carry-save tree and one plain add (`CT 1`; Yosys otherwise maps the rows' sum to a ripple adder), and with the wavefront weight swap the HammerBlade tile uses (`WAVE 1`, `_w`). All bit-exact; every gate-level netlist matches its RTL on the GPT-2 stimulus. Run on Modal, 2026-10-07 (reports in `v3/pe/results/gt2n3`, gitignored).
+
+| Variant | Max clock, 300 ps run (GHz) | Max clock, 250 ps run (GHz) | Area/MAC (µm²) | Energy/MAC at 2 GHz (fJ) | TFLOPS/mm² | TFLOPS/W |
+|---|---|---|---|---|---|---|
+| SF16, SF24 t+g, two stages, carry-save | 3.25 | 3.55 | 75.5 | 290 | 53.0 | 6.90 |
+| **… with the wavefront swap (tile array)** | **3.26** | **3.39** | **76.1** | **293** | **52.5** | **6.82** |
+| FP16, FP24 (a) t+g, two stages, carry-save | 3.05 | | 124.0 | 650 | 32.3 | 3.08 |
+| **… with the wavefront swap (tile array)** | **3.01** | **2.90** | **124.4** | **654** | **32.1** | **3.06** |
+| FP16 tile array, two stages, no carry-save | 2.89 | 2.79 | 124.3 | 662 | 32.2 | 3.02 |
+| BF16, FP24 (a) g, two stages | 3.12 | | 105.7 | 532 | 37.9 | 3.76 |
+| BF16, FP24 (a) g, two stages, carry-save | 2.97 | | 105.0 | 526 | 38.1 | 3.80 |
+| BF16 tile array, two stages | 3.10 | 2.93 | 106.6 | 540 | 37.5 | 3.70 |
+| **BF16 tile array, two stages, carry-save** | **3.03** | **2.91** | **106.2** | **537** | **37.7** | **3.72** |
+
+- **SF16 now clocks highest.** With two product stages, FP16 and BF16 are held back by their floating-point align and add stages, which SF16 does not have. Best of the two runs, tile arrays: SF16 3.39 GHz, FP16 3.01, BF16 3.03 (1.13× and 1.12×).
+- **The second stage costs efficiency.** SF16's energy per MAC rises from 233 to 293 fJ and its area from 66.5 to 76.1 µm²; the FP formats' rise less. Tile arrays, SF16 ahead by 2.23× (FP16) and 1.83× (BF16) in TFLOPS/W, 1.63× and 1.40× in TFLOPS/mm², against 2.53×/2.09× and 1.70×/1.48× with one stage.
+- **BF16's max clock moved between runs:** an earlier 300 ps run of the two-stage BF16 block (lost with its RunPod pod) gave 2.89 GHz; this one gives 3.12. The other formats repeated within 0.01 GHz.
+- Max clock is 1 / (T − register-to-register slack); a tighter target is not always faster (FP16 and BF16 come out lower from the 250 ps runs).
+
 ## Workloads on a 2 nm die (modeled)
 
 `v3/perf/v3_perf.py` (run on the research server) puts the measured PEs on an 800 mm² die: 70 mm² of matrix units in every format (SF16 64, FP16 37, BF16 43 units of 128 × 128), 14 mm² of cores, 40 mm² of I/O, and the rest SRAM at 38.1 Mb/mm², 3.22 GB in every format, with 4 HBM3E stacks for overflow. It is a roofline over the matrix units (128 × 128 tiles, 128 cycles to load a tile, fill latency per GEMM), the vector units (software exp/GELU/softmax/SiLU), HBM and a 700 W cap, on GPT-2 small to XL and YOLOv8 n to x. `v3/perf/update_doc.py` writes the results into the shuttle-plan document's section 6.
