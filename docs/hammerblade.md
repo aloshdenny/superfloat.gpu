@@ -123,6 +123,33 @@ SF16 cycles; FP16 and BF16 are identical. "Busy per read" is the tiles' busy cyc
   - the gap between launches (7 cycles on the chip).
 - **The FP32 baseline is untuned C.** A tuned HammerBlade kernel could be faster.
 
+## v3 matrix tiles
+
+Four v3 tiles in the same pod (`hb/v/sf_hb_v3.sv`): each an NA × NA wavefront array of v3 processing elements (8 × 8 or 4 × 4) with a DMA engine, 32 tags, activation banks and four weight slots. Every GPT-2 small prefill matrix multiply ran on the pod's RTL in each format: qkv, proj, fc1, fc2, scores and av at 8, 32 and 128 tokens, and the LM head on 2,048 and 4,096 of its columns (extended to all 50,257 as in `hb/bench_v3.py`). **180 launches, all bit-exact.**
+
+- `v3` (60 launches): one product stage, no address hashing in the vcaches.
+- `v3i` (120 launches): two product stages with the carry-save multiplier (the arrays measured at 2 nm), the vcaches' IPOLY hashing on, 8 × 8 and 4 × 4 arrays.
+
+| Prefill, matrix multiplies | Machine | SF16 | FP16 | BF16 |
+|---|---|---|---|---|
+| Cycles, 32-token prompt | v3, 8 × 8 | 46.28 M | 47.37 M | 47.37 M |
+| | v3i, 8 × 8 | 57.81 M | 57.79 M | 57.79 M |
+| | v3i, 4 × 4 | 63.74 M | 63.85 M | 63.85 M |
+| Cycles, 128-token prompt | v3, 8 × 8 | 87.47 M | 87.88 M | 87.88 M |
+| | v3i, 8 × 8 | 76.88 M | 76.92 M | 76.92 M |
+| | v3i, 4 × 4 | 204.24 M | 204.18 M | 204.18 M |
+| Array clock at 2 nm (GT2N) | v3i | **3.39 GHz** | 3.01 GHz | 3.03 GHz |
+| **Time to first token, v3i 8 × 8** | 8 tokens | **16.0 ms** | 18.0 ms | 17.9 ms |
+| | 32 tokens | **17.1 ms** | 19.2 ms | 19.1 ms |
+| | 128 tokens | **22.7 ms** | 25.6 ms | 25.4 ms |
+
+- **The format sets the time only through the clock.** Cycles agree within 2.5% across formats, so SF16's lead is its arrays' higher clock: 1.12–1.13× sooner than FP16 and BF16 (about 11% less time).
+- **The tiles are bandwidth-bound.** The pod's eight vcaches deliver about 1.4 words per cycle to the four tiles, so the arrays wait for weights. Smaller 4 × 4 arrays do not remove the wait: they take 1.1× the cycles of the 8 × 8 arrays at 32 tokens and 2.7× at 128.
+- **v3i against v3:** 12% fewer cycles at 128 tokens, 25% more at 32 tokens, mostly in the LM head (16.5 M against 10.6 M cycles). The two machines differ in both the address hashing and the second product stage.
+- **Clocks:** each format's exact tile array (8 × 8 wavefront block, carry-save multiplier over two stages) through ORFS to global routing on GT2N, register to register, best of the 250 ps and 300 ps runs (`hb/results/v3_clock.json`). The whole pod is assumed to run at the array's clock.
+- **Not counted:** as for v1, matrix multiplies only. HammerBlade's own clock and power are not measured.
+- **Run:** six machines on one 64-core Modal container (Verilator simulation runs about 7× slower per launch there than on the RunPod pod). Results: `hb/results/v3_*.jsonl`, `v3i_*.jsonl`, `v3_summary.json`.
+
 ## Reproduction
 
 `hb/README.md`. Versions: bsg_manycore 0052ce8, basejump_stl 3753148, Verilator 983a06a (`hb/results/versions.txt`).

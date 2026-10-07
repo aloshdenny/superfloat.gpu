@@ -1,0 +1,6 @@
+{
+ "_source": "GT2N 2 nm, ORFS to global route, register-to-register max clock 1 / (T - slack), best of the 250 ps and 300 ps runs (Modal, 2026-10-07; superfloat.gpu gt2n branch v3/pe/results/gt2n3). The tile's exact arrays: 8 x 8 wavefront blocks, carry-save multiplier over two product stages (*_c2_w). Applies to the _m2 machines only.",
+ "sf16": {"variant": "sf16_sf24_tgc2_w", "fmax_ghz": 3.39, "fmax_300ps_run_ghz": 3.26},
+ "fp16": {"variant": "fp16_fp24_a_tgc2_w", "fmax_ghz": 3.01, "fmax_250ps_run_ghz": 2.90},
+ "bf16": {"variant": "bf16_fp24_a_gc2_w", "fmax_ghz": 3.03, "fmax_250ps_run_ghz": 2.91}
+}

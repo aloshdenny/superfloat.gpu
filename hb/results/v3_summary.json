@@ -1,0 +1,234 @@
+{
+ "prompts": [
+  8,
+  32,
+  128
+ ],
+ "configs": {
+  "v3_sf16": {
+   "failed": [],
+   "launches": 20,
+   "fmax_ghz": null,
+   "prompts": {
+    "8": {
+     "cycles": 39183213.80175781,
+     "layers_cycles": 28601820,
+     "lmhead_cycles": 10581393.801757812,
+     "ttft_ms": null
+    },
+    "32": {
+     "cycles": 46281945.80175781,
+     "layers_cycles": 35700552,
+     "lmhead_cycles": 10581393.801757812,
+     "ttft_ms": null
+    },
+    "128": {
+     "cycles": 87468549.80175781,
+     "layers_cycles": 76887156,
+     "lmhead_cycles": 10581393.801757812,
+     "ttft_ms": null
+    }
+   }
+  },
+  "v3_fp16": {
+   "failed": [],
+   "launches": 20,
+   "fmax_ghz": null,
+   "prompts": {
+    "8": {
+     "cycles": 40155965.318359375,
+     "layers_cycles": 28705692,
+     "lmhead_cycles": 11450273.318359375,
+     "ttft_ms": null
+    },
+    "32": {
+     "cycles": 47368937.318359375,
+     "layers_cycles": 35918664,
+     "lmhead_cycles": 11450273.318359375,
+     "ttft_ms": null
+    },
+    "128": {
+     "cycles": 87879701.31835938,
+     "layers_cycles": 76429428,
+     "lmhead_cycles": 11450273.318359375,
+     "ttft_ms": null
+    }
+   }
+  },
+  "v3_bf16": {
+   "failed": [],
+   "launches": 20,
+   "fmax_ghz": null,
+   "prompts": {
+    "8": {
+     "cycles": 40155965.318359375,
+     "layers_cycles": 28705692,
+     "lmhead_cycles": 11450273.318359375,
+     "ttft_ms": null
+    },
+    "32": {
+     "cycles": 47368937.318359375,
+     "layers_cycles": 35918664,
+     "lmhead_cycles": 11450273.318359375,
+     "ttft_ms": null
+    },
+    "128": {
+     "cycles": 87879701.31835938,
+     "layers_cycles": 76429428,
+     "lmhead_cycles": 11450273.318359375,
+     "ttft_ms": null
+    }
+   }
+  },
+  "v3i_sf16_m2": {
+   "failed": [],
+   "launches": 20,
+   "fmax_ghz": 3.39,
+   "prompts": {
+    "8": {
+     "cycles": 54296008.458496094,
+     "layers_cycles": 37820184,
+     "lmhead_cycles": 16475824.458496094,
+     "ttft_ms": 16.01652166917289
+    },
+    "32": {
+     "cycles": 57810856.458496094,
+     "layers_cycles": 41335032,
+     "lmhead_cycles": 16475824.458496094,
+     "ttft_ms": 17.05334998775696
+    },
+    "128": {
+     "cycles": 76877728.4584961,
+     "layers_cycles": 60401904,
+     "lmhead_cycles": 16475824.458496094,
+     "ttft_ms": 22.677796005456074
+    }
+   }
+  },
+  "v3i_fp16_m2": {
+   "failed": [],
+   "launches": 20,
+   "fmax_ghz": 3.01,
+   "prompts": {
+    "8": {
+     "cycles": 54291926.36767578,
+     "layers_cycles": 37674396,
+     "lmhead_cycles": 16617530.367675781,
+     "ttft_ms": 18.037184839759394
+    },
+    "32": {
+     "cycles": 57791978.36767578,
+     "layers_cycles": 41174448,
+     "lmhead_cycles": 16617530.367675781,
+     "ttft_ms": 19.199992813181325
+    },
+    "128": {
+     "cycles": 76917746.36767578,
+     "layers_cycles": 60300216,
+     "lmhead_cycles": 16617530.367675781,
+     "ttft_ms": 25.55406856068963
+    }
+   }
+  },
+  "v3i_bf16_m2": {
+   "failed": [],
+   "launches": 20,
+   "fmax_ghz": 3.03,
+   "prompts": {
+    "8": {
+     "cycles": 54291926.36767578,
+     "layers_cycles": 37674396,
+     "lmhead_cycles": 16617530.367675781,
+     "ttft_ms": 17.918127514084418
+    },
+    "32": {
+     "cycles": 57791978.36767578,
+     "layers_cycles": 41174448,
+     "lmhead_cycles": 16617530.367675781,
+     "ttft_ms": 19.073260187351742
+    },
+    "128": {
+     "cycles": 76917746.36767578,
+     "layers_cycles": 60300216,
+     "lmhead_cycles": 16617530.367675781,
+     "ttft_ms": 25.38539484081709
+    }
+   }
+  },
+  "v3i_sf16_m2a4": {
+   "failed": [],
+   "launches": 20,
+   "fmax_ghz": 3.39,
+   "prompts": {
+    "8": {
+     "cycles": 54957822.92089844,
+     "layers_cycles": 38080524,
+     "lmhead_cycles": 16877298.920898438,
+     "ttft_ms": 16.211747174306325
+    },
+    "32": {
+     "cycles": 63738738.92089844,
+     "layers_cycles": 46861440,
+     "lmhead_cycles": 16877298.920898438,
+     "ttft_ms": 18.801987882270925
+    },
+    "128": {
+     "cycles": 204236310.92089844,
+     "layers_cycles": 187359012,
+     "lmhead_cycles": 16877298.920898438,
+     "ttft_ms": 60.2466993866957
+    }
+   }
+  },
+  "v3i_fp16_m2a4": {
+   "failed": [],
+   "launches": 20,
+   "fmax_ghz": 3.01,
+   "prompts": {
+    "8": {
+     "cycles": 55102466.66796875,
+     "layers_cycles": 38160060,
+     "lmhead_cycles": 16942406.66796875,
+     "ttft_ms": 18.30646733155108
+    },
+    "32": {
+     "cycles": 63848702.66796875,
+     "layers_cycles": 46906296,
+     "lmhead_cycles": 16942406.66796875,
+     "ttft_ms": 21.212193577398256
+    },
+    "128": {
+     "cycles": 204180734.66796875,
+     "layers_cycles": 187238328,
+     "lmhead_cycles": 16942406.66796875,
+     "ttft_ms": 67.83413111892649
+    }
+   }
+  },
+  "v3i_bf16_m2a4": {
+   "failed": [],
+   "launches": 20,
+   "fmax_ghz": 3.03,
+   "prompts": {
+    "8": {
+     "cycles": 55102466.66796875,
+     "layers_cycles": 38160060,
+     "lmhead_cycles": 16942406.66796875,
+     "ttft_ms": 18.185632563686056
+    },
+    "32": {
+     "cycles": 63848702.66796875,
+     "layers_cycles": 46906296,
+     "lmhead_cycles": 16942406.66796875,
+     "ttft_ms": 21.07217909833952
+    },
+    "128": {
+     "cycles": 204180734.66796875,
+     "layers_cycles": 187238328,
+     "lmhead_cycles": 16942406.66796875,
+     "ttft_ms": 67.38638107853755
+    }
+   }
+  }
+ }
+}

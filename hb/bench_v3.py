@@ -11,8 +11,9 @@ in a HammerBlade pod, per number format, from measured inputs:
           4,096 of its 50,257 columns and extended along the line through
           those two points (its cycles grow with the number of 8-column
           blocks): the only extrapolated term.
-  clock   each format's array (v3/pe, its 8 x 8 wavefront block at GT2N)
-          peak clock, from hb/results/v3_clock.json. The time assumes the whole pod runs at
+  clock   each format's array (v3/pe, its 8 x 8 wavefront block at GT2N,
+          two product stages) peak clock, from hb/results/v3_clock.json,
+          for the _m2 machines. The time assumes the whole pod runs at
           that clock; at any common clock the formats' times are in the ratio
           of their cycles.
 
@@ -69,7 +70,8 @@ def main():
             continue
         cyc = {k: r["cycles"] for k, r in rs.items()}
         fmt = cfg.split("_")[1]
-        ghz = clock.get(fmt, {}).get("fmax_ghz")
+        # the clocks are the two-stage arrays' (v3_clock.json): TTFT for the _m2 machines only
+        ghz = clock.get(fmt, {}).get("fmax_ghz") if "_m2" in cfg else None
         c = {"failed": bad, "launches": len(rs), "fmax_ghz": ghz, "prompts": {}}
         for T in TS:
             try:
