@@ -1,0 +1,108 @@
+/usr/bin/python3 /OpenROAD-flow-scripts/flow/scripts/run_command.py --log /OpenROAD-flow-scripts/flow/logs/nangate45/v2_chip/base/run.log --tee -- /OpenROAD-flow-scripts/tools/install/OpenROAD/bin/openroad -exit -no_init -threads 64  -no_splash  /root/sfgpu/v3/nangate45_v2chip/sta_final.tcl
+read_liberty /OpenROAD-flow-scripts/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib
+read_liberty /OpenROAD-flow-scripts/flow/designs/../results/nangate45/v2_tile/p1500/core_tile_typ.lib
+read_db ./results/nangate45/v2_chip/base/6_final.odb
+read_sdc ./results/nangate45/v2_chip/base/6_final.sdc
+source /OpenROAD-flow-scripts/flow/platforms/nangate45/setRC.tcl
+DESIGN v2_chip PERIOD_PS 1500 TIME_UNIT ns
+Design area 1959374 um^2 90% utilization.
+SETUP_ALL 1.0514256132410083e-10
+HOLD_ALL 2.5400792580398956e-11
+SETUP_TNS 0.0
+HOLD_TNS 0.0
+SETUP_VIOL 0 HOLD_VIOL 0
+SETUP_R2R 0.105143
+HOLD_R2R 0.025401
+SETUP_PATHS
+max_delay/setup group asynchronous
+
+                                     Required  Actual
+Endpoint                               Delay   Delay   Slack
+------------------------------------------------------------
+rst_s1$_DFF_PN0_/RN (DFFR_X1)           2.27    0.98    1.29 (MET)
+rst_s2$_DFF_PN0_/RN (DFFR_X2)           2.27    0.98    1.29 (MET)
+
+max_delay/setup group clk
+
+                                     Required  Actual
+Endpoint                               Delay   Delay   Slack
+------------------------------------------------------------
+gpu_inst.tiles[1].tile/data_mem_read_data[13] (core_tile)    1.85    1.75    0.11 (MET)
+gpu_inst.tiles[2].tile/data_mem_read_data[14] (core_tile)    1.89    1.79    0.11 (MET)
+core_active[0] (output)                 1.20    1.08    0.12 (MET)
+done (output)                           1.20    1.08    0.12 (MET)
+gpu_inst.tiles[1].tile/data_mem_read_data[11] (core_tile)    1.90    1.78    0.12 (MET)
+
+Startpoint: bus.g_share.sh_word[0]$_SDFF_PN0_
+            (rising edge-triggered flip-flop clocked by clk)
+Endpoint: gpu_inst.tiles[1].tile
+          (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock clk (rise edge)
+   0.7994    0.7994   clock network delay (propagated)
+   0.0000    0.7994 ^ bus.g_share.sh_word[0]$_SDFF_PN0_/CK (DFF_X1)
+   0.1079    0.9073 ^ bus.g_share.sh_word[0]$_SDFF_PN0_/Q (DFF_X1)
+   0.0336    0.9409 ^ place2754/Z (BUF_X8)
+   0.1305    1.0714 ^ place2753/Z (BUF_X2)
+   0.1155    1.1869 ^ place2752/Z (BUF_X1)
+   0.0649    1.2518 v _14317_/Z (MUX2_X1)
+   0.0563    1.3081 v _14318_/Z (MUX2_X1)
+   0.0585    1.3666 v _14319_/Z (MUX2_X1)
+   0.0646    1.4311 v _14320_/Z (MUX2_X1)
+   0.0737    1.5049 v _14321_/Z (MUX2_X1)
+   0.1204    1.6252 ^ _14356_/ZN (AOI22_X4)
+   0.0342    1.6594 v _15263_/ZN (AOI21_X1)
+   0.0659    1.7254 v place2258/Z (BUF_X1)
+   0.0207    1.7461 v gpu_inst.tiles[1].tile/data_mem_read_data[13] (core_tile)
+             1.7461   data arrival time
+
+   1.5000    1.5000   clock clk (rise edge)
+   0.2665    1.7665   clock network delay (propagated)
+   0.0000    1.7665   clock reconvergence pessimism
+             1.7665 ^ gpu_inst.tiles[1].tile/clk (core_tile)
+   0.0847    1.8512   library setup time
+             1.8512   data required time
+-------------------------------------------------------------
+             1.8512   data required time
+            -1.7461   data arrival time
+-------------------------------------------------------------
+             0.1051   slack (MET)
+
+
+HOLD_PATHS
+min_delay/hold group asynchronous
+
+                                     Required  Actual
+Endpoint                               Delay   Delay   Slack
+------------------------------------------------------------
+rst_s1$_DFF_PN0_/RN (DFFR_X1)           0.91    0.98    0.07 (MET)
+rst_s2$_DFF_PN0_/RN (DFFR_X2)           0.90    0.98    0.09 (MET)
+
+min_delay/hold group clk
+
+                                     Required  Actual
+Endpoint                               Delay   Delay   Slack
+------------------------------------------------------------
+bus.g_share.wr_word[2]$_DFF_P_/D (DFF_X1)    0.94    0.97    0.03 (MET)
+bus.g_share.wr_data[13]$_DFF_P_/D (DFF_X1)    0.80    0.83    0.03 (MET)
+bus.g_share.wr_data[11]$_DFF_P_/D (DFF_X1)    0.80    0.83    0.03 (MET)
+bus.g_share.wr_data[9]$_DFF_P_/D (DFF_X1)    0.80    0.84    0.03 (MET)
+launch_state[3]$_DFF_P_/D (DFF_X1)      0.73    0.80    0.07 (MET)
+
+FLOPS 2796
+Group                    Internal    Switching      Leakage        Total
+                            Power        Power        Power        Power (Watts)
+------------------------------------------------------------------------
+Sequential           1.301239e-02 3.443326e-04 2.173001e-04 1.357402e-02  34.0%
+Combinational        1.235113e-03 1.998882e-03 3.360698e-04 3.570065e-03   8.9%
+Clock                8.894700e-03 1.390003e-02 4.194509e-05 2.283668e-02  57.1%
+Macro                0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
+Pad                  0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
+------------------------------------------------------------------------
+Total                2.314186e-02 1.624322e-02 5.953383e-04 3.998043e-02 100.0%
+                            57.9%        40.6%         1.5%
+Elapsed time: 0:08.52[h:]min:sec. CPU time: user 78.76 sys 4.80 (980%). Peak memory: 407424KB.

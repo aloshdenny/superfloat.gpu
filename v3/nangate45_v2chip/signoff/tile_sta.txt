@@ -1,0 +1,102 @@
+/usr/bin/python3 /OpenROAD-flow-scripts/flow/scripts/run_command.py --log /OpenROAD-flow-scripts/flow/logs/nangate45/v2_tile/p1500/run.log --tee -- /OpenROAD-flow-scripts/tools/install/OpenROAD/bin/openroad -exit -no_init -threads 64  -no_splash  /root/sfgpu/v3/nangate45_v2chip/sta_final.tcl
+read_liberty /OpenROAD-flow-scripts/flow/platforms/nangate45/lib/NangateOpenCellLibrary_typical.lib
+read_db ./results/nangate45/v2_tile/p1500/6_final.odb
+read_sdc ./results/nangate45/v2_tile/p1500/6_final.sdc
+source /OpenROAD-flow-scripts/flow/platforms/nangate45/setRC.tcl
+DESIGN v2_tile PERIOD_PS 1500 TIME_UNIT ns
+Design area 237556 um^2 50% utilization.
+SETUP_ALL 1.215105793761495e-11
+HOLD_ALL 2.120753572754097e-11
+SETUP_TNS 0.0
+HOLD_TNS 0.0
+SETUP_VIOL 0 HOLD_VIOL 0
+SETUP_R2R 0.012151
+HOLD_R2R 0.062731
+SETUP_PATHS
+max_delay/setup group clk
+
+                                     Required  Actual
+Endpoint                               Delay   Delay   Slack
+------------------------------------------------------------
+core_instance.systolic_arrays[0].systolic_array_inst.g_row[0].g_col[4].g_sf16.pe.r3_mant[14]$_SDFF_PP0_/D (DFF_X1)    1.83    1.82    0.01 (MET)
+core_instance.systolic_arrays[0].systolic_array_inst.g_row[0].g_col[4].g_sf16.pe.r3_mant[13]$_SDFF_PP0_/D (DFF_X1)    1.84    1.81    0.02 (MET)
+core_instance.systolic_arrays[0].systolic_array_inst.g_row[1].g_col[3].g_sf16.pe.r3_mant[14]$_SDFF_PP0_/D (DFF_X1)    1.84    1.82    0.03 (MET)
+core_instance.systolic_arrays[0].systolic_array_inst.g_row[3].g_col[5].g_sf16.pe.r3_mant[11]$_SDFF_PP0_/D (DFF_X1)    1.85    1.82    0.03 (MET)
+core_instance.systolic_arrays[0].systolic_array_inst.g_row[2].g_col[1].g_sf16.pe.r3_mant[13]$_SDFF_PP0_/D (DFF_X1)    1.84    1.81    0.03 (MET)
+
+Startpoint: core_instance.systolic_arrays[0].systolic_array_inst.g_row[0].g_col[4].g_sf16.pe.a_out[2]$_SDFF_PP0_
+            (rising edge-triggered flip-flop clocked by clk)
+Endpoint: core_instance.systolic_arrays[0].systolic_array_inst.g_row[0].g_col[4].g_sf16.pe.r3_mant[14]$_SDFF_PP0_
+          (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: max
+
+    Delay      Time   Description
+-------------------------------------------------------------
+   0.0000    0.0000   clock clk (rise edge)
+   0.3864    0.3864   clock network delay (propagated)
+   0.0000    0.3864 ^ core_instance.systolic_arrays[0].systolic_array_inst.g_row[0].g_col[4].g_sf16.pe.a_out[2]$_SDFF_PP0_/CK (DFF_X1)
+   0.0870    0.4734 v core_instance.systolic_arrays[0].systolic_array_inst.g_row[0].g_col[4].g_sf16.pe.a_out[2]$_SDFF_PP0_/Q (DFF_X1)
+   0.0305    0.5039 v place8731/Z (BUF_X2)
+   0.0346    0.5385 v _165998_/ZN (AND2_X1)
+   0.1232    0.6617 ^ _245160_/S (FA_X1)
+   0.0985    0.7602 v _238995_/S (FA_X1)
+   0.1280    0.8882 ^ _243940_/S (FA_X1)
+   0.0987    0.9869 v _245156_/S (FA_X1)
+   0.1298    1.1167 ^ _239085_/S (FA_X1)
+   0.0989    1.2156 v _246354_/S (FA_X1)
+   0.0615    1.2771 v _256642_/S (HA_X1)
+   0.0226    1.2997 ^ _180212_/ZN (INV_X1)
+   0.0214    1.3211 v _180213_/ZN (OAI211_X2)
+   0.0915    1.4126 ^ _180225_/ZN (AOI221_X1)
+   0.0315    1.4441 ^ place5884/Z (BUF_X2)
+   0.0158    1.4599 v _180234_/ZN (NOR3_X1)
+   0.0815    1.5415 ^ _180238_/ZN (NOR4_X2)
+   0.0217    1.5631 v _180243_/ZN (OAI21_X1)
+   0.0483    1.6114 v _180244_/ZN (AND4_X1)
+   0.0451    1.6566 ^ _180249_/ZN (NOR3_X2)
+   0.0252    1.6818 v _180250_/ZN (OAI21_X1)
+   0.0771    1.7589 ^ _232074_/ZN (AOI221_X1)
+   0.0479    1.8067 ^ _232078_/ZN (XNOR2_X1)
+   0.0114    1.8181 v _232079_/ZN (NOR2_X1)
+   0.0000    1.8182 v core_instance.systolic_arrays[0].systolic_array_inst.g_row[0].g_col[4].g_sf16.pe.r3_mant[14]$_SDFF_PP0_/D (DFF_X1)
+             1.8182   data arrival time
+
+   1.5000    1.5000   clock clk (rise edge)
+   0.3708    1.8708   clock network delay (propagated)
+   0.0000    1.8708   clock reconvergence pessimism
+             1.8708 ^ core_instance.systolic_arrays[0].systolic_array_inst.g_row[0].g_col[4].g_sf16.pe.r3_mant[14]$_SDFF_PP0_/CK (DFF_X1)
+  -0.0405    1.8303   library setup time
+             1.8303   data required time
+-------------------------------------------------------------
+             1.8303   data required time
+            -1.8182   data arrival time
+-------------------------------------------------------------
+             0.0122   slack (MET)
+
+
+HOLD_PATHS
+min_delay/hold group clk
+
+                                     Required  Actual
+Endpoint                               Delay   Delay   Slack
+------------------------------------------------------------
+data_mem_queue.rdata[0][9]$_SDFFCE_PN0P_/D (DFF_X1)    0.42    0.44    0.02 (MET)
+data_mem_queue.rdata[1][9]$_SDFFCE_PN0P_/D (DFF_X1)    0.42    0.44    0.02 (MET)
+data_mem_queue.rdata[6][5]$_SDFFCE_PN0P_/D (DFF_X1)    0.39    0.42    0.03 (MET)
+data_mem_queue.rdata[4][15]$_SDFFCE_PN0P_/D (DFF_X1)    0.40    0.44    0.03 (MET)
+core_instance.threads[5].lsu_instance.lsu_state[1]$_DFF_P_/D (DFF_X1)    0.41    0.45    0.03 (MET)
+
+FLOPS 11489
+Group                    Internal    Switching      Leakage        Total
+                            Power        Power        Power        Power (Watts)
+------------------------------------------------------------------------
+Sequential           5.322567e-02 3.807416e-04 8.768479e-04 5.448326e-02  54.0%
+Combinational        2.131949e-03 4.597587e-03 3.169311e-03 9.898847e-03   9.8%
+Clock                1.688908e-02 1.955293e-02 8.535140e-05 3.652736e-02  36.2%
+Macro                0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
+Pad                  0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
+------------------------------------------------------------------------
+Total                7.224734e-02 2.453029e-02 4.131517e-03 1.009091e-01 100.0%
+                            71.6%        24.3%         4.1%
+Elapsed time: 1:24.50[h:]min:sec. CPU time: user 851.53 sys 63.81 (1083%). Peak memory: 1416832KB.

@@ -1,0 +1,13 @@
+{
+ "node": "nangate45",
+ "period_ps": 1500,
+ "parasitics": "OpenRCX extracted (6_final.spef)",
+ "tile": {"die_um": [694.16, 694.16], "cell_area_um2": 237556, "flops": 11489,
+          "setup_slack_ps": 12.2, "hold_slack_ps": 21.2, "setup_r2r_ps": 12.2, "hold_r2r_ps": 62.7,
+          "detailed_route_violations": 0, "antenna_violations": 0},
+ "chip": {"die_um": [1450, 1510], "tile_gap_um": 20, "logic_strip_um": 80, "cell_area_um2": 1959374, "flops": 2796,
+          "setup_slack_ps": 105.1, "hold_slack_ps": 25.4, "detailed_route_violations": 0, "antenna_violations": 0,
+          "note": "flops counts the chip's own registers; the tiles are macros"},
+ "first_attempt": {"tile_gap_um": 6, "logic_strip_um": 30, "die_um": [1408, 1432],
+                   "result": "global route failed with congestion (GRT-0116): overflow 14,902 on metal2-metal10, worst metal9 6,965, metal7 4,290"}
+}
