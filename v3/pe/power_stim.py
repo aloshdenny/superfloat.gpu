@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "s1"))
 import mxu_emu as E                                       # noqa: E402
 import s1_numerics as S1                                  # noqa: E402
-from variants import VARIANTS, N, widths, latency         # noqa: E402
+from variants import VARIANTS, N, widths, latency, prod_stages         # noqa: E402
 
 LAYER, M, TILE = 5, 1024, 256
 TILES = [(384, 0), (392, 8), (400, 16), (408, 24)]        # (k0, n0)
@@ -57,6 +57,7 @@ def main():
     for name, p in VARIANTS.items():
         iw, cw = widths(p)
         L = latency(p)
+        P = prod_stages(p)
         if p["FMT"] == 0:
             def enc_in(x, e):
                 q = E.sf16_ints(x, e).astype(np.int64)
@@ -78,7 +79,7 @@ def main():
             def enc_acc(P, acc=acc, p=p):
                 v = P.astype(np.float32).astype(np.float64) if acc is None else E.fp_round(P, acc)
                 return bits_fp(v, p["ACC_E"], p["ACC_M"])
-        T = S + M + 1
+        T = S + M + P
         rows = []
         pack = lambda v, b: "%x" % sum(int(x) << (i * b) for i, x in enumerate(v))
         for k in range(T):
@@ -106,14 +107,21 @@ def main():
                     aw[r] = qa[m, k0 + r]
             pn = [0] * N
             for c in range(N):
-                m = k - S - 2 - c
+                m = k - S - 1 - P - c
                 if 0 <= m < M:
                     k0, n0 = TILES[min(m // TILE, len(TILES) - 1)]
                     pn[c] = enc_acc(A[m:m + 1, :k0] @ W[:k0, n0 + c:n0 + c + 1])[0, 0]
-            rows.append(f"{sh} {sw} {pack(aw, iw)} {pack(wn, iw)} {pack(pn, cw)}")
+            if p.get("WAVE"):
+                # wavefront swap: each tile's swap token rides with row r's
+                # first activation of that tile, at S + TILE * i + r * L
+                tok = [int(any(k == S + TILE * i + r * L for i in range(len(TILES)))) for r in range(N)]
+                rows.append(f"{sh} 0 {pack(aw, iw)} {pack(wn, iw)} {pack(pn, cw)} {pack(tok, 1)}")
+            else:
+                rows.append(f"{sh} {sw} {pack(aw, iw)} {pack(wn, iw)} {pack(pn, cw)}")
         open(os.path.join(HERE, "stim", f"{name}.txt"), "w").write("\n".join(rows) + "\n")
         # Every PE busy from the last row's first vector to the stream's end.
-        meta["variants"][name] = {"L": L, "lines": T, "dump_from": S + N * L + 8, "dump_to": S + M - 1}
+        meta["variants"][name] = {"L": L, "P": P, "wave": int(bool(p.get("WAVE"))), "lines": T,
+                                  "dump_from": S + N * L + 7 + P, "dump_to": S + M - 2 + P}
         print(name, T, "lines", flush=True)
     json.dump(meta, open(os.path.join(HERE, "stim", "meta.json"), "w"), indent=1)
 

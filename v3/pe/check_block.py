@@ -20,11 +20,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 sys.path.insert(0, os.path.join(ROOT, "test", "helpers"))
 import fp16fmt                                          # noqa: E402
-from variants import VARIANTS, N, widths, latency      # noqa: E402
+from variants import VARIANTS, N, widths, latency, prod_stages      # noqa: E402
 
 M = int(os.environ.get("M", "200"))
 SRC = [os.path.join(ROOT, "src", "fp_arith.sv")] + [
-    os.path.join(HERE, f) for f in ("fpx_align.sv", "v3_pe.sv", "v3_block.sv", "v3_variants.sv", "tb_block.sv")]
+    os.path.join(HERE, f) for f in ("csa_trees.sv", "fpx_align.sv", "v3_pe.sv", "v3_block.sv", "v3_variants.sv", "tb_block.sv")]
 
 
 class Fmt(fp16fmt.Fmt):
@@ -124,6 +124,7 @@ def run(name):
     p = VARIANTS[name]
     iw, cw = widths(p)
     L = latency(p)
+    P = prod_stages(p)
     rng = random.Random(zlib.crc32(name.encode()))
     if p["FMT"] == 0:
         rin = lambda: rand_sf(rng)
@@ -140,7 +141,7 @@ def run(name):
     A = [[rin() for _ in range(N)] for _ in range(M)]
     P0 = [[racc() for _ in range(N)] for _ in range(M)]
     S = N + 2
-    T = S + M + N * L + N + 8
+    T = S + M + N * L + N + 7 + P
     lines = []
     for k in range(T):
         sh = int(k < N)
@@ -153,7 +154,7 @@ def run(name):
                 aw[r] = A[m][r]
         pn = [0] * N
         for c in range(N):
-            m = k - S - 2 - c
+            m = k - S - 1 - P - c
             if 0 <= m < M:
                 pn[c] = P0[m][c]
         pack = lambda v, b: "%x" % sum(x << (i * b) for i, x in enumerate(v))
@@ -173,13 +174,13 @@ def run(name):
             s = P0[m][c]
             for r in range(N):
                 s = op(A[m][r], W[r][c], s)
-            k = S + m + N * L + 3 + c
+            k = S + m + N * L + 2 + P + c
             got = None if out[k] is None else (out[k] >> (c * cw)) & ((1 << cw) - 1)
             if got != s:
                 bad += 1
                 if bad <= 3:
                     print(f"  {name} m={m} c={c}: got {got if got is None else hex(got)} want {hex(s)}")
-    print(f"{name:14s} L={L}: {M * N - bad}/{M * N} outputs exact" + ("" if bad else "  OK"))
+    print(f"{name:14s} L={L} P={P}: {M * N - bad}/{M * N} outputs exact" + ("" if bad else "  OK"))
     return bad == 0
 
 

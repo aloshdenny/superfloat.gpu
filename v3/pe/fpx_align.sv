@@ -96,6 +96,12 @@ endmodule
 // fp_mul (src/fp_arith.sv) with an optional truncated significand product:
 // TRUNC_K >= 0 sums the partial-product rows with the columns below TRUNC_K
 // left out and COMP added (as v3_pe_sf). TRUNC_K < 0 is fp_mul exactly.
+// SPLIT = 1 also gives the product as two partial sums, prod_lo (rows below
+// M/2, with COMP) and prod_hi (the rest), for a two-stage multiplier;
+// prod = prod_lo + prod_hi. With SPLIT = 0 they are prod and 0.
+// CT = 1: the rows (all of them when TRUNC_K < 0) and COMP reduced by a
+// carry-save tree (csa_trees.sv) to two rows, prod_lo and prod_hi, then one
+// plain add for prod.
 module fpx_mul #(
     parameter EXP_BITS  = 5,
     parameter MANT_BITS = 10,
@@ -103,11 +109,15 @@ module fpx_mul #(
     parameter M  = MANT_BITS + 1,
     parameter EW = EXP_BITS + 4,
     parameter TRUNC_K = -1,
-    parameter COMP    = 0
+    parameter COMP    = 0,
+    parameter SPLIT   = 0,
+    parameter CT      = 0
 ) (
     input  wire [W-1:0]         a,
     input  wire [W-1:0]         b,
     output wire [2*M-1:0]       prod,
+    output wire [2*M-1:0]       prod_lo,
+    output wire [2*M-1:0]       prod_hi,
     output wire signed [EW-1:0] top_exp,
     output wire                 sign,
     output wire                 zero,
@@ -137,7 +147,42 @@ module fpx_mul #(
     wire [M-1:0] am = {1'b1, af};
     wire [M-1:0] bm = {1'b1, bf};
     generate
-        if (TRUNC_K < 0) begin : g_mul
+        if (CT) begin : g_ct
+            localparam [2*M-1:0] ONE  = 1;
+            localparam [2*M-1:0] KEEP = (TRUNC_K < 0) ? ~{(2*M){1'b0}} : ~((ONE << TRUNC_K) - ONE);
+            localparam NR = (TRUNC_K < 0) ? M : M + 1;
+            wire [NR*2*M-1:0] rows;
+            genvar i;
+            for (i = 0; i < M; i = i + 1) begin : g_row
+                assign rows[i*2*M +: 2*M] = ({{M{1'b0}}, bm} << i) & {(2*M){am[i]}} & KEEP;
+            end
+            if (TRUNC_K >= 0) begin : g_comp
+                assign rows[M*2*M +: 2*M] = (2*M)'(COMP);
+            end
+            v3_csa #(.W(2*M), .NR(NR)) u_csa (.rows(rows), .s(prod_lo), .c(prod_hi));
+            assign prod = prod_lo + prod_hi;
+        end else if (SPLIT) begin : g_split
+            localparam H = M / 2;
+            if (TRUNC_K < 0) begin : g_mul
+                assign prod_lo = am[H-1:0] * bm;
+                assign prod_hi = (am[M-1:H] * bm) << H;
+            end else begin : g_rows
+                localparam [2*M-1:0] ONE  = 1;
+                localparam [2*M-1:0] KEEP = ~((ONE << TRUNC_K) - ONE);
+                reg [2*M-1:0] sl, sh;
+                integer i;
+                always @(*) begin
+                    sl = (2*M)'(COMP);
+                    sh = '0;
+                    for (i = 0; i < M; i = i + 1)
+                        if (i < H) sl = sl + (({{M{1'b0}}, bm} << i) & {(2*M){am[i]}} & KEEP);
+                        else       sh = sh + (({{M{1'b0}}, bm} << i) & {(2*M){am[i]}} & KEEP);
+                end
+                assign prod_lo = sl;
+                assign prod_hi = sh;
+            end
+            assign prod = prod_lo + prod_hi;
+        end else if (TRUNC_K < 0) begin : g_mul
             assign prod = am * bm;
         end else begin : g_rows
             localparam [2*M-1:0] ONE  = 1;
@@ -150,6 +195,10 @@ module fpx_mul #(
                     s = s + (({{M{1'b0}}, bm} << i) & {(2*M){am[i]}} & KEEP);
             end
             assign prod = s;
+        end
+        if (!SPLIT && !CT) begin : g_whole
+            assign prod_lo = prod;
+            assign prod_hi = '0;
         end
     endgenerate
     assign top_exp = $signed({{(EW-EXP_BITS){1'b0}}, ae}) + $signed({{(EW-EXP_BITS){1'b0}}, be})

@@ -8,7 +8,7 @@ v=$1; ps=$2
 F=/OpenROAD-flow-scripts/flow
 V=/root/v3
 W=$V/gl/${v}_$ps; mkdir -p $W; cd $W
-read L LINES FROM TO IW CW < <(python3 - <<PY
+read L LINES FROM TO IW CW WV < <(python3 - <<PY
 import json
 m = json.load(open("$V/stim/meta.json"))["variants"]["$v"]
 import re
@@ -16,12 +16,13 @@ src = open("$V/v3_blocks.v").read()
 mod = re.search(r"module blk_$v\b.*?endmodule", src, re.S).group(0)
 iw = int(re.search(r"input wire \[(\d+):0\] a_west", mod).group(1)) + 1
 cw = int(re.search(r"input wire \[(\d+):0\] psum_north", mod).group(1)) + 1
-print(m["L"], m["lines"], m["dump_from"], m["dump_to"], iw // 8, cw // 8)
+print(m["L"], m["lines"], m["dump_from"], m["dump_to"], iw // 8, cw // 8, m.get("wave", 0))
 PY
 )
 cp $V/stim/$v.txt stim.txt
 [ -f $V/gt2n_cells.v ] || python3 $V/lib2v.py $F/platforms/gt2n/lib/gt2_6t_w31_lvt_tt_0p7v25c.lib $V/gt2n_cells.v
 DEFS="-DTOP=blk_$v -DIW=$IW -DCW=$CW -DN=8 -DPERIOD=$ps -DDUMP_FROM=$FROM -DDUMP_TO=$TO"
+[ "$WV" = 1 ] && DEFS="$DEFS -DWAVE"
 mkdir -p rtl && (cd rtl && cp ../stim.txt . && iverilog -g2012 -s tb_block $DEFS -o rtl.vvp $V/v3_blocks.v $V/tb_gl.sv && vvp -n rtl.vvp > /dev/null && rm -f act.vcd)
 iverilog -g2012 -s tb_block $DEFS -o gl.vvp $V/gt2n_cells.v $V/netlists/${v}_$ps.v $V/tb_gl.sv || exit 1
 vvp -n gl.vvp > gl.log 2>&1 || exit 1
