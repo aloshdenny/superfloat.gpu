@@ -1,969 +1,352 @@
-# Atreides
+# SuperFloat on HammerBlade
 
-**Q1.15 fixed-point neural network accelerator GPU** for Tiny Tapeout (Sky130), with an on-die scratchpad and an external SRAM interface over the bidirectional bus.
+SuperFloat's matrix tiles running inside a **HammerBlade manycore pod**. HammerBlade is the Bespoke Silicon Group's open-source `bsg_manycore` (University of Washington): RISC-V cores on a 2D mesh, with caches in front of DRAM.
 
-Silicon configuration in this repository: **2 cores × 2 threads × one 2×2 systolic array** (8 MAC units), **128 B** address-mapped on-die scratchpad, **8×4** tiles, **50 MHz** target clock.
+In this branch, each SuperFloat tile is a memory-mapped device on that mesh:
+- HammerBlade's RISC-V cores run all the code;
+- the SuperFloat tiles do the matrix arithmetic, reading and writing DRAM through the pod's caches.
 
----
+Every tile runs in three number formats, SF16 (SuperFloat's Q1.15), FP16 and BF16, on the pod's RTL. **708 launches** of GPT-2 small's matrix work are each checked bit for bit against a reference, and all match.
 
-## Specs
+| | |
+|---|---|
+| Platform | `bsg_manycore` 0052ce8, simulated in Verilator (983a06a) |
+| Pod | 4 × 2 tiles: four RISC-V "vanilla" cores (row 0), four SuperFloat tiles (row 1) |
+| Memory | 8 vcaches (64 KB in all, 4-way, 8-word lines) in front of a 2 GiB DRAM model |
+| Network | 2D mesh with half-ruche links in X |
+| Tile kinds | **v1 core tile**: 8 SIMT threads and an 8 × 8 systolic array, running a 16-bit program. **v3 matrix tile**: an 8 × 8 (or 4 × 4) wavefront array with its own DMA, driven by a descriptor. |
+| Formats | SF16 (sign-magnitude Q1.15), FP16, BF16; accumulators SF24 (v3 SF16) or FP24 (v3 FP16, BF16) |
+| Machines | 21 pod configurations (`hb/machines/`), one tile kind and format per machine |
+| Verification | 708 launches bit-exact: 528 on v1 tiles, 180 on v3 tiles |
+| Results | v3 tiles at their 2 nm clocks, GPT-2 small, 32-token prompt: the prefill's matrix multiplies take **17.1 ms** (SF16), 19.2 ms (FP16), 19.1 ms (BF16) |
 
-| Item | Value |
-| --- | --- |
-| Compute cores | 2 |
-| Threads per block | 2 |
-| Systolic arrays | 1 × 2×2 per core |
-| MAC units (total) | 8 |
-| Scalar FMA units | 1 per thread (4 total), 2-cycle |
-| On-die scratchpad | 128 B (64 × 16-bit), `0xFFC0`–`0xFFFF` |
-| Data address space | 19-bit (1 MiB × 16-bit words, external) |
-| Program memory | 512 × 16-bit instructions (external) |
-| Memory channels | 4 data + 2 program (serialized on the pin bus) |
-| Arithmetic | Q1.15 (SF16) |
-| Clock | 50 MHz (20 ns) |
-| Process / shuttle | Sky130, Tiny Tapeout `8x4` |
-| Top module | `tt_um_aloshdenny_gpu` |
+### Contents
 
-### Table of Contents
-
-- [Overview](#overview)
+- [How this differs from the 130 nm and 2 nm builds](#how-this-differs-from-the-130-nm-and-2-nm-builds)
+- [The stack](#the-stack)
 - [Architecture](#architecture)
-- [Memory and scratchpad](#memory-and-scratchpad)
-- [Throughput](#throughput)
-- [Pinout](#pinout)
-- [Q1.15 Fixed-Point Format](#q115-fixed-point-format)
-- [ISA](#isa)
-- [Execution](#execution)
-- [Neural Network Features](#neural-network-features)
-- [Kernels](#kernels)
-- [Simulation](#simulation)
-- [ASIC / Tiny Tapeout](#asic--tiny-tapeout)
-- [Modules](#modules)
+  - [The pod](#the-pod)
+  - [v1 core tile](#v1-core-tile)
+  - [v3 matrix tile](#v3-matrix-tile)
+  - [Memory and addressing](#memory-and-addressing)
+  - [Launch and completion](#launch-and-completion)
+- [Number formats](#number-formats)
+- [Programming a tile](#programming-a-tile)
+- [Results](#results)
+- [Machines](#machines)
+- [Repository layout](#repository-layout)
+- [Building and running](#building-and-running)
+- [What is measured and what is not](#what-is-measured-and-what-is-not)
 
 ---
 
-# Overview
+## How this differs from the 130 nm and 2 nm builds
 
-Atreides runs one kernel at a time: load program and data into external memory, write `thread_count`, pulse start, wait for done. Integer ops handle addressing and control; Q1.15 FMA / systolic MACs handle the numeric work.
+The same SuperFloat arithmetic exists in three implementations. This branch is the third.
 
-The Tiny Tapeout build keeps the GPU small enough for an 8×4 tile. Hot working sets can sit in the **128 B on-die scratchpad** (ordinary `LDR`/`STR` to high addresses). Everything else goes through the external memory arbiter on `uio[7:0]`.
+| | v1 OpenFrame chip, 130 nm (`cf-openframe`) | v3 core, 2 nm (`gt2n`), planned | **HammerBlade (this branch)** |
+|---|---|---|---|
+| What it is | A whole chip: four v1 core tiles on a SKY130 OpenFrame die | A core planned on GT2N: a RISC-V control core, a vector unit and four 128 × 128 matrix units | SuperFloat tiles inside someone else's manycore |
+| Who runs the code | The chip's own dispatcher and SIMT threads | Its own RISC-V control core | HammerBlade's RISC-V vanilla cores |
+| Path to memory | A 16-bit pin bus to external memory, shared by all four tiles | On-die SRAM and HBM (modeled) | The pod's mesh and vcaches to DRAM, one port per tile |
+| How a tile is driven | Through the chip's pins | Its instruction set | Stores to the tile's registers over the mesh (memory-mapped) |
+| SF16 in memory | Sign-magnitude Q1.15 | Two's complement, converted at the matrix-unit inputs | Sign-magnitude Q1.15 |
+| Status | Signed off for SKY130 | Matrix-unit blocks measured on GT2N to global routing; the rest of the core is not RTL yet | Simulated: the pod's RTL in Verilator |
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                     ATREIDES (Tiny Tapeout 8×4)                      │
-├──────────────────────────────────────────────────────────────────────┤
-│  Core 0                         Core 1                               │
-│  ├─ 2 threads (ALU / FMA / LSU / RF / PC each)                       │
-│  └─ 1 × 2×2 systolic array (4 PEs)                                   │
-│                                                                      │
-│  Scratchpad bridge ──► 128 B soft-flop RAM (addr 0xFFC0–0xFFFF)     │
-│  Controllers: 4 data + 2 program channels                            │
-│  External arbiter (tt_um_*) ──► 8-bit muxed SRAM bus                 │
-└──────────────────────────────────────────────────────────────────────┘
-```
+**What changes in HammerBlade:**
+- **No pin bus and no chip top level.** The tile itself is the only limit on its clock.
+- **Four tiles load in parallel.** On the chip, all four shared one bus.
+- **Control moves to the vanilla cores,** which take over the chip's dispatcher, the host's launch sequence and the operations between matrix multiplies.
+- **The v1 tile runs unchanged.** An adapter puts it on the mesh.
+- **The v3 tile is new for HammerBlade.** It is sized to what a mesh port can deliver (one 32-bit word per cycle), with an 8 × 8 array instead of the 2 nm core's 128 × 128.
 
----
+## The stack
 
-# Architecture
+![The SuperFloat on HammerBlade stack](docs/images/hb_stack.svg)
 
-## GPU
+| Layer | What it is | Where |
+|---|---|---|
+| Graph compiler | Turns a model into per-GEMM tile descriptors, DRAM layouts and SF16 exponents. Specified, not built. | `docs/compiler_hammerblade.md` §6 |
+| Host code | C on the vanilla cores, built with HammerBlade's RISC-V GCC. Runs the driver and the operations between matrix multiplies (LayerNorm, softmax, GELU). | `hb/sw/` |
+| Drivers | v1: upload a 16-bit program, then hand each free tile the next thread block. v3: write one descriptor per tile and wait for its done flag. | `hb/sw/main.c`, `hb/sw/v3/main.c` |
+| MMIO | Each tile's registers, reached with `bsg_global_pod_store` / `bsg_global_pod_load` | `docs/compiler_hammerblade.md` §1 |
+| Tiles | The v1 core tile and the v3 matrix tile, in SF16, FP16 and BF16 | `hb/v/`, `hb/v3/`, `src/` |
+| Kernels and references | GPT-2 small's matrix work, with real operands and a bit-exact expected result for every launch | `test/gpt2/` |
+| Measurement | Per-launch cycle records, GPT-2 totals, figures | `hb/parse_run.py`, `hb/bench_hb.py`, `hb/bench_v3.py`, `hb/results/` |
 
-Launch sequence:
-
-1. Load kernel into program memory (external).
-2. Load weights / activations into data memory (Q1.15).
-3. Optionally stage a tile into the scratchpad (`0xFFC0`–`0xFFFF`).
-4. Write `thread_count` on `ui_in[6:0]`, then pulse `ui_in[7]` (start).
-5. Poll `uo_out[0]` for completion.
-
-| Unit | Role |
-| --- | --- |
-| Device control register | Holds `thread_count` |
-| Dispatcher | Assigns blocks to the two cores |
-| Compute cores | 2 × (2 threads + one 2×2 systolic array) |
-| Scratchpad bridge | Hits on `0xFFC0`–`0xFFFF`; misses go external |
-| Data / program controllers | 4 data + 2 program channels into the pin arbiter |
-
-### Parameters (`gpu.sv` / TT wrapper)
-
-| Parameter | Value | Notes |
-| --- | --- | --- |
-| `NUM_CORES` | 2 | |
-| `THREADS_PER_BLOCK` | 2 | |
-| `SYSTOLIC_SIZE` | 2 | 2×2 PE grid |
-| `NUM_SYSTOLIC_ARRAYS` | 1 | Per core |
-| `DATA_MEM_ADDR_BITS` | 19 | External data space |
-| `DATA_MEM_DATA_BITS` | 16 | |
-| `DATA_MEM_NUM_CHANNELS` | 4 | 2 cores × 2 threads |
-| `PROGRAM_MEM_ADDR_BITS` | 9 | 512 instructions |
-| `PROGRAM_MEM_NUM_CHANNELS` | 2 | One fetcher per core |
-
-## Core
-
-Each core runs one block at a time. Threads in the block share the fetch/decode/schedule pipeline and execute in SIMT lockstep.
-
-| Resource | Per thread | Notes |
-| --- | --- | --- |
-| ALU | yes | Integer ADD/SUB/MUL/DIV/CMP |
-| FMA | yes | Q1.15, 2 EXECUTE cycles |
-| Activation | yes | Bias + ReLU variants |
-| LSU | yes | Loads/stores (scratchpad or external) |
-| PC / register file | yes | 16 registers (13 R/W + 3 RO) |
-| Systolic array | shared | One 2×2 weight-stationary array per core |
-
-Systolic PEs are fully pipelined (**1 MAC/cycle** after fill; first result after 3 cycles). Scalar `FMA` instructions use the per-thread FMA unit.
-
-### Hierarchy (silicon build)
-
-```
-tt_um_aloshdenny_gpu
-├── RAM32 (soft-flop 32×32, 128 B)
-├── memory arbiter (uio / uo control)
-└── gpu
-    ├── dcr, dispatch
-    ├── data + program controllers
-    ├── scratchpad bridge
-    └── core ×2
-        ├── fetcher, decoder, scheduler, branch_diverge
-        ├── per-thread ×2: alu, fma, activation, lsu, registers, pc
-        └── systolic_array (2×2) → systolic_pe ×4
-```
+`docs/compiler_hammerblade.md` is the reference for whoever writes the toolchain and runtime. It covers address maps, descriptors, data layouts, numerics, launch and completion, and the toolchain, each with file and line citations.
 
 ---
 
-# Memory and scratchpad
+## Architecture
 
-## Address map (data)
+### The pod
 
-| Region | Addresses | Backing | Access |
-| --- | --- | --- | --- |
-| External data | `0x00000`–`0x0FFBF` (and rest of 19-bit space) | Off-chip SRAM via pin bus | Multi-cycle, arbitrated |
-| On-die scratchpad | `0xFFC0`–`0xFFFF` (64 halfwords) | Soft-flop 32×32 RAM | ~1–2 cycles on hit |
+![HammerBlade pod with SuperFloat tiles](docs/images/hb_pod.svg)
 
-No ISA change: the LSU issues normal loads/stores; `scratchpad.sv` steers hits to the on-die RAM and forwards misses to the data controller.
+- **Layout:** a 4 × 2 array. Row 0 holds four RV32IMAF vanilla cores. Row 1 holds four SuperFloat tiles, all of one kind and one format.
+- **Memory:**
+  - eight vcaches, four on each edge, 64 sets × 4 ways × 8-word lines (8 KB each);
+  - behind them, bsg_manycore's 2 GiB DRAM model.
+  - The v3i machines turn on the vcaches' IPOLY address hashing, as full-size HammerBlade pods do.
+- **Network:** every tile, vanilla or SuperFloat, reaches every vcache and every other tile over the mesh.
+- **How the SuperFloat row is built:**
+  - Each SuperFloat tile sits behind HammerBlade's standard tile endpoint (`bsg_manycore_endpoint_standard`).
+  - It takes one of 18 tile types, numbered 9 to 26 in `hb/v/bsg_manycore_hetero_socket.sv`.
+  - A machine picks the type for row 1 with `SF_ACCEL_ROW` and `SF_ACCEL_TYPE`.
+- **What the SuperFloat tiles don't do:** they run no RISC-V code and don't join the hardware barrier.
 
-Scratchpad details:
+### v1 core tile
 
-- 128 bytes = 64 × 16-bit words (fits in the 16-bit LSU address used from `rs`)
-- Physical RAM is 32-bit wide, 32 deep; the bridge maps halfword addresses and byte enables
-- Single 1RW port shared by all four data channels (priority encode; one hit in flight)
+![v1 accelerator tile](docs/images/hb_v1_tile.svg)
 
-## External bus protocol
+The OpenFrame chip's compute macro (`src/core_tile.sv`), unchanged, behind an adapter (`hb/v/sf_hb_accel.sv`).
 
-Program and data channels share one 8-bit bidirectional bus. A transfer is roughly:
+- **The core:**
+  - 8 threads in SIMT lockstep, each with an ALU, an FMA, an activation unit, a load/store unit and 16 registers;
+  - one 8 × 8 weight-stationary systolic array (64 MACs per cycle);
+  - a 128 B scratchpad.
+- **Program:**
+  - A vanilla core writes the 16-bit program into a 512-word program memory with one store per instruction.
+  - The chip's 32-entry instruction cache sits in front of it, flushed on any program write.
+- **Data:**
+  - The tile's 16-bit word address A is the halfword at `BASE + 2A` in DRAM.
+  - Direct adapter: each read is one halfword remote load. The core has one data channel, so one load is in flight at a time.
+  - Read-buffer adapter (`_rb`): the adapter holds 8 whole vcache lines (32 B each). A miss fetches its line with 8 loads in flight; a hit is answered the next cycle and prefetches the next line.
+  - Writes are masked remote stores, up to 32 posted.
+- **Dispatch:** the driving vanilla core acts as the chip's block scheduler. It gives each tile a block id and thread count, and the next block when a tile reports done.
 
-1. **Address** — 3 cycles (`ADDR0`/`ADDR1`/`ADDR2`) with `ale` high  
-2. **Data** — 2 cycles (`DATA0`/`DATA1`); write drives `uio`, read samples with `uio_oe` low  
-3. **Ack** — complete the channel handshake  
+**v1 instruction set** (16-bit, opcode in `[15:12]`; decoder `src/decoder.sv`):
 
-`mem_sel` selects program (0) vs data (1). `mem_we` / `mem_re` qualify the access. Only one channel is serviced at a time (fixed priority: program 0–1, then data 0–3).
+| Opcode | Instruction | | Opcode | Instruction |
+|---|---|---|---|---|
+| `0x0` | NOP | | `0x7` | LDR rd, [rs] |
+| `0x1` | BR nzp, off9 | | `0x8` | STR [rd], rs |
+| `0x2` | CMP | | `0x9` | CONST rd, imm8 |
+| `0x3` | ADD | | `0xA` | FMA (Q1.15) |
+| `0x4` | SUB | | `0xB` | ACT (bias + activation) |
+| `0x5` | MUL | | `0xC` | SYS: systolic clear, load, compute, read |
+| `0x6` | DIV | | `0xF` | RET |
 
----
+R13 holds `%blockIdx`, R14 `%blockDim` and R15 `%threadIdx`. The GPT-2 kernels are in `test/gpt2/kernels.py`.
 
-# Throughput
+### v3 matrix tile
 
-Numbers below assume the **50 MHz** Tiny Tapeout target. Peak figures are hardware ceilings with the relevant path saturated; real kernels are usually lower (hazards, fill/drain, arbitration, host SRAM latency).
+![v3 matrix tile](docs/images/hb_v3_tile.svg)
 
-## Compute
-
-| Path | Peak | Notes |
-| --- | --- | --- |
-| Systolic MACs | **400 × 10⁶ MAC/s** | 8 PEs × 1 MAC/cycle × 50 MHz |
-| Scalar FMA | **100 × 10⁶ FMA/s** | 4 thread FMAs × 0.5 issue/cycle (2-cycle unit), both cores busy |
-
-A dense matmul that keeps both systolic arrays fed approaches the MAC peak. Scalar `FMA` loops are closer to the FMA row. Mixed control/integer code sits well below either.
-
-## On-die scratchpad
-
-| Mode | Peak bandwidth | How |
-| --- | --- | --- |
-| Halfword write hit | **100 MB/s** | 16-bit × 50 MHz (1-cycle write state) |
-| Halfword read hit | **50 MB/s** | 16-bit × 25 MHz (2-cycle read) |
-| Raw 32-bit RAM port | **200 MB/s** | 32-bit × 50 MHz if the port is continuously enabled |
-
-Only one LSU hit uses the RAM at a time. Concurrent hits from other threads queue in the bridge.
-
-## External memory (pin bus)
-
-| Mode | Peak bandwidth | How |
-| --- | --- | --- |
-| Serialized 16-bit transfer | **~16.7 MB/s** | 50 MHz / 6 cycles × 2 bytes |
-
-This is the hard limit for host SRAM traffic (program fetch and data miss/fill). Typical effective rate is lower when program and data contend or when the external device needs wait states.
-
-## Practical mix
-
-| Workload style | Usually limited by |
-| --- | --- |
-| Tight MAC over scratchpad tiles | Compute (systolic / FMA) |
-| Streaming weights from external SRAM | External bus (~16.7 MB/s) |
-| Many threads hitting scratchpad together | Scratchpad 1RW port |
-
----
-
-# Pinout
-
-Tiny Tapeout standard pins. Mapping matches `info.yaml` / `tt_um_aloshdenny_gpu.sv`.
-
-### Inputs — `ui_in[7:0]`
-
-| Pin | Signal | Description |
-| --- | --- | --- |
-| `ui_in[6:0]` | `thread_count` | Device control register (written while start is low) |
-| `ui_in[7]` | `start` | Pulse high to launch the kernel |
-
-### Outputs — `uo_out[7:0]`
-
-| Pin | Signal | Description |
-| --- | --- | --- |
-| `uo_out[0]` | `done` | High when the kernel finishes |
-| `uo_out[1]` | `mem_we` | External SRAM write enable |
-| `uo_out[2]` | `mem_re` | External SRAM read enable |
-| `uo_out[3]` | `ale` | Address latch enable |
-| `uo_out[4]` | `mem_sel` | 0 = program memory, 1 = data memory |
-| `uo_out[7:5]` | — | Tied low (reserved) |
-
-### Bidirectional — `uio[7:0]`
-
-| Pin | Signal | Description |
-| --- | --- | --- |
-| `uio[7:0]` | addr/data bus | Time-multiplexed address and data bytes |
-| `uio_oe[7:0]` | output enable | Driven by the design during address/write phases |
-
-### Clock / reset / enable
-
-| Pin | Description |
-| --- | --- |
-| `clk` | System clock (≤ 50 MHz for the TT timing closure target) |
-| `rst_n` | Active-low reset (internally synchronized) |
-| `ena` | Always driven high by the TT harness when the design may run |
-
----
-
-# Q1.15 Fixed-Point Format
-
-Atreides uses Q1.15 fixed-point representation for neural network computations:
+A tile built for HammerBlade (`hb/v/sf_hb_v3.sv`) around v3's processing elements (`hb/v3/v3_pe.sv`, `v3_block.sv`). It has **no instruction stream.** One launch computes C = A · W for a range of C's columns, all three matrices in DRAM:
 
 ```
-┌───┬───────────────────────────────┐
-│ S │         FRACTION              │
-│[15]│         [14:0]               │
-└───┴───────────────────────────────┘
-  │              │
-  │              └── 15 fractional bits
-  └── Sign bit (0=positive, 1=negative)
+C[T × NC] (column blocks CB_START .. CB_START + CB_COUNT - 1) = A[T × K] · W[K × NC]
 ```
 
+- **Array:** NA × NA weight-stationary wavefront array (NA = 8, or 4 on the `a4` machines).
+  - Carry-save multiplier, with one product stage, or two on the `m2` machines.
+  - Weight tiles stream in back to back: a tile swaps in as the activation wavefront reaches it.
+- **DMA:** 32 load tags and 32 outstanding requests. Each cycle a result store goes first, then an A load, then a W load.
+- **Buffers:**
+  - A is loaded once into NA activation banks (bank = k mod NA).
+  - W streams through 4 weight slots, up to 4 tiles ahead of the array.
+- **Accumulate and round:**
+  - Per-column accumulators in SF24 (Q5.19) for SF16, and FP24 for FP16 and BF16.
+  - After the last pass of a column block, the "pop" rounds each sum once to 16 bits.
+  - Results leave through store FIFOs, two values per 32-bit word.
+- **Limits:** T ≤ 128 rows, K ≤ 3072 and a multiple of NA, NC a multiple of NA. W is laid out in NA × NA tiles, so weights are tiled offline for the machine's NA.
+- **Why 8 × 8:** a tile's port returns at most one 32-bit word, two 16-bit values, per cycle. Each NA × NA weight tile is used by T activation rows, so the array keeps up with the port when NA²/2 ≈ T. That gives NA = 8 for prompts of about 32 tokens. A 128 × 128 array would sit idle.
 
-| Property        | Value                |
-| --------------- | -------------------- |
-| Total Bits      | 16                   |
-| Sign Bits       | 1                    |
-| Fractional Bits | 15                   |
-| Range           | [-1.0, +0.999969...] |
-| Resolution      | 2^-15 ≈ 0.0000305    |
+### Memory and addressing
 
+- **Shared memory:** DRAM is one address space for every tile. A vanilla core's `.dram` pointer (`0x8xxx_xxxx`) is a valid A, W, C or BASE address for a SuperFloat tile, which translates it with HammerBlade's own `bsg_manycore_eva_to_npa`.
+- **Tile registers:** a tile's registers sit at word addresses `0x2000 + i`, byte offset `0x8000 + 4i`. Use 32-bit stores; byte masks are ignored.
 
-### Conversion
+| v1 register | | v3 register | |
+|---|---|---|---|
+| `0x2000` BASE | window base | `0x2000-0x2002` A_BASE, W_BASE, C_BASE | operand addresses |
+| `0x2001` DONE_ADDR | completion flag | `0x2003-0x2005` T, K, NC | shape |
+| `0x2002` START | block id, thread count | `0x2006-0x2007` CB_START, CB_COUNT | column blocks |
+| `0x2003` STATUS | busy | `0x2008` SHIFT | SF16 output exponent |
+| `0x2004-0x2007` | cycle, busy, read and write counters | `0x2009` DONE_ADDR, `0x200A` START | completion, launch |
+| `0x2008` FORMAT | 0 SF16, 1 FP16, 2 BF16 | `0x200B-0x2014` | status, counters, FORMAT, NA, pipeline depths |
+
+The full maps, with every field's constraints, are in `docs/compiler_hammerblade.md` §2.1 and §3.2.
+
+### Launch and completion
+
+The same protocol serves both tiles:
+
+1. A vanilla core writes the tile's registers: the program and BASE (v1), or the descriptor (v3).
+2. It writes DONE_ADDR: the address of a flag in its own local data memory.
+3. It clears the flag.
+4. It writes START.
+5. The tile runs, waits until every one of its result stores has been acknowledged, then stores 1 into the flag of whichever core wrote START.
+6. The core spins on its local flag, which costs no network traffic. When the flag reads 1, the results are in memory and visible to every core.
+
+Any vanilla core can own any tile, and several can each drive their own.
+
+---
+
+## Number formats
+
+**SF16 is sign-magnitude Q1.15 in memory:** bit 15 is the sign, bits 14–0 the magnitude, and the value is (−1)^s · m / 2^15 · 2^e. The scale e is a power of two kept by software per tensor (v3), or per token and per channel by the host. Zero is `0x0000`, and `0x8000` is never produced.
 
 ```python
-# Float to Q1.15
-def float_to_q115(f):
-    f = max(-1.0, min(f, 32767/32768))  # Clamp to valid range
-    return int(round(f * 32768)) & 0xFFFF
-
-# Q1.15 to Float
-def q115_to_float(q):
-    if q & 0x8000:  # Negative
-        return (q - 65536) / 32768.0
-    return q / 32768.0
+def to_sf16(x, e):            # e: per-tensor exponent, max|x| / 2**e < 1
+    m = min(round(abs(x) * 2 ** (15 - e)), 32767)   # round half to even
+    return (int(x < 0) << 15 | m) if m else 0
 ```
 
-### Why Q1.15?
+**FP16** is IEEE binary16. **BF16** is the top 16 bits of an FP32. Both read subnormal inputs as zero.
 
-Normalized weights/activations usually fit in [-1, 1]. A 15×15 multiply fits in 30 bits; the FMA/PE paths keep wider accumulators before saturating back to 16-bit. Fixed-point keeps the datapath smaller than a float unit at this process node.
+**What each tile computes:**
+
+| Tile | Format | Product | Accumulator | Output |
+|---|---|---|---|---|
+| v1 | SF16 | 15 × 15 magnitude product, truncated to Q1.15 | 16-bit two's complement, saturating at ±32767 | sign-magnitude SF16 |
+| v1 | FP16, BF16 | exact | one rounding to the 16-bit format per MAC | FP16 / BF16 |
+| v3 | SF16 | partial-product columns below 9 dropped plus 1024, cut to 19 fraction bits | SF24 (Q5.19), saturating | pop: shift right by SHIFT, round half to even, saturate |
+| v3 | FP16 | 11 × 11 significands, columns below 4 dropped plus 12 | FP24 (1/8/15), one RNE rounding per MAC | pop: round FP24 to FP16 |
+| v3 | BF16 | exact | FP24, one RNE rounding per MAC | pop: round FP24 to BF16 |
+
+**For v3 SF16, the compiler picks the output exponent:** SHIFT = 4 + e_C − e_A − e_W. The output then carries exponent e_C, so a GEMM's output can be the next GEMM's A unchanged. The bit-exact reference is `hb/sw/v3/mxu_emu.py`; `docs/compiler_hammerblade.md` §4 gives every rounding rule.
 
 ---
 
-# ISA
+## Programming a tile
 
-Atreides implements a 14-instruction custom ISA optimized for Q1.15 neural network operations and integer index calculation:
+One GEMM on the four v3 tiles from the vanilla core at (0,0), shortened from `hb/sw/v3/main.c`. The column blocks are split across the tiles, and every tile reads all of A:
 
-### Key Design Decision
-- **Integer operations** (`ADD`, `SUB`, `MUL`, `DIV`): Used for index and address calculations, loop counters, and structural branches.
-- **Q1.15 neural operations** (`FMA`, `ACT`): Used exclusively for Q1.15 matrix math to prevent accumulation precision loss and minimize CPU hardware footprint.
+```c
+#include "bsg_manycore.h"
+#define CSR(i) ((0x2000 + (i)) << 2)
+static volatile int done_flag[4];                       /* in the core's local data memory */
 
-This separation ensures optimal hardware for each use case.
+static inline void acc_store(int t, int i, int v) { bsg_global_pod_store(0, 0, t, 1, CSR(i), v); }
 
-### Instruction Encoding
-
-Instructions are 16 bits wide, encoded in a 4-field register-register format:
-
+void gemm_v3(const short *A, const short *Wt, short *C, int T, int K, int N, int na, int shift)
+{
+  int cbs = N / na;                                     /* column blocks of na columns */
+  for (int t = 0; t < 4; t++) {                         /* tile t of row 1 */
+    int s = cbs * t / 4, e = cbs * (t + 1) / 4;
+    if (e == s) continue;
+    acc_store(t, 0, (int) A);  acc_store(t, 1, (int) Wt);  acc_store(t, 2, (int) C);
+    acc_store(t, 3, T);        acc_store(t, 4, K);         acc_store(t, 5, N);
+    acc_store(t, 6, s);        acc_store(t, 7, e - s);     acc_store(t, 8, shift);
+    acc_store(t, 9, ((int) &done_flag[t]) >> 2);        /* DONE_ADDR */
+    done_flag[t] = 0;
+    acc_store(t, 10, 1);                                /* START */
+  }
+  for (int t = 0; t < 4; t++)
+    if (cbs * (t + 1) / 4 > cbs * t / 4) while (!done_flag[t]) ;
+}
 ```
-┌────────┬────────┬────────┬────────┐
-│ OPCODE │   Rd   │   Rs   │   Rt   │
-│ [15:12]│ [11:8] │  [7:4] │  [3:0] │
-└────────┴────────┴────────┴────────┘
-```
-For instructions with immediate operands (e.g. `CONST`), the lower 8 bits `[7:0]` are treated as an 8-bit immediate. For PC-relative branch instructions (e.g. `BRnzp`), the lower 9 bits `[8:0]` are treated as a signed PC-relative offset.
 
-### Register Map
+- **Before launching,** read each tile's NA (register 19) and FORMAT (16), and check them against what the weights were tiled and quantised for.
+- **If this core wrote the operands itself,** call `bsg_fence()` before START.
+- **v1 tiles** use the same pattern with a program upload and a block loop: `hb/sw/main.c`.
 
-Each thread owns its own independent register file with 16 registers:
+---
 
-| Register | Name       | Type | Description |
+## Results
+
+All cycles are measured on the pod's RTL in Verilator, with every output checked bit for bit. Times and energies combine those cycles with clocks and power measured on hardened tiles. Full tables: `docs/hammerblade.md`.
+
+### v3 matrix tiles: GPT-2 small prefill
+
+Clocks from each format's array hardened on GT2N (2 nm) to global routing. Times count the prefill's matrix multiplies only. 180 launches, all bit-exact.
+
+| | SF16 | FP16 | BF16 |
 |---|---|---|---|
-| `R0`–`R12` | General | R/W | 16-bit registers for integer arithmetic, addresses, and SF16 values |
-| `R13` | `%blockIdx` | RO | Grid block index assigned by the Dispatcher |
-| `R14` | `%blockDim` | RO | Core thread block dimension (threads per block) |
-| `R15` | `%threadIdx`| RO | Thread lane index inside its current compute block |
+| Array clock, 2 nm | **3.39 GHz** | 3.01 GHz | 3.03 GHz |
+| Cycles, 32-token prompt (v3i, 8 × 8) | 57.81 M | 57.79 M | 57.79 M |
+| Time to first token, 8 tokens | **16.0 ms** | 18.0 ms | 17.9 ms |
+| Time to first token, 32 tokens | **17.1 ms** | 19.2 ms | 19.1 ms |
+| Time to first token, 128 tokens | **22.7 ms** | 25.6 ms | 25.4 ms |
 
----
+- **Cycles agree within 2.5% across formats,** so SF16's lead is its arrays' higher clock: about 11% less time than FP16 and BF16.
+- **The tiles are bandwidth-bound.** The eight vcaches deliver about 1.4 words per cycle to the four tiles together, so the arrays wait for weights. 4 × 4 arrays don't help: 1.1× the cycles at 32 tokens and 2.7× at 128.
 
-### Instruction Set Reference
+### v1 core tiles: GPT-2 small, 32-token prompt and 32 generated tokens
 
-| Opcode (Binary) | Mnemonic | Syntax | Description / Behavior |
+Four tiles per format, at each tile's SKY130 signoff clock (ss, 100 °C, 1.60 V). Times count the matrix work only. 528 launches, all bit-exact.
+
+| | SF16 | FP16 | BF16 |
 |---|---|---|---|
-| `0000` | **NOP** | `NOP` | No operation. |
-| `0001` | **BRnzp**| `BRnzp offset9` | Branch conditionally on `nzp` flags to `PC + 1 + sign_extend(offset9)`. |
-| `0010` | **CMP** | `CMP Rd, Rs` | Compares integer values in `Rd` and `Rs`. Sets `nzp` flags (N: negative, Z: zero, P: positive). |
-| `0011` | **ADD** | `ADD Rd, Rs, Rt` | Integer addition: `Rd = Rs + Rt`. |
-| `0100` | **SUB** | `SUB Rd, Rs, Rt` | Integer subtraction: `Rd = Rs - Rt`. |
-| `0101` | **MUL** | `MUL Rd, Rs, Rt` | Integer multiplication: `Rd = Rs[7:0] * Rt[7:0]` (16-bit zero-extended result). |
-| `0110` | **DIV** | `DIV Rd, Rs, Rt` | Integer division: `Rd = Rs / Rt`. Fast hardware reciprocal division for common constants. |
-| `0111` | **LDR** | `LDR Rd, Rs` | Load 16-bit value from Data Memory at address `Rs` into `Rd`. |
-| `1000` | **STR** | `STR Rd, Rs` | Store 16-bit value from `Rs` into Data Memory at address `Rd`. |
-| `1001` | **CONST**| `CONST Rd, imm8`| Load 8-bit sign-extended immediate `imm8` into `Rd`. |
-| `1010` | **FMA** | `FMA Rd, Rs, Rt` | Q1.15 Fused Multiply-Accumulate: `Rd = (Rs * Rt) + Rd`. (Uses `Rd` as accumulator input). |
-| `1011` | **ACT** | `ACT Rd, Rs, Rt` | Applies activation function `Rd = act(Rs + Rt)` where `Rt` is bias. Act function in `instruction[9:8]`. <br> • `00` = Passthrough <br> • `01` = ReLU <br> • `10` = Leaky ReLU <br> • `11` = Clipped ReLU. |
-| `1100` | **SYS** | `SYS op, idx` | Systolic Array control interface instruction. <br> • `op=00` = Clear accumulators <br> • `op=01` = Load weights <br> • `op=10` = Compute step <br> • `op=11` = Read result from array `idx` into destination register. |
-| `1111` | **RET** | `RET` | Return from kernel. Finishes current thread execution block. |
+| Tile clock (ss) | 51.9 MHz | **55.7 MHz** | 54.1 MHz |
+| Time to first token, read buffer | 64.4 s | **60.1 s** | 61.8 s |
+| Time per output token, read buffer | 7.80 s | **7.27 s** | 7.48 s |
+| Energy per output token (4 tiles) | **1.97 J** | 3.66 J | 3.50 J |
+| Tile standard-cell area | **1.40 mm²** | 1.86 mm² | 1.63 mm² |
 
+- **Against the OpenFrame chip,** the same tiles take 1.15–1.16× fewer cycles with the direct adapter. With the read buffer they take 2.16–2.23× fewer on prefill and 2.73× fewer on decode.
+- **SF16 uses 46% less energy than FP16 and 44% less than BF16.** Cycles are identical across formats, so the tiles' power sets the ratio.
+- **A v1 tile does about the work of one vanilla core running FP32.** Its threads feed the 8 × 8 array one load at a time. That is why the v3 tile, whose DMA feeds the array directly, is the one to integrate.
 
 ---
 
-# Execution
+## Machines
 
-### Core Control Flow
+Each machine is a 4 × 2 pod with one kind of SuperFloat tile in row 1 (`hb/machines/<name>/Makefile.machine.include`):
 
-The scheduler drives a 7-state FSM:
-
-```
-┌──────┐   ┌────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌────────┐   ┌──────┐
-│ IDLE │──▶│ FETCH  │──▶│ DECODE  │──▶│ REQUEST │──▶│  WAIT   │──▶│EXECUTE │──▶│UPDATE│
-└──────┘   └────────┘   └─────────┘   └─────────┘   └─────────┘   └────────┘   └──────┘
-                                                                       │
-                                                                  (2 cycles for FMA)
-```
-
-1. **IDLE** — Waiting for block dispatch
-2. **FETCH** — Fetch instruction from cache/program memory
-3. **DECODE** — Decode 16-bit instruction into control signals
-4. **REQUEST** — Request memory if LDR/STR
-5. **WAIT** — Wait for memory response
-6. **EXECUTE** — Execute ALU/FMA computation (FMA takes 2 cycles)
-7. **UPDATE** — Write back to registers
-
-### Thread
-
-Thread
-
-Each thread has dedicated ALU, FMA, Activation, LSU, PC, and register file. The `%blockIdx`, `%blockDim`, and `%threadIdx` registers enable SIMD functionality.
-
-### Pipeline
-
-Atreides supports a 5-stage instruction pipeline:
-
-```
-Cycle:    1     2     3     4     5     6     7     8
-         ┌─────┬─────┬─────┬─────┬─────┐
-Instr 1: │ IF  │ ID  │ EX  │ MEM │ WB  │
-         └─────┴─────┴─────┴─────┴─────┘
-               ┌─────┬─────┬─────┬─────┬─────┐
-Instr 2:       │ IF  │ ID  │ EX  │ MEM │ WB  │
-               └─────┴─────┴─────┴─────┴─────┘
-                     ┌─────┬─────┬─────┬─────┬─────┐
-Instr 3:             │ IF  │ ID  │ EX  │ MEM │ WB  │
-                     └─────┴─────┴─────┴─────┴─────┘
-```
-
-Features:
-
-- **Hazard Detection** — RAW hazard detection and stalling
-- **Data Forwarding** — Forward results from EX/MEM stages
-- **Load-Use Stall** — Automatic stall for load-use hazards
-
----
-
-# Neural Network Features
-
-## FMA Unit
-
-The Fused Multiply-Add unit (`fma.sv`) is a **2-cycle pipelined** Q1.15 MAC:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      FMA UNIT (2-cycle)                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   Cycle 1:                                                  │
-│   ┌─────┐    ┌─────┐                                        │
-│   │ Rs  │    │ Rt  │   Operand Registers                    │
-│   │ Act │    │ Wgt │                                        │
-│   └──┬──┘    └──┬──┘                                        │
-│      │          │                                           │
-│      ▼          ▼                                           │
-│   ┌──────────────────┐                                      │
-│   │   Sign XOR       │  sign = sign_a ^ sign_w              │
-│   └────────┬─────────┘                                      │
-│            │                                                │
-│   ┌────────▼─────────┐                                      │
-│   │  15×15 Multiply  │  |mantissa_a| × |mantissa_w|         │
-│   │   (30-bit out)   │                                      │
-│   └────────┬─────────┘                                      │
-│            │                                                │
-│   Cycle 2:                                                  │
-│   ┌────────▼─────────┐                                      │
-│   │  Sign-Extend     │  Apply computed sign                  │
-│   └────────┬─────────┘                                      │
-│            │                                                │
-│   ┌────────▼─────────┐    ┌─────┐                           │
-│   │   Accumulate     │◀───│ Rd  │  Running sum (Rd += Rs*Rt)│
-│   │   (32-bit)       │    │ Acc │                           │
-│   └────────┬─────────┘    └─────┘                           │
-│            │                                                │
-│   ┌────────▼─────────┐                                      │
-│   │   Saturate       │  Clamp to Q1.15 range                │
-│   └────────┬─────────┘                                      │
-│            │                                                │
-│            ▼                                                │
-│       Output (Q1.15)   Rd = (Rs × Rt) + Rd                 │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-Key optimizations:
-
-- **Sign-magnitude multiplication** — XOR for sign, 15×15 unsigned for mantissa
-- **32-bit accumulator** — Prevents overflow during dot products
-- **Saturation** — Clamps result to valid Q1.15 range
-- **2-cycle pipeline** — High throughput with scheduler integration
-
-## Systolic Array
-
-Hardware-accelerated matrix multiplication with weight-stationary dataflow:
-
-```systemverilog
-module fma #(
-    parameter DATA_BITS = 16,
-    parameter ACC_BITS  = 32
-) (
-    input wire clk, reset, enable,
-    input wire clear_acc, load_weight, compute_enable,
-    input wire [DATA_BITS-1:0] a_in,      // Activation from left
-    input wire [DATA_BITS-1:0] b_in,      // Weight from top
-    output reg [DATA_BITS-1:0] a_out,     // Pass activation right
-    output reg [DATA_BITS-1:0] b_out,     // Pass weight down
-    output reg [DATA_BITS-1:0] acc_out    // Accumulated result (Q1.15)
-);
-```
-
-Each FMA performs: `acc += a_in × b_in` (in Q1.15 with 32-bit internal accumulator)
-
-## KV-Cache
-
-> Optional RTL (`kv_cache.sv`) — not enabled in the default Tiny Tapeout `source_files` list.
-
-
-Native support for transformer attention with sliding window (`kv_cache.sv`):
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                       KV-CACHE                              │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │                    KEY CACHE                         │   │
-│  │  ┌─────────┬─────────┬─────────┬─────────┐           │   │
-│  │  │ Head 0  │ Head 1  │ Head 2  │ Head 3  │           │   │
-│  │  │ [seq]   │ [seq]   │ [seq]   │ [seq]   │           │   │
-│  │  │ [dim]   │ [dim]   │ [dim]   │ [dim]   │           │   │
-│  │  └─────────┴─────────┴─────────┴─────────┘           │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                                                             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │                   VALUE CACHE                        │   │
-│  │  ┌─────────┬─────────┬─────────┬─────────┐           │   │
-│  │  │ Head 0  │ Head 1  │ Head 2  │ Head 3  │           │   │
-│  │  │ [seq]   │ [seq]   │ [seq]   │ [seq]   │           │   │
-│  │  │ [dim]   │ [dim]   │ [dim]   │ [dim]   │           │   │
-│  │  └─────────┴─────────┴─────────┴─────────┘           │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                                                             │
-│  Features:                                                  │
-│  • Multi-head support (4 heads)                             │
-│  • Incremental append for autoregressive decoding           │
-│  • Sliding window attention (circular buffer)               │
-│  • Batch read for attention computation                     │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-Parameters:
-
-- `NUM_HEADS`: 4 (configurable)
-- `HEAD_DIM`: 16 (configurable)
-- `MAX_SEQ_LEN`: 256 (configurable)
-
-## Weight & Activation Memory
-
-> Optional RTL (`weight_mem.sv`) — not in the default Tiny Tapeout `source_files` list.
-
-
-Dedicated memory banks with double-buffering for neural network inference (`weight_mem.sv`):
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│              WEIGHT & ACTIVATION MEMORY                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  WEIGHT BANKS (Read-only during inference)                  │
-│  ┌─────────┬─────────┬─────────┬─────────┐                  │
-│  │ Bank 0  │ Bank 1  │ Bank 2  │ Bank 3  │                  │
-│  │ Buf A/B │ Buf A/B │ Buf A/B │ Buf A/B │                  │
-│  └─────────┴─────────┴─────────┴─────────┘                  │
-│                                                             │
-│  ACTIVATION BANKS (Read/Write)                              │
-│  ┌─────────┬─────────┬─────────┬─────────┐                  │
-│  │ Bank 0  │ Bank 1  │ Bank 2  │ Bank 3  │                  │
-│  │ Buf A/B │ Buf A/B │ Buf A/B │ Buf A/B │                  │
-│  └─────────┴─────────┴─────────┴─────────┘                  │
-│                                                             │
-│  Features:                                                  │
-│  • 4 parallel banks for concurrent access                   │
-│  • Double-buffering for prefetching                         │
-│  • 1024 entries per bank (1K × 16-bit = 2KB per bank)       │
-│  • Prefetch support for hiding latency                      │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-# Advanced Features
-
-## Memory Coalescing
-
-> Optional RTL (`mem_coalesce.sv`) — not in the default Tiny Tapeout `source_files` list.
-
-
-Combines multiple sequential memory requests into single transactions (`mem_coalesce.sv`):
-
-```
-Before Coalescing:           After Coalescing:
-┌─────────────────┐          ┌─────────────────┐
-│ Thread 0: R[0]  │          │                 │
-│ Thread 1: R[1]  │  ────▶   │ Single Request  │
-│ Thread 2: R[2]  │          │ R[0:3]          │
-│ Thread 3: R[3]  │          │                 │
-└─────────────────┘          └─────────────────┘
-   4 requests                   1 request
-```
-
-The coalescing unit:
-
-1. Analyzes pending memory requests from threads in the block
-2. Identifies sequential addresses
-3. Combines into single wide transaction
-4. Distributes results back to threads
-
-## Branch Divergence
-
-Handles SIMT execution when threads take different paths (`branch_diverge.sv`):
-
-```
-                    ┌─────────────┐
-                    │   Branch    │
-                    │ Instruction │
-                    └──────┬──────┘
-                           │
-              ┌────────────┴────────────┐
-              ▼                         ▼
-       ┌─────────────┐           ┌─────────────┐
-       │ Threads 0,2 │           │ Threads 1,3 │
-       │ Take Branch │           │ Fall Through│
-       └──────┬──────┘           └──────┬──────┘
-              │                         │
-              │    ┌─────────────┐      │
-              └───▶│ Reconverge  │◀─────┘
-                   │   Point     │
-                   └─────────────┘
-```
-
-Features:
-
-- **Divergence Stack** — Tracks divergent thread masks
-- **Warp Mask** — Active thread tracking per warp
-- **Reconvergence Detection** — Automatic at post-dominator points
-- **Nested Divergence** — Stack-based handling of nested branches
-
-## Instruction Pipeline
-
-5-stage pipeline with hazard handling (`pipeline.sv`):
-
-
-| Stage | Description        | Hazard Handling |
-| ----- | ------------------ | --------------- |
-| IF    | Instruction Fetch  | —               |
-| ID    | Instruction Decode | RAW detection   |
-| EX    | Execute (ALU/FMA)  | Data forwarding |
-| MEM   | Memory Access      | Load-use stall  |
-| WB    | Write Back         | —               |
----
-
-# Performance & Model Profiling
-
-Atreides features two modes of operation:
-1. **Standard FMA Mode**: Threads execute standard instructions sequentially through the scheduler's 7-state FSM. FMA operations run at a throughput of **0.208 FLOPs/cycle** per thread due to load-store latencies and loop overhead.
-2. **Systolic Array Mode**: Matrix computations are accelerated using the weight-stationary systolic arrays (2 arrays of 2×2 PEs per core, 16 total PEs across 2 cores). At peak utilization, this delivers **19.2 FLOPs/cycle** at a safe 50 MHz clock speed, representing a **92.4× speedup** over sequential execution.
-
-### Measured Hardware Microbenchmarks (100 MHz Simulation)
-
-Below is the verified performance measured directly from the RTL simulation across typical matrix dimensions:
-
-| Operation | Dimensions | Cycles | Latency | GFLOPS | Throughput |
+| Machines | Tile | Array | Product stages | IPOLY hashing | Socket types |
 |---|---|---|---|---|---|
-| **MatMul** | $2 \times 2 \times 2$ | 373 | 3.7 µs | 0.00429 GFLOPS | 0.0107 elements/cycle |
-| **MatMul** | $3 \times 3 \times 3$ | 974 | 9.7 µs | 0.00554 GFLOPS | 0.0092 elements/cycle |
-| **MatMul** | $4 \times 4 \times 4$ | 1204 | 12.0 µs | 0.01063 GFLOPS | 0.0133 elements/cycle |
+| `sf_4x2_{sf16,fp16,bf16}` | v1, direct adapter | 8 × 8 | – | off | 9, 10, 11 |
+| `sf_4x2_{sf16,fp16,bf16}_rb` | v1, 8-line read buffer | 8 × 8 | – | off | 12, 13, 14 |
+| `v3_4x2_{sf16,fp16,bf16}` | v3 | 8 × 8 | 1 | off | 15, 16, 17 |
+| `v3_4x2_*_m2` | v3 | 8 × 8 | 2 | off | 18, 19, 20 |
+| `v3_4x2_*_a4` | v3 | 4 × 4 | 1 | off | 21, 22, 23 |
+| `v3i_4x2_*_m2` | v3 | 8 × 8 | 2 | on | 18, 19, 20 |
+| `v3i_4x2_*_m2a4` | v3 | 4 × 4 | 2 | on | 24, 25, 26 |
 
----
+## Repository layout
 
-### Large LLM Decoder Latency & Throughput Scaling (50 MHz Clock)
+| Path | Contents |
+|---|---|
+| `hb/v/sf_hb_accel.sv` | v1 adapter: endpoint, registers, program memory and instruction cache, data path, read buffer |
+| `hb/v/sf_hb_v3.sv` | v3 matrix tile: descriptor, DMA, buffers, wavefront array, accumulators, pop |
+| `hb/v/bsg_manycore_hetero_socket.sv` | HammerBlade's tile socket with the SuperFloat tile types 9–26 |
+| `hb/v3/` | v3 processing element, block and FP arithmetic used by the v3 tile |
+| `src/` | v1 RTL: `core_tile.sv` and everything under it (renamed `sf1_*` in the build copy by `hb/v1_prefix.py`) |
+| `hb/machines/` | the 21 pod configurations |
+| `hb/sw/` | drivers on the vanilla cores (`main.c` v1, `v3/main.c` v3), launch generators, the FP32 baseline (`vanilla/`) |
+| `hb/setup_pod.sh`, `hb/sf_filelist.mk` | wire SuperFloat into a `bsg_manycore` checkout (four small edits) |
+| `hb/run_launch.sh`, `run_all.sh`, `parse_run.py` | build, run and record launches |
+| `hb/bench_hb.py`, `bench_v3.py`, `make_fig.py` | GPT-2 totals and figures |
+| `hb/tools/make_diagrams.py` | the architecture diagrams in `docs/images/hb_*.svg` |
+| `hb/results/` | every launch's record, tile signoff and clock numbers, totals, tool versions |
+| `test/gpt2/` | GPT-2 small launches with real operands and bit-exact references (`prepare.py`), v1 kernels (`kernels.py`), format models |
+| `docs/hammerblade.md` | measured results and method |
+| `docs/compiler_hammerblade.md` | compiler and runtime reference |
 
-Estimated decode latency per token (1 token generation step with context length = 32) comparing sequential FMA execution with systolic array acceleration:
+## Building and running
 
-| Model | Parameters | Layers | $d_{\text{model}}$ | FLOPs/token | Standard FMA Latency | Standard FMA Token/s | Systolic Array Latency | Systolic Array Token/s | Speedup |
-|---|---|---|---|---|---|---|---|---|---|
-| **GPT-2 (Small)** | 117M | 12 | 768 | $1.71 \times 10^8$ | 16.46 s | 0.0607 | 178.2 ms | 5.61 | 92.4x |
-| **Transformer-500M** | 500M | 24 | 1024 | $6.07 \times 10^8$ | 58.43 s | 0.0171 | 632.4 ms | 1.58 | 92.4x |
-| **Transformer-1B** | 1.0B | 32 | 1536 | $1.82 \times 10^9$ | 175.00 s | 0.0057 | 1.89 s | 0.53 | 92.4x |
-| **Transformer-2B** | 2.0B | 32 | 2048 | $3.23 \times 10^9$ | 310.84 s | 0.0032 | 3.36 s | 0.30 | 92.4x |
-| **Transformer-4B** | 4.0B | 40 | 3072 | $9.08 \times 10^9$ | 873.48 s | 0.0011 | 9.45 s | 0.11 | 92.4x |
-| **Transformer-8B** | 8.0B | 80 | 4096 | $3.23 \times 10^{10}$ | 3104.35 s | 0.0003 | 33.60 s | 0.03 | 92.4x |
-
----
-
-# Kernels
-
-### Matrix Addition
-
-Adds two 1×8 matrices using Q1.15 arithmetic:
-
-```asm
-.threads 8
-.data 0x2000 0x2000 0x2000 0x2000 0x2000 0x2000 0x2000 0x2000  ; A (0.25 in Q1.15)
-.data 0x4000 0x4000 0x4000 0x4000 0x4000 0x4000 0x4000 0x4000  ; B (0.5 in Q1.15)
-
-MUL R0, %blockIdx, %blockDim
-ADD R0, R0, %threadIdx         ; i = blockIdx * blockDim + threadIdx
-
-CONST R1, #0                   ; baseA
-CONST R2, #8                   ; baseB
-CONST R3, #16                  ; baseC
-
-ADD R4, R1, R0                 ; addr(A[i])
-LDR R4, R4                     ; load A[i]
-
-ADD R5, R2, R0                 ; addr(B[i])
-LDR R5, R5                     ; load B[i]
-
-ADD R6, R4, R5                 ; C[i] = A[i] + B[i]
-
-ADD R7, R3, R0                 ; addr(C[i])
-STR R7, R6                     ; store C[i]
-
-RET
-```
-
-### Matrix Multiplication
-
-Multiplies two 2×2 matrices using FMA for Q1.15 dot products:
-
-```asm
-.threads 4
-.data 0x4000 0x4000 0x4000 0x4000  ; A (0.5 in Q1.15)
-.data 0x4000 0x4000 0x4000 0x4000  ; B (0.5 in Q1.15)
-
-MUL R0, %blockIdx, %blockDim
-ADD R0, R0, %threadIdx         ; i = blockIdx * blockDim + threadIdx
-
-CONST R1, #1                   ; increment
-CONST R2, #2                   ; N
-CONST R3, #0                   ; baseA
-CONST R4, #4                   ; baseB
-CONST R5, #8                   ; baseC
-
-DIV R6, R0, R2                 ; row = i / N
-MUL R7, R6, R2
-SUB R7, R0, R7                 ; col = i % N
-
-CONST R8, #0                   ; acc = 0 (Q1.15)
-CONST R9, #0                   ; k = 0
-
-LOOP:
-  MUL R10, R6, R2
-  ADD R10, R10, R9
-  ADD R10, R10, R3             ; addr(A[row][k])
-  LDR R10, R10                 ; load A[row][k]
-
-  MUL R11, R9, R2
-  ADD R11, R11, R7
-  ADD R11, R11, R4             ; addr(B[k][col])
-  LDR R11, R11                 ; load B[k][col]
-
-  FMA R8, R10, R11             ; acc += A[row][k] * B[k][col] (Q1.15 FMA)
-
-  ADD R9, R9, R1               ; k++
-
-  CMP R9, R2
-  BRn LOOP                     ; while k < N
-
-ADD R9, R5, R0                 ; addr(C[i])
-STR R9, R8                     ; store result
-
-RET
-```
-
----
-
-# Simulation
-
-### Prerequisites
+On a Linux host with Verilator 5 and HammerBlade's RISC-V GCC (`software/riscv-tools`: `checkout-riscv-gnu-tools build-riscv-gnu-tools`):
 
 ```bash
-# Install Verilog compiler
-brew install icarus-verilog
-
-# Install cocotb
-pip3 install cocotb
-
-# Install sv2v (SystemVerilog to Verilog converter)
-# Download from https://github.com/zachjs/sv2v/releases
-
-# Create build directory
-mkdir build
+git clone https://github.com/bespoke-silicon-group/bsg_manycore.git
+git clone https://github.com/bespoke-silicon-group/basejump_stl.git
+make -C bsg_manycore checkout_submodules && make -C basejump_stl/imports DRAMSim3
+hb/setup_pod.sh bsg_manycore .
+make -C bsg_manycore/machines sf_4x2_sf16/simsc BSG_PLATFORM=verilator IGNORE_CADENV=1
+MC=$PWD/bsg_manycore ROOT=$PWD RUNS=$PWD/runs hb/run_launch.sh sf16 gemv_check
 ```
 
-### Running Tests
+- **Launches:** built by `test/gpt2/prepare.py` from GPT-2 small (`GPT2_DIR` holds `model.safetensors` and `tokenizer.json`).
+- **Batch runs and the FP32 baseline:** `hb/README.md`.
+- **The v3 tiles:** launches from `hb/sw/v3/gen_v3.py`, runs with `hb/run_v3.sh`; build and test steps are in `docs/compiler_hammerblade.md` §5.
+- **Tool versions:** `hb/results/versions.txt`.
 
-```bash
-# Matrix Addition
-make test_matadd
+## What is measured and what is not
 
-# Matrix Multiplication
-make test_matmul
+- **Measured:**
+  - cycles, on the RTL of the whole pod: cores, mesh, vcaches and DRAM model;
+  - bit-exact outputs for all 708 launches;
+  - the tiles' clocks, power and area, hardened separately: v1 at SKY130 (signed off for the OpenFrame chip), v3's arrays at GT2N to global routing.
+- **Not measured:**
+  - **Process.** The pod itself is not hardened, and its clock is assumed to match the tile's.
+  - **HammerBlade's own power.** The mesh, vcaches, DRAM and vanilla cores are left out of the energy figures.
+  - **DRAM.** The memory model is bsg_manycore's test memory, not an HBM2 model.
+  - **Operations between matrix multiplies** (LayerNorm, softmax, GELU), which would run on the vanilla cores.
+  - **A tuned FP32 baseline.** The vanilla-core comparison is untuned C.
+- **Not built:** the graph compiler and a runtime library. The drivers in `hb/sw/` do their jobs for the measured launches.
 
-# ResNet-20 Model Inference
-# Simulates full Q1.15 inference natively on the Verilog DUT utilizing SF16 ACT bias addition
-make test_model_resnet
-
-# GPT-2 Autoregressive Inference (Hardware Native)
-# Executes the entire 12-layer GPT-2 model bit-for-bit on the Verilog DUT. Automatically tiles 
-# large memory-bound parameter tensors across the PCIe interface to fit inside the 1 MiB data space.
-make test_model_transformer
-
-# Run all unit tests
-make test_all_units
-
-# Clean build artifacts
-make clean
-```
-
-### Output
-
-Simulation produces log files in `test/results/` with:
-
-- Initial data memory state
-- Complete execution trace (cycle-by-cycle)
-- Final data memory state
-
-Example trace output:
-
-```
-=================================== Cycle 10 ===================================
-
-+---------------------- Core 0 ----------------------+
-
-+-------- Thread 0 --------+
-PC: 0
-Instruction: MUL R0, R13, R14
-Core State: EXECUTE
-Fetcher State: IDLE
-LSU State: IDLE
-Registers: R0 = 0, R1 = 0, ... %blockIdx = 0, %blockDim = 4, %threadIdx = 0
-RS = 0, RT = 4
-ALU Out: 0
-```
-
----
-
-# Test Files
-
-The test infrastructure provides comprehensive simulation and verification:
-
-```
-test/
-├── __init__.py              # Test package marker
-├── tb_gpu.sv                # Full GPU testbench
-├── tb_fma.sv                # FMA unit testbench
-├── tb_alu.sv                # ALU unit testbench
-├── tb_activation.sv         # Activation unit testbench
-├── tb_fma.sv        # Systolic FMA testbench
-├── tb_array.sv     # Systolic array testbench
-├── tb_cache.sv              # Cache unit testbench
-├── tb_decoder.sv            # Decoder unit testbench
-├── tb_lsu.sv                # LSU unit testbench
-├── test_matadd.py           # Matrix addition kernel test
-├── test_matmul.py           # Matrix multiplication kernel test
-├── test_model_resnet.py     # End-to-end ResNet-20 hardware verification test
-├── test_model_transformer.py # End-to-end GPT-2 inference pipeline hardware test
-├── test_fma_unit.py         # FMA unit test (cocotb)
-├── test_alu_unit.py         # ALU unit test (cocotb)
-├── test_activation_unit.py  # Activation unit test (cocotb)
-├── test_fma_unit.py # Systolic FMA test (cocotb)
-├── test_array_unit.py # Systolic array test (cocotb)
-├── test_cache_unit.py       # Cache unit test (cocotb)
-├── test_decoder_unit.py     # Decoder unit test (cocotb)
-├── test_lsu_unit.py         # LSU unit test (cocotb)
-├── gtkwave/                 # GTKWave save files for waveform viewing
-│   ├── fma.gtkw
-│   ├── alu.gtkw
-│   ├── activation.gtkw
-│   ├── fma.gtkw
-│   ├── array.gtkw
-│   ├── cache.gtkw
-│   ├── decoder.gtkw
-│   └── lsu.gtkw
-├── helpers/
-│   ├── __init__.py          # Helper package exports
-│   ├── q115.py              # Q1.15 fixed-point conversion utilities
-│   ├── format.py            # Trace formatting (decode instructions)
-│   ├── logger.py            # File/console logging with timestamps
-│   ├── memory.py            # Memory init & assembly instruction helpers
-│   ├── report.py            # Test report generation
-│   └── setup.py             # Test setup, kernel execution, state capture
-└── results/                 # Test output logs
-```
-
-### Test Helper Modules
-
-
-| Module      | Description                                                |
-| ----------- | ---------------------------------------------------------- |
-| `q115.py`   | Q1.15 ↔ float conversion, Q1.15 arithmetic (mul, add, fma) |
-| `format.py` | Instruction decoding, register formatting, trace output    |
-| `logger.py` | `GPULogger` class for trace files with timestamps          |
-| `memory.py` | Memory init, assembly helpers (`asm_add`, `asm_fma`, etc.) |
-| `setup.py`  | `setup_test()`, `run_kernel()`, `get_core_states()`        |
-| `report.py` | Test summary report generation                             |
-
-
-### Assembly Helpers
-
-The `memory.py` module provides assembly instruction builders:
-
-```python
-from helpers.memory import *
-
-program = [
-    asm_mul(R0, BLOCK_IDX, BLOCK_DIM),  # R0 = blockIdx * blockDim
-    asm_add(R0, R0, THREAD_IDX),         # R0 += threadIdx
-    asm_const(R1, 0),                    # R1 = 0
-    asm_ldr(R2, R1),                     # R2 = mem[R1]
-    asm_fma(R3, R2, R4),                 # R3 = R2 * R4 + R3 (Q1.15)
-    asm_str(R5, R3),                     # mem[R5] = R3
-    asm_ret(),                           # End thread
-]
-```
-
-### Writing New Tests
-
-```python
-import cocotb
-from helpers.setup import setup_test, run_kernel
-from helpers.memory import asm_add, asm_ret, R0, R1
-
-@cocotb.test()
-async def test_example(dut):
-    program = [asm_add(R0, R0, R1), asm_ret()]
-    data = [0x1000, 0x2000]  # Q1.15 values
-    
-    logger = await setup_test(dut, "example", program, data, thread_count=2)
-    await run_kernel(dut, logger, max_cycles=100, trace_interval=5)
-    
-    # Read results and verify
-    from helpers.memory import read_memory_range
-    results = read_memory_range(dut, 0, 4)
-    logger.close()
-```
-
----
-
-# ASIC / Tiny Tapeout
-
-Submission flow uses Tiny Tapeout’s GDS action and `src/config.json` (merged with `tt_tool` user config). Tile size is **8×4** (`info.yaml`). The on-die scratchpad is a **synthesizable** 32×32 soft-flop RAM (`RAM32.v`), not the hard DFFRAM macro (the CI LibreLane flow cannot run the post-PDN power hook that hard RAM32 needs).
-
-Local / experimental LibreLane configs under `librelane/` may describe larger hierarchical builds; **the silicon parameters that matter for this shuttle are those in `src/` and `info.yaml`.**
-
-GDS viewing (after a successful harden):
-
-```bash
-klayout runs/.../final/gds/*.gds
-# or
-make view_layout
-```
-
-### Design metrics (TT target)
-
-| Metric | Value |
-| --- | --- |
-| Technology | Sky130 |
-| Clock | 50 MHz |
-| Tiles | 8×4 |
-| MAC units | 8 |
-| On-die scratchpad | 128 B |
-| External data bus peak | ~16.7 MB/s @ 50 MHz |
-
----
-
-# Modules
-
-| Module | File | Description |
-| --- | --- | --- |
-| Chip top | `tt_um_aloshdenny_gpu.sv` | TT pins, memory arbiter, RAM32 instance |
-| GPU | `gpu.sv` | Cores, controllers, dispatcher, DCR, scratchpad bridge |
-| Scratchpad | `scratchpad.sv` | Address decode / hit mux for `0xFFC0`–`0xFFFF` |
-| RAM32 | `RAM32.v` | Soft-flop 32×32 1RW (128 B) |
-| Core | `core.sv` | Scheduler, threads, systolic array |
-| ALU | `alu.sv` | Integer arithmetic |
-| FMA | `fma.sv` | Q1.15 fused multiply-add (2-cycle) |
-| Activation | `activation.sv` | Bias + ReLU family |
-| Decoder | `decoder.sv` | 16-bit instruction decode |
-| Registers | `registers.sv` | 16-entry register file |
-| LSU | `lsu.sv` | Load/store unit |
-| PC | `pc.sv` | Program counter / branches |
-| Scheduler | `scheduler.sv` | Core pipeline FSM |
-| Fetcher | `fetcher.sv` | Instruction fetch |
-| Dispatcher | `dispatch.sv` | Block dispatch |
-| DCR | `dcr.sv` | Device control register |
-| Controller | `controller.sv` | Memory channel controller |
-| Systolic array | `systolic_array.sv` | 2×2 weight-stationary array |
-| Systolic PE | `systolic_pe.sv` | Pipelined MAC PE (1 MAC/cycle) |
-| Branch diverge | `branch_diverge.sv` | SIMT divergence stack |
-
-Optional / experimental RTL also present in-tree (`cache.sv`, `mem_coalesce.sv`, `weight_mem.sv`, `kv_cache.sv`) is not part of the default TT `source_files` list.
-
----
-
-**Atreides** — Superfloat / Tiny Tapeout
+HammerBlade (`bsg_manycore`, `basejump_stl`) is the work of the Bespoke Silicon Group. SuperFloat adds tiles to it and makes four small edits to the build, listed in `hb/README.md`.
